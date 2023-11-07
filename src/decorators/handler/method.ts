@@ -4,6 +4,7 @@ import { PartialDeep } from "type-fest";
 import { RequestMethod } from "../../types";
 import {
   getSECControllerMethodMetadata,
+  isSECBondControllerMethodMetadata,
   mergeSECControllerMethodMetadata,
 } from "../../metadata";
 
@@ -21,6 +22,12 @@ function createMethodDecorator(method: RequestMethod): MethodDecorator {
   return (path: string, operationFragment: PartialDeep<MethodSettings>) => {
     return function (target: any, methodName: string) {
       const existing = getSECControllerMethodMetadata(target, methodName);
+      if (existing && isSECBondControllerMethodMetadata(existing)) {
+        throw new Error(
+          `Method handler ${methodName} cannot both be bound to an operation and have http methods specified.`
+        );
+      }
+
       if (existing && existing.method) {
         throw new Error(
           `Method handler ${methodName} cannot handle multiple http methods.`
@@ -29,7 +36,7 @@ function createMethodDecorator(method: RequestMethod): MethodDecorator {
 
       mergeSECControllerMethodMetadata(
         target,
-        { method, operationFragment: operationFragment ?? {} },
+        { path, method, operationFragment: operationFragment ?? {} },
         methodName
       );
     };

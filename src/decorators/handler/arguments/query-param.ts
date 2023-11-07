@@ -4,14 +4,17 @@ import { mergeSECControllerMethodMetadata } from "../../../metadata";
 
 import { setMethodParameterType } from "./utils";
 
-export type PathParameterSpec = BaseParameterObject;
+export type QueryParameterSettings = BaseParameterObject;
 
 /**
- * Defines a path parameter in the OpenAPI spec and registers it to pass to this method argument.
+ * Defines a query parameter in the OpenAPI spec and registers it to pass to this method argument.
  * @param name The name of the parameter.
  * @param spec The specification of the OpenAPI parameter.
  */
-export function PathParam(name: string, spec?: Partial<PathParameterSpec>) {
+export function QueryParam(
+  name: string,
+  settings?: Partial<QueryParameterSettings>
+) {
   return (target: any, propertyKey: string, parameterIndex: number) => {
     // Warn: We might be a bound method.  In which case, operationFragment will be totally ignored.
     mergeSECControllerMethodMetadata(
@@ -20,9 +23,9 @@ export function PathParam(name: string, spec?: Partial<PathParameterSpec>) {
         operationFragment: {
           parameters: [
             {
-              in: "path",
+              in: "query",
               name,
-              ...(spec ?? {}),
+              ...(settings ?? {}),
             },
           ],
         },

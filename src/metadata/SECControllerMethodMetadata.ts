@@ -8,11 +8,31 @@ import { defineMetadata, getMetadata, mergeMetadata } from "./reflect";
 
 const SECControllerMethodMetadataKey = "sec:controller-method";
 
-export interface SECControllerMethodMetadata {
+export interface SECBondControllerMethodMetadata {
+  operationId: string;
   args: SECControllerMethodHandlerArg[];
+}
+export function isSECBondControllerMethodMetadata(
+  metadata: SECControllerMethodMetadata
+): metadata is SECBondControllerMethodMetadata {
+  return "operationId" in metadata;
+}
+
+export interface SECCustomControllerMethodMetadata {
+  path: string;
   method: RequestMethod;
+  args: SECControllerMethodHandlerArg[];
   operationFragment: PartialDeep<OperationObject>;
 }
+export function isSECCustomControllerMethodMetadata(
+  metadata: SECControllerMethodMetadata
+): metadata is SECCustomControllerMethodMetadata {
+  return "method" in metadata;
+}
+
+export type SECControllerMethodMetadata =
+  | SECBondControllerMethodMetadata
+  | SECCustomControllerMethodMetadata;
 
 export function setSECControllerMethodMetadata(
   target: any,
