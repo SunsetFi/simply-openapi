@@ -37,7 +37,7 @@ export type SECControllerMethodMetadata =
 export function setSECControllerMethodMetadata(
   target: any,
   metadata: SECControllerMethodMetadata,
-  methodName: string
+  methodName: string | symbol
 ) {
   defineMetadata(SECControllerMethodMetadataKey, metadata, target, methodName);
 }
@@ -49,7 +49,7 @@ export function mergeSECControllerMethodMetadata(
     | ((
         previous: PartialDeep<SECControllerMethodMetadata>
       ) => PartialDeep<SECControllerMethodMetadata>),
-  methodName: string
+  methodName: string | symbol
 ) {
   if (typeof metadata === "function") {
     const previous = getSECControllerMethodMetadata(target, methodName);
@@ -67,7 +67,7 @@ export function mergeSECControllerMethodMetadata(
 
 export function getSECControllerMethodMetadata(
   target: any,
-  methodName: string
+  methodName: string | symbol
 ): SECControllerMethodMetadata | null {
   return (
     getMetadata(SECControllerMethodMetadataKey, target, methodName) ?? null

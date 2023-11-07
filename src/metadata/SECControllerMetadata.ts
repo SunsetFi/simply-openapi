@@ -7,6 +7,7 @@ const SECControllerMetadataKey = "sec:controller";
 
 export interface SECControllerMetadata {
   path?: string;
+  tags?: string[];
   openapiFragment?: PartialDeep<OpenAPIObject>;
 }
 

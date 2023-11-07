@@ -3,7 +3,7 @@ import { JSONSchema6 } from "json-schema";
 import { RequestHandler } from "express";
 
 import ajv from "../../ajv";
-import { OperationHandlerMiddleware } from "../../routes/handler-types";
+import { OperationHandlerMiddleware } from "../../routes";
 
 /**
  * Describes an argument that pulls data from an OpenAPI parameter.
@@ -30,6 +30,21 @@ export const secControllerMethodHandlerParameterArgSchema: JSONSchema6 = {
     },
   },
   required: ["type", "parameterName"],
+};
+
+export interface SECControllerMethodHandlerBodyArg {
+  type: "http-body";
+}
+
+export const secControllerMethodHandlerBodyArg: JSONSchema6 = {
+  type: "object",
+  properties: {
+    type: {
+      type: "string",
+      enum: ["http-body"],
+    },
+  },
+  required: ["type"],
 };
 
 /**
@@ -73,12 +88,14 @@ export const secControllerMethodHandlerResponseArg: JSONSchema6 = {
  */
 export type SECControllerMethodHandlerArg =
   | SECControllerMethodHandlerParameterArg
+  | SECControllerMethodHandlerBodyArg
   | SECControllerMethodHandlerRequestArg
   | SECControllerMethodHandlerResponseArg;
 
 export const secControllerMethodHandlerArgSchema: JSONSchema6 = {
   oneOf: [
     secControllerMethodHandlerParameterArgSchema,
+    secControllerMethodHandlerBodyArg,
     secControllerMethodHandlerRequestArg,
     secControllerMethodHandlerResponseArg,
   ],

@@ -3,9 +3,12 @@ import {
   OperationObject,
   ParameterObject,
   PathItemObject,
+  RequestBodyObject,
+  SchemaObject,
+  ReferenceObject,
 } from "openapi3-ts/oas31";
 import { NotFound, BadRequest } from "http-errors";
-import { isObject, isFunction } from "lodash";
+import { isObject, isFunction, mapValues, cloneDeep } from "lodash";
 
 import ajv from "../../ajv";
 
@@ -13,11 +16,14 @@ import {
   SECControllerMethodExtensionData,
   SECControllerMethodExtensionName,
   SECControllerMethodHandlerArg,
+  SECControllerMethodHandlerBodyArg,
   SECControllerMethodHandlerParameterArg,
   validateSECControllerMethodExtensionData,
 } from "../../openapi/extensions/SECControllerMethod";
 import { MiddlewareManager } from "./middleware-manager";
 import { CreateRouterOptions } from "../router-factory";
+import { request } from "http";
+import { ValidateFunction } from "ajv";
 
 type ArgumentCollector = (req: Request, res: Response) => any;
 
@@ -159,6 +165,8 @@ export class MethodHandler {
         return (_req, res: Response) => res;
       case "openapi-parameter":
         return this._buildParameterCollector(arg, op);
+      case "http-body":
+        return this._buildBodyCollector(arg, op);
       default:
         throw new Error(`Unknown handler argument type ${(arg as any).type}.`);
     }
@@ -202,6 +210,14 @@ export class MethodHandler {
       };
     }
 
+    if (isReferenceObject(param.schema)) {
+      // TODO: Get the full openapi as a reference and resolve this
+      // TODO: Log what handler this is for.
+      throw new Error(
+        `Parameter ${arg.parameterName} has a schema reference.  References are not supported at this time.`
+      );
+    }
+
     const validationSchema = {
       type: "object",
       properties: { value: param.schema },
@@ -232,4 +248,71 @@ export class MethodHandler {
       return data.value;
     };
   }
+
+  private _buildBodyCollector(
+    arg: SECControllerMethodHandlerBodyArg,
+    op: OperationObject
+  ): ArgumentCollector {
+    const requestBody = op.requestBody as RequestBodyObject | undefined;
+    if (!requestBody) {
+      // Return the raw body, as no transformations were applied
+      return (req) => req.body;
+    }
+
+    if (!("content" in requestBody)) {
+      throw new Error(
+        `Request body does not have content.  References are not supported at this time.`
+      );
+    }
+
+    function compileSchema(
+      mimeType: string,
+      schema: SchemaObject | ReferenceObject | undefined
+    ): ValidateFunction {
+      if (schema === undefined) {
+        // We accept it, but didn't define a schema.  Let it through
+        return (() => true) as any;
+      }
+
+      if (isReferenceObject(schema)) {
+        // TODO: Get the full openapi as a reference and resolve this
+        // TODO: Log what handler this is for.
+        throw new Error(
+          `Body type ${mimeType} has a schema reference.  References are not supported at this time.`
+        );
+      }
+      return ajv.compile(schema);
+    }
+
+    const validators: Record<string, ValidateFunction> = mapValues(
+      requestBody.content,
+      ({ schema }, key) => compileSchema(key, schema)
+    );
+
+    return (req) => {
+      const contentType = req.headers["content-type"] ?? "*/*";
+      const validator = validators[contentType] ?? validators["*/*"];
+      if (!validator) {
+        throw new BadRequest(
+          `Request body content type ${contentType} is not supported.`
+        );
+      }
+
+      // We will mutate the body through coersion, so clone it to avoid interfering
+      // with the outside world.
+      const body = cloneDeep(req.body);
+
+      if (!validator(body)) {
+        throw new BadRequest(
+          `Request body is invalid: ${ajv.errorsText(validator.errors)}.`
+        );
+      }
+
+      return body;
+    };
+  }
+}
+
+function isReferenceObject<T>(obj: any): obj is ReferenceObject {
+  return "$ref" in obj;
 }

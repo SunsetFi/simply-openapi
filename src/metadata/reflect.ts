@@ -7,7 +7,7 @@ function hasReflectMetadata() {
 export function getMetadata<T>(
   object: any,
   key: string | symbol,
-  methodName?: string
+  methodName?: string | symbol
 ): T | undefined {
   if (!hasReflectMetadata()) {
     throw new Error(
@@ -22,7 +22,7 @@ export function defineMetadata(
   key: string | symbol,
   value: any,
   target: any,
-  methodName?: string
+  methodName?: string | symbol
 ) {
   if (!hasReflectMetadata()) {
     throw new Error(
@@ -37,7 +37,7 @@ export function mergeMetadata(
   key: string | symbol,
   value: any,
   target: any,
-  methodName?: string
+  methodName?: string | symbol
 ) {
   if (!hasReflectMetadata()) {
     throw new Error(

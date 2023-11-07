@@ -2,9 +2,13 @@ import { OpenAPIObject } from "openapi3-ts/oas31";
 
 import { mergeSECControllerMetadata } from "../metadata";
 
-export function Controller(path?: string) {
+export interface ControllerOptions {
+  tags?: string[];
+}
+
+export function Controller(path?: string, opts?: ControllerOptions) {
   return function (target: any) {
-    mergeSECControllerMetadata(target, { path });
+    mergeSECControllerMetadata(target, { path, tags: opts?.tags });
   };
 }
 

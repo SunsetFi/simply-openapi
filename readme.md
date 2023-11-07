@@ -234,8 +234,14 @@ Usage:
 ```ts
 @Controller("/widgets")
 class MyController {
-  @Put("/")
-  putWidget(@Body({ ...widgetSchema }) body: Widget) {
+  @Put("/", {
+    summary: "Create or update widgets",
+    tags: ["Widgets"],
+  })
+  putWidget(
+    @RequireJsonBody("The widget to create or update", widgetSchema)
+    body: Widget
+  ) {
     const existingWidget = repository.findItemById(body.id);
     if (existingWidget) {
       return ResultObject.status(200).json(existingWidget);
@@ -254,6 +260,17 @@ class MyController {
 Accessing express requests and responses directly can cause complications for large robust applications as unit testing them is very finicky and they hide the declarative nature of what your method is doing.
 
 However, no library can cover all use cases, so both the request and response objects can be made available to handlers using the `@Req` and `@Res` parameter decorators.
+There is no way to access the `next` function, however, as controller methods are handled in their own middleware stack that differs from that of express.
+
+```ts
+@Controller("/")
+class MyController {
+  @Get("/")
+  rawHandler(@Req() req: Request, @Res() res: Response) {
+    ...
+  }
+}
+```
 
 ## Enforcing return types at runtime
 

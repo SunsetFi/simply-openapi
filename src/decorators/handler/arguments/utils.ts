@@ -3,7 +3,7 @@ import { SECControllerMethodHandlerArg } from "../../../openapi";
 
 export function setMethodParameterType(
   target: any,
-  propertyKey: string,
+  propertyKey: string | symbol,
   parameterIndex: number,
   arg: SECControllerMethodHandlerArg
 ) {
@@ -13,7 +13,9 @@ export function setMethodParameterType(
       const args = [...(previous.args ?? [])];
       if (args[parameterIndex].type) {
         throw new Error(
-          `Method handler ${propertyKey} cannot redefine the parameter type at index ${parameterIndex}.`
+          `Method handler ${String(
+            propertyKey
+          )} cannot redefine the parameter type at index ${parameterIndex}.`
         );
       }
 

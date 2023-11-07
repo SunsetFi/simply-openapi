@@ -133,6 +133,10 @@ function addOpenAPIPathsFromController(
     }
     paths[path][metadata.method] = {
       ...(metadata.operationFragment as OperationObject),
+      tags: [
+        ...(controllerMetadata.tags ?? []),
+        ...(metadata.operationFragment.tags ?? []),
+      ],
       [SECControllerMethodExtensionName]: {
         controller,
         handler,
@@ -156,19 +160,4 @@ function* getControllerHandlers(
       }
     }
   } while ((currentObj = Object.getPrototypeOf(currentObj)));
-}
-
-function scanProperties(obj: object): string[] {
-  let props: string[] = [];
-  let currentObj = obj;
-
-  do {
-    Object.getOwnPropertyNames(currentObj).forEach((prop) => {
-      if (props.indexOf(prop) === -1) {
-        props.push(prop);
-      }
-    });
-  } while ((currentObj = Object.getPrototypeOf(currentObj)));
-
-  return props;
 }
