@@ -20,17 +20,27 @@ export type MethodSettings = Omit<
 
 function createMethodDecorator(method: RequestMethod): MethodDecorator {
   return (path: string, operationFragment: PartialDeep<MethodSettings>) => {
-    return function (target: any, methodName: string) {
+    return function (target: any, methodName: string | symbol | undefined) {
+      if (methodName === undefined) {
+        throw new Error(
+          `@${method.toUpperCase()}() must be applied to a method.`
+        );
+      }
+
       const existing = getSECControllerMethodMetadata(target, methodName);
       if (existing && isSECBoundControllerMethodMetadata(existing)) {
         throw new Error(
-          `Method handler ${methodName} cannot both be bound to an operation and have http methods specified.`
+          `Method handler ${String(
+            methodName
+          )} cannot both be bound to an operation and have http methods specified.`
         );
       }
 
       if (existing && existing.method) {
         throw new Error(
-          `Method handler ${methodName} cannot handle multiple http methods.`
+          `Method handler ${String(
+            methodName
+          )} cannot handle multiple http methods.`
         );
       }
 

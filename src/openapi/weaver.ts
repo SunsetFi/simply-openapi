@@ -71,6 +71,13 @@ function addOpenApiBoundControllerToPaths(
   paths: PathsObject,
   controller: Controller
 ) {
+  const controllerMetadata = getSECControllerMetadata(controller);
+  if (!controllerMetadata) {
+    throw new Error(
+      `Controller ${controller.constructor.name} is missing @Controller decorator.`
+    );
+  }
+
   const handlerData = Array.from(getControllerHandlers(controller));
   for (const [handler, metadata] of handlerData) {
     if (!isSECBoundControllerMethodMetadata(metadata)) {
@@ -80,7 +87,7 @@ function addOpenApiBoundControllerToPaths(
     const operation = findOperationById(paths, metadata.operationId);
     if (!operation) {
       throw new Error(
-        `Controller ${controller.constructor.name} method ${handler.name} is bound to operation ${metadata.operationId} but that operation does not exist.`
+        `Controller ${controller.constructor.name} method ${handler.name} is bound to operation ${metadata.operationId} but that operation does not exist in the provided OpenAPI specification.`
       );
     }
 
@@ -88,8 +95,16 @@ function addOpenApiBoundControllerToPaths(
       controller,
       handler,
       handlerArgs: metadata.args,
-      expressMiddleware: [],
-      handlerMiddleware: [],
+      // controller middleware should run before operation middleware
+      // Dont ask me why these empty arrays need to be type-masked when the others dont...
+      expressMiddleware: [
+        controllerMetadata?.expressMiddleware ?? ([] as any),
+        ...(metadata.expressMiddleware ?? []),
+      ],
+      handlerMiddleware: [
+        controllerMetadata?.handlerMiddleware ?? ([] as any),
+        ...(metadata.handlerMiddleware ?? []),
+      ],
     } satisfies SECControllerMethodExtensionData;
   }
 }
@@ -127,6 +142,7 @@ function addOpenAPIPathsFromController(
     if (!isSECCustomControllerMethodMetadata(metadata)) {
       continue;
     }
+    // The above check should be type guarding this, but isnt for some reason.
     const path = joinUrlPaths(controllerMetadata.path ?? "/", metadata.path);
     if (!paths[path]) {
       paths[path] = {};
@@ -141,8 +157,16 @@ function addOpenAPIPathsFromController(
         controller,
         handler,
         handlerArgs: metadata.args,
-        expressMiddleware: [],
-        handlerMiddleware: [],
+        // controller middleware should run before operation middleware
+        // Dont ask me why these empty arrays need to be type-masked when the others dont...
+        expressMiddleware: [
+          controllerMetadata?.expressMiddleware ?? ([] as any),
+          ...(metadata.expressMiddleware ?? []),
+        ],
+        handlerMiddleware: [
+          controllerMetadata?.handlerMiddleware ?? ([] as any),
+          ...(metadata.handlerMiddleware ?? []),
+        ],
       } satisfies SECControllerMethodExtensionData,
     };
   }

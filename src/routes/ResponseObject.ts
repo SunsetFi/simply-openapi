@@ -54,28 +54,44 @@ export interface CookieSettings {
 }
 
 export class ResponseObject {
-  // These are not marked private so as to be open to unit testing.
+  // These are not marked private so as to be easier to unit test in typescript.
   _body: any;
   _status: number = HttpStatusCodes.OK;
   _headers: Record<string, string> = {};
   _cookies: Record<string, { value: string } & CookieSettings> = {};
 
+  /**
+   * Sets the body for this response.
+   */
   static body(value: any): ResponseObject {
     return new ResponseObject().body(value);
   }
 
+  /**
+   * Sets the body as a json value for this response.
+   * This also sets the Content-Type header to application/json.
+   */
   static json(value: JsonValue): ResponseObject {
     return new ResponseObject().json(value);
   }
 
+  /**
+   * Sets the status code for this response.
+   */
   static status(value: number): ResponseObject {
     return new ResponseObject().status(value);
   }
 
+  /**
+   * Sets a header for this response.
+   */
   static header(key: string, value: string): ResponseObject {
     return new ResponseObject().header(key, value);
   }
 
+  /**
+   * Sets a cookie for this response.
+   */
   static cookie(
     key: string,
     value: string,
@@ -84,32 +100,52 @@ export class ResponseObject {
     return new ResponseObject().cookie(key, value, settings);
   }
 
+  /**
+   * Sets the body for this response.
+   */
   body(value: any): this {
     this._body = value;
     return this;
   }
 
+  /**
+   * Sets the body as a json value for this response.
+   * This also sets the Content-Type header to application/json.
+   */
   json(value: JsonValue): this {
     this._body = value;
     this._headers["Content-Type"] = "application/json";
     return this;
   }
 
+  /**
+   * Sets the status code for this response.
+   */
   status(value: number): this {
     this._status = value;
     return this;
   }
 
+  /**
+   * Sets a header for this response.
+   */
   header(key: string, value: string): this {
     this._headers[key] = value;
     return this;
   }
 
+  /**
+   * Sets a cookie for this response.
+   */
   cookie(key: string, value: string, settings?: CookieSettings): this {
     this._cookies[key] = { value, ...settings };
     return this;
   }
 
+  /**
+   * Apply this result object to the express response.
+   * @param res The express response to apply this result to.
+   */
   _apply(res: Response) {
     if (this._status !== undefined) {
       res.status(this._status);

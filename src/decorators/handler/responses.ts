@@ -14,7 +14,11 @@ export function Response(
   response: ResponseObject,
   content?: ContentObject
 ) {
-  return function (target: any, propertyKey: string) {
+  return function (target: any, propertyKey: string | symbol | undefined) {
+    if (propertyKey === undefined) {
+      throw new Error(`@Response() must be applied to a method.`);
+    }
+
     // Warn: We might be a bound method.  In which case, operationFragment will be totally ignored.
     mergeSECControllerMethodMetadata(
       target,

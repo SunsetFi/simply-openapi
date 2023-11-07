@@ -1,15 +1,31 @@
 import { setMethodParameterType } from "./utils";
 
-export function Req() {
-  return (target: any, propertyKey: string, parameterIndex: number) => {
+export function Req(): ParameterDecorator {
+  return (
+    target: any,
+    propertyKey: string | symbol | undefined,
+    parameterIndex: number
+  ) => {
+    if (propertyKey === undefined) {
+      throw new Error(`@Req() must be applied to a method.`);
+    }
+
     setMethodParameterType(target, propertyKey, parameterIndex, {
       type: "http-request",
     });
   };
 }
 
-export function Res() {
-  return (target: any, propertyKey: string, parameterIndex: number) => {
+export function Res(): ParameterDecorator {
+  return (
+    target: any,
+    propertyKey: string | symbol | undefined,
+    parameterIndex: number
+  ) => {
+    if (propertyKey === undefined) {
+      throw new Error(`@Res() must be applied to a method.`);
+    }
+
     setMethodParameterType(target, propertyKey, parameterIndex, {
       type: "http-response",
     });

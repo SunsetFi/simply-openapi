@@ -11,8 +11,19 @@ export type PathParameterSpec = BaseParameterObject;
  * @param name The name of the parameter.
  * @param spec The specification of the OpenAPI parameter.
  */
-export function PathParam(name: string, spec?: Partial<PathParameterSpec>) {
-  return (target: any, propertyKey: string, parameterIndex: number) => {
+export function PathParam(
+  name: string,
+  spec?: Partial<PathParameterSpec>
+): ParameterDecorator {
+  return (
+    target: any,
+    propertyKey: string | symbol | undefined,
+    parameterIndex: number
+  ) => {
+    if (propertyKey === undefined) {
+      throw new Error(`@PathParam() must be applied to a method.`);
+    }
+
     // Warn: We might be a bound method.  In which case, operationFragment will be totally ignored.
     mergeSECControllerMethodMetadata(
       target,

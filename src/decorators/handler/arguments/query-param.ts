@@ -14,8 +14,16 @@ export type QueryParameterSettings = BaseParameterObject;
 export function QueryParam(
   name: string,
   settings?: Partial<QueryParameterSettings>
-) {
-  return (target: any, propertyKey: string, parameterIndex: number) => {
+): ParameterDecorator {
+  return (
+    target: any,
+    propertyKey: string | symbol | undefined,
+    parameterIndex: number
+  ) => {
+    if (propertyKey === undefined) {
+      throw new Error(`@QueryParam() must be applied to a method.`);
+    }
+
     // Warn: We might be a bound method.  In which case, operationFragment will be totally ignored.
     mergeSECControllerMethodMetadata(
       target,

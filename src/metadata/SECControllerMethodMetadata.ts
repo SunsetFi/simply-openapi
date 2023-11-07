@@ -1,14 +1,29 @@
 import { PartialDeep } from "type-fest";
 import { OperationObject } from "openapi3-ts/dist/oas31";
+import { RequestHandler } from "express";
 
 import { SECControllerMethodHandlerArg } from "../openapi";
 import { RequestMethod } from "../types";
 
 import { defineMetadata, getMetadata, mergeMetadata } from "./reflect";
+import { OperationHandlerMiddleware } from "../routes";
 
 const SECControllerMethodMetadataKey = "sec:controller-method";
 
-export interface SECBondControllerMethodMetadata {
+export interface SECControllerMethodCommonMetadata {
+  /**
+   * Middleware for transforming the arguments or response of the handler.
+   */
+  handlerMiddleware?: OperationHandlerMiddleware[];
+
+  /**
+   * Express middleware to run around the handler.
+   */
+  expressMiddleware?: RequestHandler[];
+}
+
+export interface SECBondControllerMethodMetadata
+  extends SECControllerMethodCommonMetadata {
   operationId: string;
   args: SECControllerMethodHandlerArg[];
 }
@@ -18,7 +33,8 @@ export function isSECBoundControllerMethodMetadata(
   return "operationId" in metadata;
 }
 
-export interface SECCustomControllerMethodMetadata {
+export interface SECCustomControllerMethodMetadata
+  extends SECControllerMethodCommonMetadata {
   path: string;
   method: RequestMethod;
   args: SECControllerMethodHandlerArg[];

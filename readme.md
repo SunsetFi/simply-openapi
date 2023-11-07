@@ -17,7 +17,7 @@ every declarative statement the spec can make will be enforced in your methods:
 
 - Parameters and bodies will be validated against their schema. If the schema doesn't match, your method will not be called and the appropriate error will be returned
 - Parameters and bodes will be coerced to the schema. The schema type indicates a number? If the parameter is a valid number, it will be casted before being forwarded to the controller. Your body schema includes default values? Those defaults will be populated.
-- [TODO] Response contracts are still contracts! Optional support is provided for validating all outgoing data to ensure your service is responding with what it is documented as responding. This can be enforced in development, and log warnings in production.
+- Response contracts are still contracts! Optional support is provided for validating all outgoing data to ensure your service is responding with what it is documented as responding. This can be enforced in development, and log warnings in production.
 
 This is in contrast to many other controller libraries, that try to generate openapi spec ad-hoc from the controllers and do not make an effort to enforce compliance.
 
@@ -35,8 +35,8 @@ Need a different serialization type? Need additional transformations on inputs b
 There are 3 ways to use SEC:
 
 - [Produce routers from predefined OpenAPI schema and annotated controllers](#producing-routers-from-existing-openapi-specs)
-- [Produce both routers and OpenAPI schema from controllers with HTTP-descriptive decorators](#producing-routers-and-openapi-specs-from-decorator-annotated-controllers)
-- Produce routers from OpenAPI schema adorned with `x-sec` extensions
+- [Produce both routers and OpenAPI schema from controllers and handler methods using decorators](#producing-routers-and-openapi-specs-from-controller-and-handler-decorators)
+- [Produce routers from OpenAPI schema adorned with `x-sec` extensions](#producing-routers-from-openapi-spec-annotated-with-the-sec-extensions)
 
 ### Producing routers from existing OpenAPI specs
 
@@ -73,7 +73,13 @@ const mySpec = {
           }
         ],
         "response": {
-          "application/json": { "type": "number" }
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {"type": "number" }
+              }
+            }
+          }
         }
       }
     }
@@ -91,6 +97,11 @@ class MyController {
   }
 }
 ```
+
+Note how the types of both parameters are numbers, not strings. This is because the OpenAPI doc typed the query parameters as numbers, and SEC obediently casted the values to javascript numeric values before passing it to the handler function.
+If this method was to be called with non-number query values, SEC's handler will return a 400 Bad Request explaining the invalid value and the handler will not be called.
+
+Also note that the response is typed as number. You may optionally enforce this at runtime. See [Enforcing return types at runtime](#enforcing-return-types-at-runtime)
 
 With this combination, you can produce a functional express route in two steps.
 
@@ -114,14 +125,14 @@ const routerFromSpec = createRouterFromSpec(annotatedSpec);
 
 You are now ready to use the router in your app. See [Using the produced router](#using-the-produced-router).
 
-### Producing routers and OpenAPI specs from decorator-annotated controllers
+### Producing Routers and OpenAPI specs from controller and handler decorators
 
 If you want to focus on the code and leave the OpenAPI specs to be auto-generated, you can produce both the routers and the specs entirely from decorators adorning Controller classes
 
 ```ts
-@Controller("/v1")
+@Controller("/v1", { tags: ["Math"] })
 class MyController {
-  @Post("/add", { tags: ["Addition", "Math"], summary: "Adds two numbers" })
+  @Post("/add", { summary: "Adds two numbers", tags: ["Addition"] })
   @JsonResonse(200, "The sum of the two numbers", { type: number })
   addNumbers(
     @QueryParam("a", { type: "number" }) a: number,
@@ -150,6 +161,10 @@ const routerFromSpec = createRouterFromSpec(annotatedSpec);
 
 You are now ready to use the router in your app. See [Using the produced router](#using-the-produced-router).
 
+### Producing routers from OpenAPI spec annotated with the SEC extensions
+
+TODO
+
 ## Using the produced router
 
 The routers produced by SEC are miniamlistic and only cover mapping openapi requests to handlers. SEC stays out of the way of building your express app so you can configure it however you like, including additional routing, error handling, static resources, and any other features you desire.
@@ -165,7 +180,7 @@ Additionally, SEC uses http-errors to communicate error states upstream. These m
 
 Note that previous versions of this library provided both an internal body-parser and internal error handling, but this was removed in favor of more flexibility for the implementor.
 
-A good basis for an express app using SEC is provided below:
+A good basis for an express app using SEC is provided below. You may wish to instead substitute other npm express error handler libraries, just be sure they handle errors thrown by http-errors.
 
 ```ts
 import bodyParser from "body-parser";
@@ -214,11 +229,6 @@ app.use((err, req, res, next) => {
 })
 
 ```
-
-Note how the types of both parameters are numbers, not strings. This is because the OpenAPI doc typed the query parameters as numbers, and SEC obediently casted the values to javascript numeric values before passing it to the handler function.
-If this method was to be called with non-number query values, SEC's handler will return a 400 Bad Request explaining the invalid value and the handler will not be called.
-
-Also note that the response is typed as number. You may optionally enforce this at runtime. See [Enforcing return types at runtime](#enforcing-return-types-at-runtime)
 
 ## Returning status codes, headers, cookies, and non-json bodies.
 
