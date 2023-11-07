@@ -1,6 +1,7 @@
 import { getMockReq, getMockRes } from "@jest-mock/express";
+import "jest-extended";
 
-import { operationHandlerFallbackResponseMiddleware } from "./OperationHandlerFallbackResponseMiddleware";
+import { operationHandlerFallbackResponseMiddleware } from "./FallbackResponseMiddleware";
 
 describe("operationHandlerFallbackResponseMiddleware", function () {
   it("errors when no response has been sent", function () {

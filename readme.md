@@ -220,6 +220,41 @@ If this method was to be called with non-number query values, SEC's handler will
 
 Also note that the response is typed as number. You may optionally enforce this at runtime. See [Enforcing return types at runtime](#enforcing-return-types-at-runtime)
 
+## Returning status codes, headers, cookies, and non-json bodies.
+
+From time to time, greater control is needed over the exact response sent by your handler. For example, you might send a Location header with the location of a newly created resource, or you may need to choose a status code
+based on the action taken by the handler. For this, the `ResponseObject` exists.
+
+This object provides a testable and mockable abstraction over the usual operations done to the express Response object. It can be used as a stand-in for injecting the express response, and is handled internally by an operation handler middleware provided by default.
+
+(Note: If you need further customization, you can supply your own operation handler middleware to intercept and work with this object directly, or you can create your own return types and middleware).
+
+Usage:
+
+```ts
+@Controller("/widgets")
+class MyController {
+  @Put("/")
+  putWidget(@Body({ ...widgetSchema }) body: Widget) {
+    const existingWidget = repository.findItemById(body.id);
+    if (existingWidget) {
+      return ResultObject.status(200).json(existingWidget);
+    }
+
+    const newWidget = repository.createItem(body);
+    return ResultObject.status(201)
+      .header("Location", `http://widgetfactory.biz/widgets/${newWidget.id}`)
+      .json(newWidget);
+  }
+}
+```
+
+## Escaping SEC and using raw express requests and responses
+
+Accessing express requests and responses directly can cause complications for large robust applications as unit testing them is very finicky and they hide the declarative nature of what your method is doing.
+
+However, no library can cover all use cases, so both the request and response objects can be made available to handlers using the `@Req` and `@Res` parameter decorators.
+
 ## Enforcing return types at runtime
 
 TODO

@@ -10,10 +10,11 @@ import { isFunction, pick } from "lodash";
 import { SECControllerMethodExtensionName } from "../openapi";
 import { RequestMethod, requestMethods } from "../types";
 
-import { MethodHandler } from "./method-handler";
+import { MethodHandler } from "./utils/method-handler";
 import {
   operationHandlerJsonResponseMiddleware,
   operationHandlerFallbackResponseMiddleware,
+  operationHandlerResponseObjectMiddleware,
 } from "./handler-middleware";
 import { OperationHandlerMiddleware } from "./handler-types";
 
@@ -123,7 +124,8 @@ class RouterFromSpecFactory {
     // Middleware runs inside out, so our default should be first.
     _opts.handlerMiddleware.unshift(
       operationHandlerFallbackResponseMiddleware,
-      operationHandlerJsonResponseMiddleware
+      operationHandlerJsonResponseMiddleware,
+      operationHandlerResponseObjectMiddleware
     );
   }
 

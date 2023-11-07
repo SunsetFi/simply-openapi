@@ -8,14 +8,14 @@ import {
   SECControllerMethodExtensionData,
   SECControllerMethodExtensionName,
   SECControllerMethodHandlerArg,
-} from "../openapi/extensions/SECControllerMethod";
+} from "../../openapi/extensions/SECControllerMethod";
 
 import { MethodHandler } from "./method-handler";
-import { CreateRouterOptions } from "./router-factory";
+import { CreateRouterOptions } from "../router-factory";
 import {
   operationHandlerFallbackResponseMiddleware,
   operationHandlerJsonResponseMiddleware,
-} from "./handler-middleware";
+} from "../handler-middleware";
 import { MockRequest } from "@jest-mock/express/dist/src/request";
 
 describe("MethodHandler", function () {

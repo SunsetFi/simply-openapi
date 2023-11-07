@@ -1,7 +1,7 @@
-import { ResponseObject } from "openapi3-ts/dist/oas30";
-import { ContentObject, SchemaObject } from "openapi3-ts/oas31";
-import { mergeSECControllerMethodMetadata } from "../../metadata";
+import { ResponseObject, ContentObject, SchemaObject } from "openapi3-ts/oas31";
 import { Response } from "express";
+
+import { mergeSECControllerMethodMetadata } from "../../metadata";
 
 /**
  * Documents a possible response from this operation.
@@ -10,7 +10,7 @@ import { Response } from "express";
  * @param content A mapping of content types this response object can return.  This is optional and merged with response.
  */
 export function Response(
-  statusCode: number,
+  statusCode: number | "default",
   response: ResponseObject,
   content?: ContentObject
 ) {
@@ -43,7 +43,7 @@ export function Response(
  * @param schema The OpenAPI schema object for the application/json response.
  */
 export function JsonResponse(
-  statusCode: number,
+  statusCode: number | "default",
   response: ResponseObject,
   schema: SchemaObject
 ) {

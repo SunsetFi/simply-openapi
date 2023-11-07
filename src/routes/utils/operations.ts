@@ -1,4 +1,4 @@
-import { OperationHandlerMiddlewareContext } from "./handler-types";
+import { OperationHandlerMiddlewareContext } from "../handler-types";
 
 export function nameOperationFromContext(
   context: OperationHandlerMiddlewareContext

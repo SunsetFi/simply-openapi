@@ -1,5 +1,5 @@
 import { getMockReq, getMockRes } from "@jest-mock/express";
-import { operationHandlerJsonResponseMiddleware } from "./OperationHandlerJsonResponseMiddleware";
+import { operationHandlerJsonResponseMiddleware } from "./JsonResponseMiddleware";
 import "jest-extended";
 
 describe("operationHandlerJsonResponseMiddleware", function () {

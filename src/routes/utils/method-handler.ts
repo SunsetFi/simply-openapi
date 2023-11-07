@@ -7,7 +7,7 @@ import {
 import { NotFound, BadRequest } from "http-errors";
 import { isObject, isFunction } from "lodash";
 
-import ajv from "../ajv";
+import ajv from "../../ajv";
 
 import {
   SECControllerMethodExtensionData,
@@ -15,9 +15,9 @@ import {
   SECControllerMethodHandlerArg,
   SECControllerMethodHandlerParameterArg,
   validateSECControllerMethodExtensionData,
-} from "../openapi/extensions/SECControllerMethod";
+} from "../../openapi/extensions/SECControllerMethod";
 import { MiddlewareManager } from "./middleware-manager";
-import { CreateRouterOptions } from "./router-factory";
+import { CreateRouterOptions } from "../router-factory";
 
 type ArgumentCollector = (req: Request, res: Response) => any;
 

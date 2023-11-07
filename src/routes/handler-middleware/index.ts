@@ -1,2 +1,3 @@
-export * from "./OperationHandlerFallbackResponseMiddleware";
-export * from "./OperationHandlerJsonResponseMiddleware";
+export * from "./FallbackResponseMiddleware";
+export * from "./JsonResponseMiddleware";
+export * from "./ResponseObjectMiddleware";

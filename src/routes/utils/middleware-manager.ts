@@ -2,7 +2,7 @@ import {
   OperationHandlerMiddleware,
   OperationHandlerMiddlewareContext,
   OperationHandlerMiddlewareNextFunction,
-} from "./handler-types";
+} from "../handler-types";
 
 export class MiddlewareManager {
   private middlewares: OperationHandlerMiddleware[] = [];

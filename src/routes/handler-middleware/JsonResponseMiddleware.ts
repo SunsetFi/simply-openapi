@@ -2,7 +2,7 @@ import HttpStatusCodes from "http-status-codes";
 
 import { isJson } from "../../types";
 
-import { nameOperationFromContext } from "../utils";
+import { nameOperationFromContext } from "../utils/operations";
 import {
   OperationHandlerMiddlewareContext,
   OperationHandlerMiddlewareNextFunction,
