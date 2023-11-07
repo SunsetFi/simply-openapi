@@ -12,7 +12,7 @@ export interface SECBondControllerMethodMetadata {
   operationId: string;
   args: SECControllerMethodHandlerArg[];
 }
-export function isSECBondControllerMethodMetadata(
+export function isSECBoundControllerMethodMetadata(
   metadata: SECControllerMethodMetadata
 ): metadata is SECBondControllerMethodMetadata {
   return "operationId" in metadata;

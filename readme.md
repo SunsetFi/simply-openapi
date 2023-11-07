@@ -34,6 +34,196 @@ Need a different serialization type? Need additional transformations on inputs b
 
 There are 3 ways to use SEC:
 
+- [Produce routers from predefined OpenAPI schema and annotated controllers](#producing-routers-from-existing-openapi-specs)
+- [Produce both routers and OpenAPI schema from controllers with HTTP-descriptive decorators](#producing-routers-and-openapi-specs-from-decorator-annotated-controllers)
 - Produce routers from OpenAPI schema adorned with `x-sec` extensions
-- [TODO] Produce routers from unextended OpenAPI schema and controllers with `@OperationHandler()` decorators.
-- [TODO] Produce both routers and OpenAPI schema from controllers with HTTP-descriptive decorators.
+
+### Producing routers from existing OpenAPI specs
+
+When you have OpenAPI specs already written and you just want to attach controllers, you can do so using the `@BindOperation` decorator.
+This decorator allows you to attach controller methods to arbitrary OpenAPI Operation by their operation id.
+
+When using this decorator, it is important to use `@BindParam` and `@BindBody` decorators instead of the typical `@PathParam`, `@QueryParam`, and `@Body` decorators, as the latter will try to redefine
+openapi specs. If this mixup occurs, SEC will throw an error.
+
+The original OpenAPI Schema:
+
+```ts
+const mySpec = {
+  "openapi": "3.1.0",
+  "info": {...},
+  "paths": {
+    "/add": {
+      "post": {
+        "operationId": "post-add",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "a",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "b",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "response": {
+          "application/json": { "type": "number" }
+        }
+      }
+    }
+  }
+}
+```
+
+The controller you would like to bind:
+
+```ts
+class MyController {
+  @BindOperation("post-add")
+  getHelloWorld(@BindParam("a") a: number, @BindParam("b") b: number): number {
+    return a + b;
+  }
+}
+```
+
+With this combination, you can produce a functional express route in two steps.
+
+First, we need to take our openapi spec and annotate it with the extensions that describe our controller.
+
+```ts
+import { attachBoundControllersToOpenAPI } from "simply-openapi-controllers";
+
+const annotatedSpec = attachBoundControllersToOpenAPI(mySpec, [
+  new MyController(),
+]);
+```
+
+This will create a new OpenAPI spec that contains metadata describing our controllers and handlers. Note that during this process, if one of your controllers asks for an operation or binding parameter that is not defined in the openapi spec, an error will be thrown describing the issue.
+
+Now that we have our annotated spec, we can create an express router that implements it:
+
+```ts
+const routerFromSpec = createRouterFromSpec(annotatedSpec);
+```
+
+You are now ready to use the router in your app. See [Using the produced router](#using-the-produced-router).
+
+### Producing routers and OpenAPI specs from decorator-annotated controllers
+
+If you want to focus on the code and leave the OpenAPI specs to be auto-generated, you can produce both the routers and the specs entirely from decorators adorning Controller classes
+
+```ts
+@Controller("/v1")
+class MyController {
+  @Post("/add", { tags: ["Addition", "Math"], summary: "Adds two numbers" })
+  @JsonResonse(200, "The sum of the two numbers", { type: number })
+  addNumbers(
+    @QueryParam("a", { type: "number" }) a: number,
+    @QueryParam("b", { type: "number" }) b: number
+  ) {
+    return a + b;
+  }
+}
+```
+
+This is sufficient to create a fully formed OpenAPI specification, although more decorators exist to further annotate the document if desired. See [Decorator reference](#decorator-reference).
+
+You can then produce the OpenAPI spec out of your controller with:
+
+```ts
+const openApiSpec = createOpenAPIFromControllers([new MyController()]);
+```
+
+Note that if you are integrating into an existing app and already have existing OpenApi specs, you can produce only the path object with `createOpenAPIPathsFromControllers`, which takes the same signature.
+
+Once you have produced the spec, creating a router to handle it is simple:
+
+```ts
+const routerFromSpec = createRouterFromSpec(annotatedSpec);
+```
+
+You are now ready to use the router in your app. See [Using the produced router](#using-the-produced-router).
+
+## Using the produced router
+
+The routers produced by SEC are miniamlistic and only cover mapping openapi requests to handlers. SEC stays out of the way of building your express app so you can configure it however you like, including additional routing, error handling, static resources, and any other features you desire.
+
+This does mean that there are some areas left uncovered, and up to you to provide. These are
+
+- error handling
+- body parsing
+- authentication and security
+
+Body parsing is of particular importance as SEC expects json object bodies.
+Additionally, SEC uses http-errors to communicate error states upstream. These must be handled for proper operation.
+
+Note that previous versions of this library provided both an internal body-parser and internal error handling, but this was removed in favor of more flexibility for the implementor.
+
+A good basis for an express app using SEC is provided below:
+
+```ts
+import bodyParser from "body-parser";
+
+...
+
+app.use(bodyParser.json({strict: true}), routerFromSpec);
+
+app.use((err, req, res, next) => {
+  if (res.headersSent) {
+    console.error(
+      err,
+      `An error occured request \"${req.url}\" after headers have been sent: ${err.message}`,
+    );
+    res.end();
+    return;
+  }
+
+  if (isHttpErrorLike(err)) {
+    if (!err.expose) {
+      console.error(
+        err,
+        `Internal error handling request \"${req.url}\": ${err.message}`,
+      );
+      res
+        .status(HttpStatusCodes.INTERNAL_SERVER_ERROR)
+        .json({ message: "Internal Server Error" })
+        .end();
+    } else {
+      console.error(
+        err,
+        `Error ${err.statusCode} handling request \"${req.url}\": ${err.message}`,
+      );
+      res.status(err.statusCode).json({ message: err.message }).end();
+    }
+  } else {
+    console.error(
+      err,
+      `An unknown error was thrown handling request \"${req.url}\": ${err.message}`,
+    );
+    res
+      .status(HttpStatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ message: "Internal Server Error" })
+      .end();
+  }
+})
+
+```
+
+Note how the types of both parameters are numbers, not strings. This is because the OpenAPI doc typed the query parameters as numbers, and SEC obediently casted the values to javascript numeric values before passing it to the handler function.
+If this method was to be called with non-number query values, SEC's handler will return a 400 Bad Request explaining the invalid value and the handler will not be called.
+
+Also note that the response is typed as number. You may optionally enforce this at runtime. See [Enforcing return types at runtime](#enforcing-return-types-at-runtime)
+
+## Enforcing return types at runtime
+
+TODO
+
+## Decorator reference
+
+TODO
