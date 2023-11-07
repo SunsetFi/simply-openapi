@@ -1,4 +1,4 @@
-import { OperationHandlerMiddlewareContext } from "../openapi";
+import { OperationHandlerMiddlewareContext } from "./handler-types";
 
 export function nameOperationFromContext(
   context: OperationHandlerMiddlewareContext

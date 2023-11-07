@@ -4,20 +4,18 @@ import {
   OperationObject,
   PathItemObject,
 } from "openapi3-ts/oas31";
-import { Entries, JsonValue } from "type-fest";
+import { Entries } from "type-fest";
 import { isFunction, pick } from "lodash";
 
-import {
-  OperationHandlerMiddleware,
-  OperationHandlerMiddlewareContext,
-  OperationHandlerMiddlewareNextFunction,
-  SECControllerMethodExtensionName,
-} from "../openapi";
+import { SECControllerMethodExtensionName } from "../openapi";
 import { RequestMethod, requestMethods } from "../types";
 
 import { MethodHandler } from "./method-handler";
-import { operationHandlerJsonResponseMiddleware } from "./handler-middleware/OperationHandlerJsonResponseMiddleware";
-import { operationHandlerFallbackResponseMiddleware } from "./handler-middleware/OperationHandlerFallbackResponseMiddleware";
+import {
+  operationHandlerJsonResponseMiddleware,
+  operationHandlerFallbackResponseMiddleware,
+} from "./handler-middleware";
+import { OperationHandlerMiddleware } from "./handler-types";
 
 export interface RouteCreationContext {
   openApi: OpenAPIObject;

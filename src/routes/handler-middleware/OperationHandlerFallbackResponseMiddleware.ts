@@ -1,7 +1,7 @@
 import {
   OperationHandlerMiddlewareContext,
   OperationHandlerMiddlewareNextFunction,
-} from "../../openapi";
+} from "../handler-types";
 import { nameOperationFromContext } from "../utils";
 
 export async function operationHandlerFallbackResponseMiddleware(

@@ -1,12 +1,12 @@
 import HttpStatusCodes from "http-status-codes";
 
-import {
-  OperationHandlerMiddlewareContext,
-  OperationHandlerMiddlewareNextFunction,
-} from "../../openapi";
 import { isJson } from "../../types";
 
 import { nameOperationFromContext } from "../utils";
+import {
+  OperationHandlerMiddlewareContext,
+  OperationHandlerMiddlewareNextFunction,
+} from "../handler-types";
 
 export async function operationHandlerJsonResponseMiddleware(
   context: OperationHandlerMiddlewareContext,
