@@ -83,18 +83,30 @@ describe("MethodHandler", function () {
     return [next, json, req, res];
   }
 
+  describe("expressMiddleware", function () {
+    it("applies the middleware", async function () {
+      const middleware = jest.fn((req, res, next) => next());
+
+      const [next] = await testHandler({}, () => null, [], {
+        expressMiddleware: [middleware],
+      });
+
+      expect(next).not.toHaveBeenCalled();
+      expect(middleware).toHaveBeenCalled();
+    });
+  });
+
   describe("handlerMiddleware", function () {
     it("applies the middleware in order", async function () {
       const middleware1 = jest.fn((ctx, next) => next());
       const middleware2 = jest.fn((ctx, next) => next());
 
-      const [next, json] = await testHandler({}, () => null, [], {
+      const [next] = await testHandler({}, () => null, [], {
         handlerMiddleware: [middleware1, middleware2],
       });
 
       expect(next).not.toHaveBeenCalled();
       expect(middleware1).toHaveBeenCalledBefore(middleware2);
-      expect(json).toHaveBeenCalledAfter(middleware2);
     });
   });
 
@@ -103,7 +115,7 @@ describe("MethodHandler", function () {
       const handler = jest.fn((arg) => null);
       const [next] = await testHandler({}, handler, [
         {
-          type: "http-request",
+          type: "request-raw",
         },
       ]);
 
@@ -118,7 +130,7 @@ describe("MethodHandler", function () {
       const handler = jest.fn((x) => null);
       const [next] = await testHandler({}, handler, [
         {
-          type: "http-response",
+          type: "response-raw",
         },
       ]);
 

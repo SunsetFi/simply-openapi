@@ -1,4 +1,10 @@
-import { NextFunction, Request, Response, Router } from "express";
+import {
+  NextFunction,
+  Request,
+  RequestHandler,
+  Response,
+  Router,
+} from "express";
 import {
   OperationObject,
   ParameterObject,
@@ -9,6 +15,7 @@ import {
 } from "openapi3-ts/oas31";
 import { NotFound, BadRequest } from "http-errors";
 import { isObject, isFunction, mapValues, cloneDeep } from "lodash";
+import { ValidateFunction } from "ajv";
 
 import ajv from "../../ajv";
 
@@ -19,11 +26,44 @@ import {
   SECControllerMethodHandlerBodyArg,
   SECControllerMethodHandlerParameterArg,
   validateSECControllerMethodExtensionData,
-} from "../../openapi/extensions/SECControllerMethod";
+} from "../../openapi";
+
 import { MiddlewareManager } from "./middleware-manager";
-import { CreateRouterOptions } from "../router-factory";
-import { request } from "http";
-import { ValidateFunction } from "ajv";
+import { OperationHandlerMiddleware } from "../handler-types";
+
+export interface MethodHandlerOpts {
+  /**
+   * Resolve a controller specified in the x-sec-controller-method extension into a controller object.
+   * @param controller The controller to resolve.
+   * @returns The resolved controller
+   */
+  resolveController?: (controller: object | string | symbol) => object;
+
+  /**
+   * Resolve a method specified in the x-sec-controller-method extension into a method.
+   * @param controller The controller containing the method to resolve.
+   * @param method The method to resolve.
+   * @returns The resolved method
+   */
+  resolveHandler?: (
+    controller: object,
+    method: Function | string | symbol
+  ) => Function;
+
+  /**
+   * Middleware to apply to all handlers.
+   * This middleware will apply in-order before any middleware registered on the operation.
+   *
+   * In addition to the middleware specified here, the last middleware will always be one that
+   * processes json responses.
+   */
+  handlerMiddleware?: OperationHandlerMiddleware[];
+
+  /**
+   * Middleware to apply to the express router.
+   */
+  expressMiddleware?: RequestHandler[];
+}
 
 type ArgumentCollector = (req: Request, res: Response) => any;
 
@@ -41,8 +81,49 @@ export class MethodHandler {
     private _pathItem: PathItemObject,
     private _method: string,
     private _operation: OperationObject,
-    private _opts: CreateRouterOptions
+    private _opts: MethodHandlerOpts
   ) {
+    let { resolveController, resolveHandler } = _opts;
+
+    if (!resolveController) {
+      resolveController = (controller) => {
+        if (!isObject(controller)) {
+          throw new Error(
+            `Controller for operation ${
+              _operation.operationId
+            } handling \"${_method} ${_path}\" is not an object (got ${String(
+              this._extensionData.controller
+            )}).`
+          );
+        }
+
+        return controller;
+      };
+    }
+
+    if (!resolveHandler) {
+      resolveHandler = (controller, method) => {
+        if (
+          (typeof method === "string" || typeof method === "symbol") &&
+          typeof (controller as any)[method] === "function"
+        ) {
+          method = (controller as any)[method];
+        }
+
+        if (!isFunction(method)) {
+          throw new Error(
+            `Handler for operation \"${
+              _operation.operationId
+            }\" handling \"${_method} ${_path}\" is not a function (got ${String(
+              this._extensionData.handler
+            )}).`
+          );
+        }
+
+        return method;
+      };
+    }
+
     this._extensionData = _operation[
       SECControllerMethodExtensionName
     ] as SECControllerMethodExtensionData;
@@ -66,25 +147,11 @@ export class MethodHandler {
     this._controller = this._opts.resolveController
       ? this._opts.resolveController(this._extensionData.controller)
       : (this._extensionData.controller as any);
-    if (!isObject(this._controller)) {
-      throw new Error(
-        `Controller for operation ${_operation.operationId} (${String(
-          this._extensionData.controller
-        )}) is not an object.`
-      );
-    }
 
-    this._handler = this._opts.resolveHandler
-      ? this._opts.resolveHandler(this._controller, this._extensionData.handler)
-      : (this._extensionData.handler as any);
-
-    if (!isFunction(this._handler)) {
-      throw new Error(
-        `Handler for operation ${_operation.operationId} (${String(
-          this._extensionData.handler
-        )}) is not a function.`
-      );
-    }
+    this._handler = resolveHandler(
+      this._controller,
+      this._extensionData.handler
+    );
 
     this._argumentCollectors = (this._extensionData.handlerArgs ?? []).map(
       (arg) => this._buildArgumentCollector(arg, _operation)
@@ -159,13 +226,13 @@ export class MethodHandler {
   ): ArgumentCollector {
     // TODO: Parameter interceptor.
     switch (arg.type) {
-      case "http-request":
+      case "request-raw":
         return (req: Request, _res) => req;
-      case "http-response":
+      case "response-raw":
         return (_req, res: Response) => res;
       case "openapi-parameter":
         return this._buildParameterCollector(arg, op);
-      case "http-body":
+      case "request-body":
         return this._buildBodyCollector(arg, op);
       default:
         throw new Error(`Unknown handler argument type ${(arg as any).type}.`);

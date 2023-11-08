@@ -109,21 +109,6 @@ function addOpenApiBoundControllerToPaths(
   }
 }
 
-function findOperationById(
-  paths: PathsObject,
-  operationId: string
-): OperationObject | null {
-  for (const path of Object.values(paths)) {
-    for (const operation of Object.values(path)) {
-      if (operation.operationId === operationId) {
-        return operation;
-      }
-    }
-  }
-
-  return null;
-}
-
 function addOpenAPIPathsFromController(
   controller: Controller,
   paths: PathsObject,
@@ -184,4 +169,19 @@ function* getControllerHandlers(
       }
     }
   } while ((currentObj = Object.getPrototypeOf(currentObj)));
+}
+
+function findOperationById(
+  paths: PathsObject,
+  operationId: string
+): OperationObject | null {
+  for (const path of Object.values(paths)) {
+    for (const operation of Object.values(path)) {
+      if (operation.operationId === operationId) {
+        return operation;
+      }
+    }
+  }
+
+  return null;
 }

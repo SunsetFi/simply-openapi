@@ -1,9 +1,9 @@
 import { IExtensionType } from "openapi3-ts/oas31";
 import { JSONSchema6 } from "json-schema";
-import { RequestHandler } from "express";
 
 import ajv from "../../ajv";
 import { OperationHandlerMiddleware } from "../../routes";
+import { Middleware } from "../../types";
 
 /**
  * Describes an argument that pulls data from an OpenAPI parameter.
@@ -32,8 +32,11 @@ export const secControllerMethodHandlerParameterArgSchema: JSONSchema6 = {
   required: ["type", "parameterName"],
 };
 
+/**
+ * Describes an argument that pulls data from the request body.
+ */
 export interface SECControllerMethodHandlerBodyArg {
-  type: "http-body";
+  type: "request-body";
 }
 
 export const secControllerMethodHandlerBodyArg: JSONSchema6 = {
@@ -41,7 +44,7 @@ export const secControllerMethodHandlerBodyArg: JSONSchema6 = {
   properties: {
     type: {
       type: "string",
-      enum: ["http-body"],
+      enum: ["request-body"],
     },
   },
   required: ["type"],
@@ -51,7 +54,7 @@ export const secControllerMethodHandlerBodyArg: JSONSchema6 = {
  * Describes an argument that expects the HTTP request.
  */
 export interface SECControllerMethodHandlerRequestArg {
-  type: "http-request";
+  type: "request-raw";
 }
 
 export const secControllerMethodHandlerRequestArg: JSONSchema6 = {
@@ -59,7 +62,7 @@ export const secControllerMethodHandlerRequestArg: JSONSchema6 = {
   properties: {
     type: {
       type: "string",
-      enum: ["http-request"],
+      enum: ["request-raw"],
     },
   },
   required: ["type"],
@@ -69,7 +72,7 @@ export const secControllerMethodHandlerRequestArg: JSONSchema6 = {
  * Describes an argument that expects the HTTP response.
  */
 export interface SECControllerMethodHandlerResponseArg {
-  type: "http-response";
+  type: "response-raw";
 }
 
 export const secControllerMethodHandlerResponseArg: JSONSchema6 = {
@@ -77,7 +80,7 @@ export const secControllerMethodHandlerResponseArg: JSONSchema6 = {
   properties: {
     type: {
       type: "string",
-      enum: ["http-response"],
+      enum: ["response-raw"],
     },
   },
   required: ["type"],
@@ -114,28 +117,36 @@ export const SECControllerMethodExtensionName =
 export interface SECControllerMethodExtensionData {
   /**
    * The class instance of the controller class.
+   * If this is a string or symbol, then the resolveController option must be passed to createRouterFromSpec to successfully create a controller.
    */
   controller: object | string | symbol;
 
   /**
    * The handler method of the controller class.
+   * If this is a string or symbol, then createRouterFromSpec will attempt to find a method by that key on the controller.
+   * If other behavior is desired, this may be overridden by passing the resolveHandler option to createRouterFromSpec.
    */
   handler: Function | string | symbol;
 
   /**
    * An array of objects describing the purpose of each argument to the handler function.
+   * The order if this array should match the order of the parameters in the function that they pertain to.
    */
   handlerArgs?: SECControllerMethodHandlerArg[];
 
   /**
-   * Middleware for transforming the arguments or response of the handler.
+   * Middleware for wrapping the handler function.
+   * These can replace parameters and reinterpret the handler's results as needed.
+   *
+   * These middlewares are responsible for sending the return value of the handler to the response.
+   * While defaults are provided to do this, you can customize the behavior of the responses by overriding this behavior here.
    */
   handlerMiddleware?: OperationHandlerMiddleware[];
 
   /**
    * Express middleware to run around the handler.
    */
-  expressMiddleware?: RequestHandler[];
+  expressMiddleware?: Middleware[];
 }
 
 export const secControllerMethodExtensionDataSchema: JSONSchema6 = {

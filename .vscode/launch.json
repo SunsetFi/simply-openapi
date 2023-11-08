@@ -7,7 +7,7 @@
     {
       "type": "node",
       "name": "vscode-jest-tests",
-      "request": "launch",
+      "request-raw": "launch",
       "args": ["--runInBand"],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
@@ -16,7 +16,7 @@
     },
     {
       "type": "node",
-      "request": "launch",
+      "request-raw": "launch",
       "name": "Launch Example",
       "program": "${workspaceFolder}/example/src/index.ts",
       "outFiles": ["${workspaceFolder}/example/dist/**/*.js"]

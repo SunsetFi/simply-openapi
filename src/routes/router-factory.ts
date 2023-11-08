@@ -5,17 +5,19 @@ import {
   PathItemObject,
 } from "openapi3-ts/oas31";
 import { Entries } from "type-fest";
-import { isFunction, pick } from "lodash";
+import { isFunction, isObject, pick } from "lodash";
 
 import { SECControllerMethodExtensionName } from "../openapi";
 import { RequestMethod, requestMethods } from "../types";
 
 import { MethodHandler } from "./utils/method-handler";
+
 import {
   operationHandlerJsonResponseMiddleware,
   operationHandlerFallbackResponseMiddleware,
   operationHandlerResponseObjectMiddleware,
 } from "./handler-middleware";
+import { maybeParseJson } from "./express-middleware";
 import { OperationHandlerMiddleware } from "./handler-types";
 
 export interface RouteCreationContext {
@@ -32,29 +34,11 @@ export type OperationHandlerFactory = (
 
 export interface CreateRouterOptions {
   /**
-   * Resolve a controller specified in the x-sec-controller-method extension into a controller object.
-   * @param controller The controller to resolve.
-   * @returns The resolved controller, or null if the controller could not be resolved.
-   */
-  resolveController?: (controller: object | string | symbol) => object | null;
-
-  /**
-   * Resolve a method specified in the x-sec-controller-method extension into a method.
-   * @param controller The controller containing the method to resolve.
-   * @param method The method to resolve.
-   * @returns The resolved method, or null if the method could not be resolved.
-   */
-  resolveHandler?: (
-    controller: object,
-    method: Function | string | symbol
-  ) => Function | null;
-
-  /**
    * An array of factories to produce handlers for operation in the openapi schema.
    * The first factory to produce a non-null handler will be used.
    *
    * In addition to factories specified here, the last factory will always be one that produces a handler based on
-   * the x-sec-controller and x-sec-controller-method extensions.
+   * the x-sec-controller-method extensions.
    */
   handlerFactories?: OperationHandlerFactory[];
 
@@ -92,30 +76,18 @@ class RouterFromSpecFactory {
     private _openApi: OpenAPIObject,
     private _opts: CreateRouterOptions = {}
   ) {
-    if (!_opts.resolveHandler) {
-      _opts.resolveHandler = (controller, method) => {
-        if (isFunction(method)) {
-          return method;
-        }
-
-        if (
-          typeof method === "string" ||
-          (typeof method === "symbol" &&
-            Object.prototype.hasOwnProperty.call(controller, method))
-        ) {
-          return (controller as any)[method];
-        }
-
-        return null;
-      };
-    }
-
     if (!_opts.handlerFactories) {
       _opts.handlerFactories = [];
     }
 
     // Factories run in order, so our default should be last.
     _opts.handlerFactories.push(this._secOperationHandlerFactory.bind(this));
+
+    if (!_opts.expressMiddleware) {
+      _opts.expressMiddleware = [];
+    }
+
+    _opts.expressMiddleware.push(maybeParseJson);
 
     if (!_opts.handlerMiddleware) {
       _opts.handlerMiddleware = [];
@@ -133,7 +105,13 @@ class RouterFromSpecFactory {
     const router = Router({ mergeParams: true });
 
     for (const [path, pathItem] of Object.entries(this._openApi.paths ?? {})) {
-      connectRouteHandlers(router, path, pathItem, this._openApi, this._opts);
+      this._connectRouteHandlers(
+        router,
+        path,
+        pathItem,
+        this._openApi,
+        this._opts
+      );
     }
 
     return router;
@@ -157,43 +135,43 @@ class RouterFromSpecFactory {
     );
     return handler.handle.bind(handler);
   }
-}
 
-function connectRouteHandlers(
-  router: Router,
-  path: string,
-  pathItem: PathItemObject,
-  openApi: OpenAPIObject,
-  opts: CreateRouterOptions
-) {
-  for (const [method, operation] of methodsFromPathItem(pathItem)) {
-    if (!requestMethods.includes(method as any)) {
-      continue;
-    }
-
-    if (!operation) {
-      continue;
-    }
-
-    let handler: RequestHandler | null | undefined;
-    for (const handlerFactory of opts.handlerFactories!) {
-      handler = handlerFactory(operation, {
-        openApi,
-        path,
-        pathItem,
-        method,
-      });
-
-      if (handler) {
-        break;
+  private _connectRouteHandlers(
+    router: Router,
+    path: string,
+    pathItem: PathItemObject,
+    openApi: OpenAPIObject,
+    opts: CreateRouterOptions
+  ) {
+    for (const [method, operation] of methodsFromPathItem(pathItem)) {
+      if (!requestMethods.includes(method as any)) {
+        continue;
       }
-    }
 
-    if (!handler) {
-      return;
-    }
+      if (!operation) {
+        continue;
+      }
 
-    (router as any)[method](path, handler);
+      let handler: RequestHandler | null | undefined;
+      for (const handlerFactory of opts.handlerFactories!) {
+        handler = handlerFactory(operation, {
+          openApi,
+          path,
+          pathItem,
+          method,
+        });
+
+        if (handler) {
+          break;
+        }
+      }
+
+      if (!handler) {
+        return;
+      }
+
+      (router as any)[method](path, handler);
+    }
   }
 }
 

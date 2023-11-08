@@ -11,7 +11,7 @@ export function Req(): ParameterDecorator {
     }
 
     setMethodParameterType(target, propertyKey, parameterIndex, {
-      type: "http-request",
+      type: "request-raw",
     });
   };
 }
@@ -27,7 +27,7 @@ export function Res(): ParameterDecorator {
     }
 
     setMethodParameterType(target, propertyKey, parameterIndex, {
-      type: "http-response",
+      type: "response-raw",
     });
   };
 }

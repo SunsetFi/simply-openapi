@@ -93,7 +93,10 @@ describe("operationHandlerJsonResponseMiddleware", function () {
       );
     };
 
-    expect(test()).resolves.toBeUndefined();
+    const handlerResult = await test();
+
+    expect(handlerResult).toBeUndefined();
+    expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(result);
   });
 });

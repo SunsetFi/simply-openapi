@@ -72,7 +72,7 @@ const mySpec = {
             }
           }
         ],
-        "response": {
+        "response-raw": {
           "200": {
             "content": {
               "application/json": {
@@ -163,72 +163,141 @@ You are now ready to use the router in your app. See [Using the produced router]
 
 ### Producing routers from OpenAPI spec annotated with the SEC extensions
 
-TODO
+Despite all the decorators, the root spec SEC operates on is an OpenAPI specification object. It is possible to write these entirely by hand if so desired.
+
+All metadata needed by SEC to wire up controllers is stored on the `x-sec-controller-method` extension on Operation objects.
+
+TODO: More friendly walkthrough on setting this up. Don't just dump typescript typings here.
+
+The `x-sec-controller-method` extension contains an object with the following properties:
+
+```ts
+export interface SECControllerMethodExtensionData {
+  /**
+   * The class instance of the controller class.
+   * If this is a string or symbol, then the resolveController option must be passed to createRouterFromSpec to successfully create a controller.
+   */
+  controller: object | string | symbol;
+
+  /**
+   * The handler method of the controller class.
+   * If this is a string or symbol, then createRouterFromSpec will attempt to find a method by that key on the controller.
+   * If other behavior is desired, this may be overridden by passing the resolveHandler option to createRouterFromSpec.
+   */
+  handler: Function | string | symbol;
+
+  /**
+   * An array of objects describing the purpose of each argument to the handler function.
+   * The order if this array should match the order of the parameters in the function that they pertain to.
+   */
+  handlerArgs?: SECControllerMethodHandlerArg[];
+
+  /**
+   * Middleware for wrapping the handler function.
+   * These can replace parameters and reinterpret the handler's results as needed.
+   *
+   * These middlewares are responsible for sending the return value of the handler to the response.
+   * While defaults are provided to do this, you can customize the behavior of the responses by overriding this behavior here.
+   */
+  handlerMiddleware?: OperationHandlerMiddleware[];
+
+  /**
+   * Express middleware to run around the handler.
+   */
+  expressMiddleware?: Middleware[];
+}
+
+/**
+ * Metadata about the argument of a controller method handler function.
+ */
+export type SECControllerMethodHandlerArg =
+  | SECControllerMethodHandlerParameterArg
+  | SECControllerMethodHandlerBodyArg
+  | SECControllerMethodHandlerRequestArg
+  | SECControllerMethodHandlerResponseArg;
+
+/**
+ * Describes an argument that pulls data from an OpenAPI parameter.
+ */
+export interface SECControllerMethodHandlerParameterArg {
+  type: "openapi-parameter";
+
+  /**
+   * The name of the OpenAPI parameter in the operation to insert into this argument.
+   */
+  parameterName: string;
+}
+
+/**
+ * Describes an argument that pulls data from the request body.
+ */
+export interface SECControllerMethodHandlerBodyArg {
+  type: "request-body";
+}
+
+/**
+ * Describes an argument that expects the HTTP request.
+ */
+export interface SECControllerMethodHandlerRequestArg {
+  type: "request-raw";
+}
+
+/**
+ * Describes an argument that expects the HTTP response.
+ */
+export interface SECControllerMethodHandlerResponseArg {
+  type: "response-raw";
+}
+```
 
 ## Using the produced router
 
-The routers produced by SEC are miniamlistic and only cover mapping openapi requests to handlers. SEC stays out of the way of building your express app so you can configure it however you like, including additional routing, error handling, static resources, and any other features you desire.
+The created router is entirely self-contained, and all SEC features should work out of the box simply by connecting the router to your express app. As SEC is focused only on the request handler level, it provides no requirements on how you create or customize your express app.
 
-This does mean that there are some areas left uncovered, and up to you to provide. These are
+However, despite these defaults, you are still able to influence SEC's behavior by supplanting its middleware with your own.
 
-- error handling
-- body parsing
-- authentication and security
+### Overriding the default express middleware
 
-Body parsing is of particular importance as SEC expects json object bodies.
-Additionally, SEC uses http-errors to communicate error states upstream. These must be handled for proper operation.
+The routers produced by SEC are miniamlistic and only cover mapping openapi requests to handlers and provide the minimial middleware to do this job.
 
-Note that previous versions of this library provided both an internal body-parser and internal error handling, but this was removed in favor of more flexibility for the implementor.
+The middlewares SEC defaults within its handlers are:
 
-A good basis for an express app using SEC is provided below. You may wish to instead substitute other npm express error handler libraries, just be sure they handle errors thrown by http-errors.
+- body-parser.json({strict: true})
+- error handling for errors produced by the `http-errors` npm library, or those providing similar properties on thrown error objects.
+
+You are free to override both of these middleware choices.
+
+- body-parser is wrapped in a check that will not parse the body if req.body is already set, so as to not inferfere with your own body-parsing. You can supply your own middleware to override this.
+- error handling can be overriden by providing your own error handler to the expressMiddleware option of createRouterFromSpec
+
+Note that the built in error handler will use console.error to record errors, which is not ideal if you have your own logging framework. You can override this behavior by providing your own logger to SEC's middleware creator.
 
 ```ts
-import bodyParser from "body-parser";
+import pino from "pino";
+import { createRouterFromSpec, createHandleHttpErrorsMiddleware } from "simply-openapi-controllers";
 
 ...
 
-app.use(bodyParser.json({strict: true}), routerFromSpec);
-
-app.use((err, req, res, next) => {
-  if (res.headersSent) {
-    console.error(
-      err,
-      `An error occured request \"${req.url}\" after headers have been sent: ${err.message}`,
-    );
-    res.end();
-    return;
-  }
-
-  if (isHttpErrorLike(err)) {
-    if (!err.expose) {
-      console.error(
-        err,
-        `Internal error handling request \"${req.url}\": ${err.message}`,
-      );
-      res
-        .status(HttpStatusCodes.INTERNAL_SERVER_ERROR)
-        .json({ message: "Internal Server Error" })
-        .end();
-    } else {
-      console.error(
-        err,
-        `Error ${err.statusCode} handling request \"${req.url}\": ${err.message}`,
-      );
-      res.status(err.statusCode).json({ message: err.message }).end();
-    }
-  } else {
-    console.error(
-      err,
-      `An unknown error was thrown handling request \"${req.url}\": ${err.message}`,
-    );
-    res
-      .status(HttpStatusCodes.INTERNAL_SERVER_ERROR)
-      .json({ message: "Internal Server Error" })
-      .end();
-  }
+const router = createRouterFromSpec(openApiSpec, {
+  expressMiddleware: [
+    createHandleHttpErrorsMiddleware({
+      logger: (err, ctx, message) => pino.error({err, ...ctx}, message)
+    })
+  ]
 })
-
 ```
+
+For best results, you should consider providing your own middleware for various purposes:
+
+- Handling arbitrary non-http errors (ideally at the express application level)
+- authentication and security (either globally, across the spec with the expressMiddleware option, or per-controler or per-method with the @UseRequestMiddleware() decorator)
+
+You have a few choices of where to add your middleware:
+
+- Globablly at your express app, or any router that preceeds the SEC router.
+- In the SEC router, using the `expressMiddleware` option of `createRouterFromSpec`
+- Targeting whole controllers, using the @UseRequestMiddleware() decorator
+- Targeting individual handler methods, using the @UseRequestMiddleware() decorator.
 
 ## Returning status codes, headers, cookies, and non-json bodies.
 
@@ -267,7 +336,7 @@ class MyController {
 
 ## Escaping SEC and using raw express requests and responses
 
-Accessing express requests and responses directly can cause complications for large robust applications as unit testing them is very finicky and they hide the declarative nature of what your method is doing.
+Accessing express requests and responses directly can cause complications for development, as it complicates unit testing and hides the declarative requirements of your handler function.
 
 However, no library can cover all use cases, so both the request and response objects can be made available to handlers using the `@Req` and `@Res` parameter decorators.
 There is no way to access the `next` function, however, as controller methods are handled in their own middleware stack that differs from that of express.
@@ -281,6 +350,15 @@ class MyController {
   }
 }
 ```
+
+Of particular note, if you plan on handling the response completely, ensure your method returns either undefined or a promise resolving to undefined. Passing results from
+your handler will be intercepted by handler middleware and interpreted as endpoint results to be sent to the client.
+
+All default result handlers in SEC interpret an undefined result to mean that the response was already handled and no further work is needed. However, there is a safty fallback in place
+where if a function returns undefined, the very last handler middleware will ensure that res.headersSent is true. If not, it will throw an error. This is to guard against accidentally
+not sending any response at all and leaving the request hanging.
+
+As always, handling of responses can be overridden by your own handlerMiddleware, if your needs differ.
 
 ## Enforcing return types at runtime
 

@@ -61,7 +61,7 @@ export function Body(
       propertyKey
     );
     setMethodParameterType(target, propertyKey, parameterIndex, {
-      type: "http-body",
+      type: "request-body",
     });
   };
 }

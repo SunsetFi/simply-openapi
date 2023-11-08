@@ -1,3 +1,4 @@
+import { ErrorRequestHandler, RequestHandler } from "express";
 import { PathItemObject } from "openapi3-ts/dist/model/openapi30";
 import { JsonValue } from "type-fest";
 
@@ -13,6 +14,8 @@ export const requestMethods = [
 ] as const satisfies readonly (keyof PathItemObject)[];
 
 export type RequestMethod = (typeof requestMethods)[number];
+
+export type Middleware = RequestHandler | ErrorRequestHandler;
 
 export function isJson(x: any): x is JsonValue {
   if (x == null) {

@@ -1,9 +1,9 @@
 import { OpenAPIObject } from "openapi3-ts/oas31";
 import { PartialDeep } from "type-fest";
-import { RequestHandler } from "express";
 
 import { defineMetadata, getMetadata, mergeMetadata } from "./reflect";
 import { OperationHandlerMiddleware } from "../routes";
+import { Middleware } from "../types";
 
 const SECControllerMetadataKey = "sec:controller";
 
@@ -31,14 +31,23 @@ export interface SECControllerMetadata {
   /**
    * Express middleware to run around the handler.
    */
-  expressMiddleware?: RequestHandler[];
+  expressMiddleware?: Middleware[];
 }
 
 export function mergeSECControllerMetadata(
   target: any,
-  metadata: PartialDeep<SECControllerMetadata>
+  metadata:
+    | PartialDeep<SECControllerMetadata>
+    | ((
+        previous: PartialDeep<SECControllerMetadata>
+      ) => PartialDeep<SECControllerMetadata>)
 ) {
-  mergeMetadata(SECControllerMetadataKey, metadata, target);
+  if (typeof metadata === "function") {
+    metadata = metadata(getSECControllerMetadata(target) ?? {});
+    defineMetadata(SECControllerMetadataKey, metadata, target);
+  } else {
+    mergeMetadata(SECControllerMetadataKey, metadata, target);
+  }
 }
 
 export function setSECControllerMetadata(

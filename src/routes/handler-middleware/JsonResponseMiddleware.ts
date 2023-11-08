@@ -44,6 +44,6 @@ export async function operationHandlerJsonResponseMiddleware(
     );
   }
 
-  context.res.status(HttpStatusCodes.OK).json(result).end();
+  context.res.status(HttpStatusCodes.OK).json(result);
   return undefined;
 }

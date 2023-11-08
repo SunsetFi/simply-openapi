@@ -1,9 +1,8 @@
 import { PartialDeep } from "type-fest";
 import { OperationObject } from "openapi3-ts/dist/oas31";
-import { RequestHandler } from "express";
 
 import { SECControllerMethodHandlerArg } from "../openapi";
-import { RequestMethod } from "../types";
+import { Middleware, RequestMethod } from "../types";
 
 import { defineMetadata, getMetadata, mergeMetadata } from "./reflect";
 import { OperationHandlerMiddleware } from "../routes";
@@ -19,7 +18,7 @@ export interface SECControllerMethodCommonMetadata {
   /**
    * Express middleware to run around the handler.
    */
-  expressMiddleware?: RequestHandler[];
+  expressMiddleware?: Middleware[];
 }
 
 export interface SECBondControllerMethodMetadata
