@@ -10,6 +10,81 @@ Don't have OpenAPI specs? No problem! SEC also provides decorators for your clas
 SEC is designed to be a single-purpose library. It solves the use case of producing robust controllers and methods for web request handling, and does not dictate any design patterns beyond what it needs to do its job.  
 It is highly extensible, supporting both the typical express middleware, plus its own middleware for method handlers, allowing you to integrate with the method creation for customizing both the inputs and outputs of your controller methods.
 
+## Forward: Enforcing your endpoint contracts through OpenAPI
+
+Before getting into the specifics of this library, its important to know what makes OpenAPI so powerful as a source to derive our handlers from.
+
+OpenAPI is very expressive when it comes to the specification of the inputs and outputs of handler functions. OpenAPI specs can define the exact shape and requirements of parameters, bodies, and even response types differing across status codes and content types. All of this information encapsulates declarative instructions that normally would be implemented by the developers: Type checks, null checks, coersion, casting, default values, and error handling all provide a great amount of boilerplate that must be written for all endpoint handlers. However, since OpenAPI already defines all of this, why not derive it programmically and automate away such boilerplate?
+
+This is the core concept of simply-openapi-controllers.
+
+For example, let's take this simple OpenAPI example:
+
+````json
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Swagger Petstore",
+    "license": {
+      "name": "MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://petstore.swagger.io/v1"
+    }
+  ],
+  "paths": {
+"/pets/{petId}": {
+      "get": {
+        "summary": "Info for a specific pet",
+        "operationId": "showPetById",
+        "tags": [
+          "pets"
+        ],
+        "parameters": [
+          {
+            "name": "petId",
+            "in": "path",
+            "required": true,
+            "description": "The id of the pet to retrieve",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Expected response to a valid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pet"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+}
+  }
+}
+
+      ```
+
+
+
 ## OpenAPI is definitive, everything else follows
 
 The philosophy of SEC is that the OpenAPI spec (either self-provided or described in-code by decorators) should be the definitive form of the service, and the handlers should conform to it. In practice, that means
@@ -28,7 +103,9 @@ documentation, SEC uses OpenAPI as the source of truth for how all methods shoul
 
 ## Pluggable everywhere
 
-Need a different serialization type? Need additional transformations on inputs before passing them to your methods? A middleware system for handlers is provided, allowing both the inputs to your methods as well as the method responses to be tweaked, transformed, and handled with ease. Middleware can be injected at the global level, [TODO] class level, [TODO] methods, or [TODO] even individual parameters. SEC even uses this system for its own default handling; anything it does by default can be replaced.
+Need a different serialization type? Need additional transformations on inputs before passing them to your methods? A middleware system for handlers is provided, allowing both the inputs to your methods as well as the method responses to be tweaked, transformed, and handled with ease. Middleware can be injected at the global level, class level, and individual methods.
+
+SEC even uses this middleware system for its own core features, meaning any middleware you provide can override any default behavior of SEC. Need specialized handling of your method response to your express response? Need customized error handling? Want to return DTOs from your methods and serialize them dependent on request content types? No problem! Provide a handler middleware you are good to go!
 
 ## Usage
 
@@ -85,7 +162,7 @@ const mySpec = {
     }
   }
 }
-```
+````
 
 The controller you would like to bind:
 

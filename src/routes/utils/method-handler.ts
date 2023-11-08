@@ -15,9 +15,7 @@ import {
 } from "openapi3-ts/oas31";
 import { NotFound, BadRequest } from "http-errors";
 import { isObject, isFunction, mapValues, cloneDeep } from "lodash";
-import { ValidateFunction } from "ajv";
-
-import ajv from "../../ajv";
+import AJV, { ValidateFunction } from "ajv";
 
 import {
   SECControllerMethodExtensionData,
@@ -27,11 +25,18 @@ import {
   SECControllerMethodHandlerParameterArg,
   validateSECControllerMethodExtensionData,
 } from "../../openapi";
+import ajv from "../../ajv";
 
-import { MiddlewareManager } from "./middleware-manager";
 import { OperationHandlerMiddleware } from "../handler-types";
 
+import { MiddlewareManager } from "./middleware-manager";
+
 export interface MethodHandlerOpts {
+  /**
+   * The AJV schema validator to use for this method.,
+   */
+  ajv?: AJV;
+
   /**
    * Resolve a controller specified in the x-sec-controller-method extension into a controller object.
    * @param controller The controller to resolve.
@@ -70,6 +75,8 @@ type ArgumentCollector = (req: Request, res: Response) => any;
 export class MethodHandler {
   private _selfRoute = Router({ mergeParams: true });
 
+  private _ajv: AJV;
+
   private _controller: object;
   private _handler: Function;
 
@@ -84,6 +91,8 @@ export class MethodHandler {
     private _opts: MethodHandlerOpts
   ) {
     let { resolveController, resolveHandler } = _opts;
+
+    this._ajv = _opts.ajv ?? ajv;
 
     if (!resolveController) {
       resolveController = (controller) => {
@@ -138,7 +147,7 @@ export class MethodHandler {
       throw new Error(
         `Operation ${
           _operation.operationId
-        } has an invalid ${SECControllerMethodExtensionName} extension: ${ajv.errorsText(
+        } has an invalid ${SECControllerMethodExtensionName} extension: ${this._ajv.errorsText(
           validateSECControllerMethodExtensionData.errors
         )}}`
       );
@@ -289,7 +298,7 @@ export class MethodHandler {
       type: "object",
       properties: { value: param.schema },
     };
-    const validator = ajv.compile(validationSchema);
+    const validator = this._ajv.compile(validationSchema);
     return (req: Request, _res) => {
       const value =
         param.in === "path"
@@ -305,9 +314,9 @@ export class MethodHandler {
           throw new NotFound();
         } else {
           throw new BadRequest(
-            `Query parameter ${arg.parameterName} is invalid: ${ajv.errorsText(
-              validator.errors
-            )}.`
+            `Query parameter ${
+              arg.parameterName
+            } is invalid: ${this._ajv.errorsText(validator.errors)}.`
           );
         }
       }
@@ -332,10 +341,10 @@ export class MethodHandler {
       );
     }
 
-    function compileSchema(
+    const compileSchema = (
       mimeType: string,
       schema: SchemaObject | ReferenceObject | undefined
-    ): ValidateFunction {
+    ): ValidateFunction => {
       if (schema === undefined) {
         // We accept it, but didn't define a schema.  Let it through
         return (() => true) as any;
@@ -348,8 +357,11 @@ export class MethodHandler {
           `Body type ${mimeType} has a schema reference.  References are not supported at this time.`
         );
       }
-      return ajv.compile({ type: "object", properties: { value: schema } });
-    }
+      return this._ajv.compile({
+        type: "object",
+        properties: { value: schema },
+      });
+    };
 
     const validators: Record<string, ValidateFunction> = mapValues(
       requestBody.content,
@@ -391,7 +403,7 @@ export class MethodHandler {
 
       if (!validator(validateObj)) {
         throw new BadRequest(
-          `Request body is invalid: ${ajv.errorsText(validator.errors)}.`
+          `Request body is invalid: ${this._ajv.errorsText(validator.errors)}.`
         );
       }
 

@@ -5,10 +5,12 @@ import {
   PathItemObject,
 } from "openapi3-ts/oas31";
 import { Entries } from "type-fest";
-import { isFunction, isObject, pick } from "lodash";
+import { pick } from "lodash";
+import AJV from "ajv";
 
 import { SECControllerMethodExtensionName } from "../openapi";
 import { RequestMethod, requestMethods } from "../types";
+import ajv from "../ajv";
 
 import { MethodHandler } from "./utils/method-handler";
 
@@ -33,6 +35,11 @@ export type OperationHandlerFactory = (
 ) => RequestHandler | null | undefined;
 
 export interface CreateRouterOptions {
+  /**
+   * The AJV schema validator to use when validating data,
+   */
+  ajv?: AJV;
+
   /**
    * An array of factories to produce handlers for operation in the openapi schema.
    * The first factory to produce a non-null handler will be used.
@@ -76,6 +83,10 @@ class RouterFromSpecFactory {
     private _openApi: OpenAPIObject,
     private _opts: CreateRouterOptions = {}
   ) {
+    if (!_opts.ajv) {
+      _opts.ajv = ajv;
+    }
+
     if (!_opts.handlerFactories) {
       _opts.handlerFactories = [];
     }
