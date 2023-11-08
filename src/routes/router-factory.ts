@@ -62,6 +62,13 @@ export interface CreateRouterOptions {
    * Middleware to apply to the express router.
    */
   expressMiddleware?: RequestHandler[];
+
+  /**
+   * If true, ensure that all responses are handled by the handler.
+   * If false, no such check will be performed, and handlers that return undefined may leave requests hanging open.
+   * @default true
+   */
+  ensureResponsesHandled?: boolean;
 }
 
 /**
@@ -104,9 +111,13 @@ class RouterFromSpecFactory {
       _opts.handlerMiddleware = [];
     }
 
-    // Middleware runs inside out, so our default should be first.
+    // Middleware runs inside out, so our defaults should be first, to allow
+    // user-supplied middleware to run before us.
+    if (_opts.ensureResponsesHandled !== false) {
+      _opts.handlerMiddleware.push(operationHandlerFallbackResponseMiddleware);
+    }
+
     _opts.handlerMiddleware.unshift(
-      operationHandlerFallbackResponseMiddleware,
       operationHandlerJsonResponseMiddleware,
       operationHandlerResponseObjectMiddleware
     );
