@@ -348,7 +348,7 @@ export class MethodHandler {
           `Body type ${mimeType} has a schema reference.  References are not supported at this time.`
         );
       }
-      return ajv.compile(schema);
+      return ajv.compile({ type: "object", properties: { value: schema } });
     }
 
     const validators: Record<string, ValidateFunction> = mapValues(
@@ -357,8 +357,27 @@ export class MethodHandler {
     );
 
     return (req) => {
-      const contentType = req.headers["content-type"] ?? "*/*";
-      const validator = validators[contentType] ?? validators["*/*"];
+      if (requestBody.required && !req.body) {
+        throw new BadRequest(`Request body is required.`);
+      }
+
+      let contentType = req.headers["content-type"] ?? null;
+      if (contentType) {
+        const semicolon = contentType.indexOf(";");
+        if (semicolon !== -1) {
+          contentType = contentType.substring(0, semicolon);
+        }
+      }
+
+      let validator: ValidateFunction | undefined;
+      if (contentType) {
+        validator = validators[contentType];
+      }
+
+      if (!validator) {
+        validator = validators.default;
+      }
+
       if (!validator) {
         throw new BadRequest(
           `Request body content type ${contentType} is not supported.`
@@ -367,15 +386,16 @@ export class MethodHandler {
 
       // We will mutate the body through coersion, so clone it to avoid interfering
       // with the outside world.
-      const body = cloneDeep(req.body);
+      // Body might be a string or other primitive, so we need to wrap it for cocersion.
+      const validateObj = { value: cloneDeep(req.body) };
 
-      if (!validator(body)) {
+      if (!validator(validateObj)) {
         throw new BadRequest(
           `Request body is invalid: ${ajv.errorsText(validator.errors)}.`
         );
       }
 
-      return body;
+      return validateObj.value;
     };
   }
 }

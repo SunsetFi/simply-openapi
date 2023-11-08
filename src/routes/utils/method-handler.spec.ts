@@ -544,6 +544,195 @@ describe("MethodHandler", function () {
         });
       });
     });
+
+    describe("openapi body parameter", function () {
+      describe("without an openapi requestBody", function () {
+        it("provides the raw body object", async function () {
+          const handler = jest.fn((x) => null);
+
+          const bodyValue = "hello world";
+
+          const [next] = await testHandler(
+            {},
+            handler,
+            [
+              {
+                type: "request-body",
+              },
+            ],
+            {},
+            { body: bodyValue }
+          );
+
+          expect(next).not.toHaveBeenCalled();
+          expect(handler).toHaveBeenCalledWith(bodyValue);
+        });
+      });
+
+      describe("with an openapi requstBody", function () {
+        it("returns bad request when a required body is not supplied", async function () {
+          const handler = jest.fn((x) => null);
+
+          const bodyValue = undefined;
+
+          const [next] = await testHandler(
+            {
+              requestBody: {
+                required: true,
+                content: {},
+              },
+            },
+            handler,
+            [
+              {
+                type: "request-body",
+              },
+            ],
+            {},
+            { body: bodyValue }
+          );
+
+          expect(next).toHaveBeenCalled();
+          expect(next.mock.calls[0][0]).toBeInstanceOf(BadRequest);
+        });
+
+        it("returns bad request when a body does not match the schema", async function () {
+          const handler = jest.fn((x) => null);
+
+          const bodyValue = "12345";
+
+          const [next] = await testHandler(
+            {
+              requestBody: {
+                required: true,
+                content: {
+                  default: {
+                    schema: {
+                      type: "string",
+                      minLength: 10,
+                    },
+                  },
+                },
+              },
+            },
+            handler,
+            [
+              {
+                type: "request-body",
+              },
+            ],
+            {},
+            { body: bodyValue }
+          );
+
+          expect(next).toHaveBeenCalled();
+          expect(next.mock.calls[0][0]).toBeInstanceOf(BadRequest);
+        });
+
+        it("provides the body when the body matches the schema", async function () {
+          const handler = jest.fn((x) => null);
+
+          const bodyValue = "12345";
+
+          const [next] = await testHandler(
+            {
+              requestBody: {
+                required: true,
+                content: {
+                  default: {
+                    schema: {
+                      type: "string",
+                      minLength: 5,
+                      maxLength: 5,
+                    },
+                  },
+                },
+              },
+            },
+            handler,
+            [
+              {
+                type: "request-body",
+              },
+            ],
+            {},
+            { body: bodyValue }
+          );
+
+          expect(next).not.toHaveBeenCalled();
+          expect(handler).toHaveBeenCalledWith(bodyValue);
+        });
+
+        it("selects the right validator for the content type", async function () {
+          const handler = jest.fn((x) => null);
+
+          const bodyValue = "hello world";
+
+          const [next] = await testHandler(
+            {
+              requestBody: {
+                required: true,
+                content: {
+                  default: {
+                    schema: {
+                      type: "string",
+                    },
+                  },
+                  "foo/bar": {
+                    schema: {
+                      type: "integer",
+                    },
+                  },
+                },
+              },
+            },
+            handler,
+            [
+              {
+                type: "request-body",
+              },
+            ],
+            {},
+            { body: bodyValue, headers: { "content-type": "foo/bar" } }
+          );
+
+          expect(next).toHaveBeenCalled();
+          expect(next.mock.calls[0][0]).toBeInstanceOf(BadRequest);
+        });
+
+        it("coerces values", async function () {
+          const handler = jest.fn((x) => null);
+
+          const bodyValue = "12345";
+
+          const [next] = await testHandler(
+            {
+              requestBody: {
+                required: true,
+                content: {
+                  default: {
+                    schema: {
+                      type: "integer",
+                    },
+                  },
+                },
+              },
+            },
+            handler,
+            [
+              {
+                type: "request-body",
+              },
+            ],
+            {},
+            { body: bodyValue }
+          );
+
+          expect(next).not.toHaveBeenCalled();
+          expect(handler).toHaveBeenCalledWith(Number(bodyValue));
+        });
+      });
+    });
   });
 });
 
