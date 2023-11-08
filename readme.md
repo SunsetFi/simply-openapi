@@ -482,9 +482,7 @@ your handler will be intercepted by handler middleware and interpreted as endpoi
 
 All default result handlers in SEC interpret an undefined result to mean that the response was already handled and no further work is needed. However, there is a safty fallback in place
 where if a function returns undefined, the very last handler middleware will ensure that res.headersSent is true. If not, it will throw an error. This is to guard against accidentally
-not sending any response at all and leaving the request hanging.
-
-As always, handling of responses can be overridden by your own handlerMiddleware, if your needs differ.
+not sending any response at all and leaving the request hanging. If this behavior is undesired, pass `ensureResponsesHandled: false` to the createRouterFromSpec function options.
 
 ## Enforcing return types at runtime
 
