@@ -42,6 +42,30 @@ export interface CreateRouterOptions {
   ajv?: AJV;
 
   /**
+   * Resolver to convert a controller specified in the x-simply-controller-method extension into an instance of the controller object.
+   * This can be used to integrate with DI, Proxy controller objects, or perform other transformations on the controllers.
+   *
+   * If not specified, the controller will be validated as a javascript object and used as-is.
+   * @param controller The controller to resolve.
+   * @returns The resolved controller
+   */
+  resolveController?: (controller: object | string | symbol) => object;
+
+  /**
+   * Resolver to convert a method specified in the x-simply-controller-method extension into a function reference for invocation.
+   * This can be used to wrap or otherwise transform the controller methods.
+   *
+   * If not specified, the default resolver will use functions as-is, and will seek to resolve a string to a function by method name on the controller instance.
+   * @param controller The controller containing the method to resolve.
+   * @param method The method to resolve.
+   * @returns The resolved method
+   */
+  resolveHandler?: (
+    controller: object,
+    method: Function | string | symbol
+  ) => Function;
+
+  /**
    * An array of factories to produce handlers for operation in the openapi schema.
    * The first factory to produce a non-null handler will be used.
    *
@@ -150,6 +174,7 @@ class RouterFromSpecFactory {
     }
 
     var handler = new MethodHandler(
+      this._openApi,
       ctx.path,
       ctx.pathItem,
       ctx.method,

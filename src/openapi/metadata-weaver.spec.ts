@@ -17,7 +17,7 @@ describe("createOpenAPIFromControllers", function () {
     );
 
     expect(result).toMatchObject({
-      openapi: "3.0.0",
+      openapi: "3.1.0",
       info: {
         title: "Test",
         version: "1.0.0",
@@ -214,9 +214,8 @@ describe("createOpenAPIFromControllers", function () {
       );
 
       const replacedSpec: OpenAPIObject = {
-        openapi: "3.0.0",
+        openapi: "3.1.0",
         info: { title: "Replaced", version: "1.0.0" },
-        paths: {},
         "x-test": true,
       };
       const extractorResult = (spec: OpenAPIObject) => replacedSpec;

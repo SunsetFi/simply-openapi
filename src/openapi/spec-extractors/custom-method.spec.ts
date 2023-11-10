@@ -50,7 +50,7 @@ describe("extractSOCCustomMethodSpec", function () {
   ] {
     const finalInput: OpenAPIObject = merge(
       {
-        openapi: "3.0.0",
+        openapi: "3.1.0",
         info: {
           title: "Test",
           version: "1.0.0",

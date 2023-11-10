@@ -152,8 +152,8 @@ export interface SOCControllerMethodExtensionData {
 export const socControllerMethodExtensionDataSchema: JSONSchema6 = {
   type: "object",
   properties: {
-    // We would want to validate controller and handler, but ajv doesn't do that out of the box.
-    controller: { type: "object" },
+    // Controller can be object, string, or symbol.  We cannot validate for symbol.
+    controller: {},
     handlerArgs: {
       type: "array",
       items: socControllerMethodHandlerArgSchema,

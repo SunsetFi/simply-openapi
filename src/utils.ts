@@ -55,7 +55,7 @@ export function getInstanceMethods(instance: object) {
 export function resolveReference<T extends object>(
   spec: OpenAPIObject,
   value: T | ReferenceObject
-): T {
+): T | null {
   if ("$ref" in value) {
     if (!value["$ref"].startsWith("#")) {
       throw new Error(
@@ -63,8 +63,16 @@ export function resolveReference<T extends object>(
       );
     }
     const ptr = Ptr.parse(value["$ref"].substring(1));
-    return ptr.eval(spec);
+    try {
+      return ptr.eval(spec);
+    } catch {
+      return null;
+    }
   }
 
   return value;
+}
+
+export function isNotNull<T>(x: T | null): x is T {
+  return x !== null;
 }

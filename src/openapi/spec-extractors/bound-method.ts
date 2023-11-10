@@ -46,7 +46,7 @@ export const extractSOCBoundMethodSpec: OpenAPIObjectExtractor = (
 
       if (
         !(operation.parameters ?? []).some(
-          (x) => resolveReference(spec, x).name === arg.parameterName
+          (x) => resolveReference(spec, x)?.name === arg.parameterName
         )
       ) {
         throw new Error(
@@ -54,7 +54,7 @@ export const extractSOCBoundMethodSpec: OpenAPIObjectExtractor = (
             methodName
           )} uses bound parameter ${arg.parameterName}, but operation ${
             metadata.operationId
-          } does not define such a parameter.`
+          } does not define such a parameter.  Either the parameter does not exist or its reference failed to resolve.`
         );
       }
     }

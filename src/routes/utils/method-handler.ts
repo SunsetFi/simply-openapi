@@ -9,10 +9,10 @@ import {
   OperationObject,
   ParameterObject,
   PathItemObject,
-  RequestBodyObject,
   SchemaObject,
   ReferenceObject,
   OpenAPIObject,
+  isReferenceObject,
 } from "openapi3-ts/oas31";
 import { NotFound, BadRequest } from "http-errors";
 import { isObject, isFunction, mapValues, cloneDeep } from "lodash";
@@ -27,11 +27,11 @@ import {
   validateSOCControllerMethodExtensionData,
 } from "../../openapi";
 import ajv from "../../ajv";
+import { resolveReference, isNotNull } from "../../utils";
 
 import { OperationHandlerMiddleware } from "../handler-types";
 
 import { OperationHandlerMiddlewareManager } from "./OperationHandlerMiddlewareManager";
-import { resolveReference } from "../../utils";
 
 export interface MethodHandlerOpts {
   /**
@@ -256,13 +256,17 @@ export class MethodHandler {
     op: OperationObject
   ): ArgumentCollector {
     // Find the parameter object in the OpenAPI operation
-    const param: ParameterObject | undefined = op.parameters?.find(
-      (param) => resolveReference(this._spec, param).name === arg.parameterName
+    const resolvedParams = (op.parameters ?? [])
+      .map((param) => resolveReference(this._spec, param))
+      .filter(isNotNull);
+
+    const param: ParameterObject | undefined = resolvedParams.find(
+      (param) => param.name === arg.parameterName
     ) as ParameterObject;
 
     if (!param) {
       throw new Error(
-        `Parameter ${arg.parameterName} not found in operation parameters.`
+        `Parameter ${arg.parameterName} not found in operation parameters.  Either it was not defined or its $ref failed to resolve.`
       );
     }
 
@@ -291,13 +295,22 @@ export class MethodHandler {
       };
     }
 
-    schema = resolveReference(this._spec, schema);
+    if (isReferenceObject(schema)) {
+      const ref = schema;
+      schema = resolveReference(this._spec, schema)!;
+      if (!schema) {
+        throw new Error(
+          `Could not resolve schema reference ${ref["$ref"]} of parameter ${param.name}.`
+        );
+      }
+    }
 
     const validationSchema = {
       type: "object",
-      properties: { value: param.schema },
+      properties: { value: schema },
     };
     const validator = this._ajv.compile(validationSchema);
+
     return (req: Request, _res) => {
       const value =
         param.in === "path"
@@ -328,19 +341,27 @@ export class MethodHandler {
     arg: SOCControllerMethodHandlerBodyArg,
     op: OperationObject
   ): ArgumentCollector {
-    const requestBody = op.requestBody as RequestBodyObject | undefined;
-    if (!requestBody) {
+    if (!op.requestBody) {
       // Return the raw body, as no transformations were applied
       return (req) => req.body;
     }
 
-    if (!("content" in requestBody)) {
+    const requestBody = resolveReference(this._spec, op.requestBody);
+    if (!requestBody) {
       throw new Error(
-        `Request body does not have content.  References are not supported at this time.`
+        `Could not resolve requestBody reference ${
+          (op.requestBody as any)["$ref"]
+        }.`
       );
     }
 
+    if (!("content" in requestBody)) {
+      // No specification of content, just return as-is
+      return (req) => req.body;
+    }
+
     const compileSchema = (
+      mediaType: string,
       schema: SchemaObject | ReferenceObject | undefined
     ): ValidateFunction => {
       if (schema === undefined) {
@@ -348,7 +369,15 @@ export class MethodHandler {
         return (() => true) as any;
       }
 
-      schema = resolveReference(this._spec, schema);
+      if (isReferenceObject(schema)) {
+        const ref = schema;
+        schema = resolveReference(this._spec, ref)!;
+        if (!schema) {
+          throw new Error(
+            `Could not resolve schema reference ${ref["$ref"]} for requestBody media type ${mediaType}.`
+          );
+        }
+      }
 
       return this._ajv.compile({
         type: "object",
@@ -358,7 +387,7 @@ export class MethodHandler {
 
     const validators: Record<string, ValidateFunction> = mapValues(
       requestBody.content,
-      ({ schema }) => compileSchema(schema)
+      ({ schema }, key) => compileSchema(key, schema)
     );
 
     return (req) => {
@@ -366,26 +395,18 @@ export class MethodHandler {
         throw new BadRequest(`Request body is required.`);
       }
 
-      let contentType = req.headers["content-type"] ?? null;
-      if (contentType) {
-        const semicolon = contentType.indexOf(";");
-        if (semicolon !== -1) {
-          contentType = contentType.substring(0, semicolon);
+      const contentType = req.headers["content-type"] ?? "";
+
+      const validator = pickContentType(contentType, validators);
+      if (!validator) {
+        if (contentType === "") {
+          throw new BadRequest(`The Content-Type header is required.`);
         }
-      }
 
-      let validator: ValidateFunction | undefined;
-      if (contentType) {
-        validator = validators[contentType];
-      }
-
-      if (!validator) {
-        validator = validators.default;
-      }
-
-      if (!validator) {
         throw new BadRequest(
-          `Request body content type ${contentType} is not supported.`
+          `Request body content type ${contentType} is not supported.  Supported content types: ${Object.keys(
+            validators
+          ).join(", ")}`
         );
       }
 
@@ -403,4 +424,45 @@ export class MethodHandler {
       return validateObj.value;
     };
   }
+}
+
+function pickContentType<T>(
+  contentType: string | null,
+  values: Record<string, T>
+): T | null {
+  if (contentType === "") {
+    contentType = null;
+  }
+
+  if (contentType) {
+    const semicolon = contentType.indexOf(";");
+    if (semicolon !== -1) {
+      contentType = contentType.substring(0, semicolon);
+    }
+  }
+
+  if (!contentType) {
+    return values["*/*"] ?? null;
+  }
+
+  const contentTypeParts = contentType.split("/");
+  let chosen: T | null = null;
+  let wildcardsUsed = 0;
+  for (const [type, value] of Object.entries(values)) {
+    const typeParts = type.split("/");
+    if (typeParts[0] === "*" || typeParts[0] === contentTypeParts[0]) {
+      if (typeParts[1] === "*" || typeParts[1] === contentTypeParts[1]) {
+        let localWildcards =
+          typeParts[0] === "*" ? 1 : 0 + typeParts[1] === "*" ? 1 : 0;
+        if (localWildcards < wildcardsUsed) {
+          chosen = value;
+          if (localWildcards === 0) {
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  return chosen;
 }

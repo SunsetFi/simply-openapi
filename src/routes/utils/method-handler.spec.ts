@@ -1,8 +1,9 @@
-import { OperationObject } from "openapi3-ts/oas31";
+import { OpenAPIObject, OperationObject } from "openapi3-ts/oas31";
 import { getMockReq as getMockReqReal, getMockRes } from "@jest-mock/express";
 import { MockRequest } from "@jest-mock/express/dist/src/request";
 import { Request, Response } from "express";
 import { NotFound, BadRequest } from "http-errors";
+import { merge } from "lodash";
 import "jest-extended";
 
 import {
@@ -20,25 +21,6 @@ import {
 import { MethodHandler } from "./method-handler";
 
 describe("MethodHandler", function () {
-  function createSut(op: OperationObject, opts: CreateRouterOptions = {}) {
-    return new MethodHandler(
-      { openapi: "3.0.0", info: { title: "Test", version: "1.0.0" } },
-      "path",
-      {},
-      "GET",
-      op,
-      {
-        ...opts,
-        handlerMiddleware: [
-          // FIXME: This is seeing headersSent false even when the below middleware sends it.
-          operationHandlerFallbackResponseMiddleware,
-          operationHandlerJsonResponseMiddleware,
-          ...(opts.handlerMiddleware ?? []),
-        ],
-      }
-    );
-  }
-
   function getMockReq(opts: MockRequest) {
     return getMockReqReal({
       url: "http://www.webpt.com",
@@ -48,18 +30,30 @@ describe("MethodHandler", function () {
     });
   }
 
-  async function testHandler(
-    op: Partial<OperationObject>,
-    handler: (...args: any) => any,
-    handlerArgs: SOCControllerMethodHandlerArg[],
-    opts: CreateRouterOptions = {},
-    mockReq: MockRequest = {}
-  ): Promise<[next: jest.Mock, json: jest.Mock, req: Request, res: Response]> {
+  interface TestHandlerOptions {
+    op: Partial<OperationObject>;
+    handler: (...args: any) => any;
+    handlerArgs: SOCControllerMethodHandlerArg[];
+    opts?: CreateRouterOptions;
+    mockReq?: MockRequest;
+    spec?: Partial<OpenAPIObject>;
+  }
+  async function testHandler({
+    op,
+    handler,
+    handlerArgs,
+    opts = {},
+    mockReq = {},
+    spec = {},
+  }: TestHandlerOptions): Promise<
+    [next: jest.Mock, json: jest.Mock, req: Request, res: Response]
+  > {
     const ext: SOCControllerMethodExtensionData = {
       controller: {},
       handler,
       handlerArgs,
     };
+
     op = {
       responses: {},
       ...op,
@@ -69,7 +63,24 @@ describe("MethodHandler", function () {
       },
     };
 
-    const sut = createSut(op as any, opts);
+    const sut = new MethodHandler(
+      merge(
+        { openapi: "3.1.0", info: { title: "Test", version: "1.0.0" } },
+        spec
+      ),
+      "path",
+      {},
+      "GET",
+      op as OperationObject,
+      {
+        ...opts,
+        handlerMiddleware: [
+          operationHandlerFallbackResponseMiddleware,
+          operationHandlerJsonResponseMiddleware,
+          ...(opts.handlerMiddleware ?? []),
+        ],
+      }
+    );
 
     const req = getMockReq(mockReq);
     const { res } = getMockRes();
@@ -92,20 +103,170 @@ describe("MethodHandler", function () {
   }
 
   describe("controller resolution", function () {
-    test.todo("resolves teh controller from custom provided options");
+    it("uses the controller resolver specified in resolveController", async function () {
+      const inputController = "input";
+      const handler = jest.fn(() => null);
+      const outputController = {
+        handler,
+      };
+      const resolver = jest.fn(() => outputController);
+      const sut = new MethodHandler(
+        { openapi: "3.1.0", info: { title: "Test", version: "1.0.0" } },
+        "path",
+        {},
+        "GET",
+        {
+          responses: {},
+          [SOCControllerMethodExtensionName]: {
+            controller: inputController,
+            handler: "handler",
+            handlerArgs: [],
+          } satisfies SOCControllerMethodExtensionData,
+        } as OperationObject,
+        {
+          resolveController: resolver,
+          handlerMiddleware: [
+            operationHandlerFallbackResponseMiddleware,
+            operationHandlerJsonResponseMiddleware,
+          ],
+        }
+      );
+
+      expect(resolver).toHaveBeenCalledWith(inputController);
+
+      const req = getMockReq({});
+      const { res } = getMockRes();
+
+      const [promise, next, json] = raceMocks(
+        (err) => {},
+        () => {
+          res.headersSent = true;
+          return res;
+        }
+      );
+
+      res.json = json;
+
+      sut.handle(req, res, next);
+
+      await promise;
+
+      expect(next).not.toHaveBeenCalled();
+      expect(handler).toHaveBeenCalled();
+    });
   });
 
   describe("handler resolution", function () {
-    test.todo("resolves the handler from strings by default");
-    test.todo("resolves the handler from custom provided options");
+    it("resolves a handler from a string", async function () {
+      const methodName = "testHandler";
+      const handler = jest.fn(() => null);
+      const inputController = {
+        [methodName]: handler,
+      };
+      const sut = new MethodHandler(
+        { openapi: "3.1.0", info: { title: "Test", version: "1.0.0" } },
+        "path",
+        {},
+        "GET",
+        {
+          responses: {},
+          [SOCControllerMethodExtensionName]: {
+            controller: inputController,
+            handler: methodName,
+            handlerArgs: [],
+          } satisfies SOCControllerMethodExtensionData,
+        } as OperationObject,
+        {
+          handlerMiddleware: [
+            operationHandlerFallbackResponseMiddleware,
+            operationHandlerJsonResponseMiddleware,
+          ],
+        }
+      );
+
+      const req = getMockReq({});
+      const { res } = getMockRes();
+
+      const [promise, next, json] = raceMocks(
+        (err) => {},
+        () => {
+          res.headersSent = true;
+          return res;
+        }
+      );
+
+      res.json = json;
+
+      sut.handle(req, res, next);
+
+      await promise;
+
+      expect(next).not.toHaveBeenCalled();
+      expect(handler).toHaveBeenCalled();
+    });
+
+    it("uses the handler resolver supplied by resolveHandler", async function () {
+      const methodName = "testHandler";
+      const handler = jest.fn(() => null);
+      const resolver = jest.fn(() => handler);
+      const inputController = {};
+      const sut = new MethodHandler(
+        { openapi: "3.1.0", info: { title: "Test", version: "1.0.0" } },
+        "path",
+        {},
+        "GET",
+        {
+          responses: {},
+          [SOCControllerMethodExtensionName]: {
+            controller: inputController,
+            handler: methodName,
+            handlerArgs: [],
+          } satisfies SOCControllerMethodExtensionData,
+        } as OperationObject,
+        {
+          resolveHandler: resolver,
+          handlerMiddleware: [
+            operationHandlerFallbackResponseMiddleware,
+            operationHandlerJsonResponseMiddleware,
+          ],
+        }
+      );
+
+      expect(resolver).toHaveBeenCalledWith(inputController, methodName);
+
+      const req = getMockReq({});
+      const { res } = getMockRes();
+
+      const [promise, next, json] = raceMocks(
+        (err) => {},
+        () => {
+          res.headersSent = true;
+          return res;
+        }
+      );
+
+      res.json = json;
+
+      sut.handle(req, res, next);
+
+      await promise;
+
+      expect(next).not.toHaveBeenCalled();
+      expect(handler).toHaveBeenCalled();
+    });
   });
 
   describe("expressMiddleware", function () {
     it("applies the middleware", async function () {
       const middleware = jest.fn((req, res, next) => next());
 
-      const [next] = await testHandler({}, () => null, [], {
-        expressMiddleware: [middleware],
+      const [next] = await testHandler({
+        op: {},
+        handler: () => null,
+        handlerArgs: [],
+        opts: {
+          expressMiddleware: [middleware],
+        },
       });
 
       expect(next).not.toHaveBeenCalled();
@@ -118,8 +279,13 @@ describe("MethodHandler", function () {
       const middleware1 = jest.fn((ctx, next) => next());
       const middleware2 = jest.fn((ctx, next) => next());
 
-      const [next] = await testHandler({}, () => null, [], {
-        handlerMiddleware: [middleware1, middleware2],
+      const [next] = await testHandler({
+        op: {},
+        handler: () => null,
+        handlerArgs: [],
+        opts: {
+          handlerMiddleware: [middleware1, middleware2],
+        },
       });
 
       expect(next).not.toHaveBeenCalled();
@@ -130,11 +296,15 @@ describe("MethodHandler", function () {
   describe("parameters", function () {
     it("supports the request parameter", async function () {
       const handler = jest.fn((arg) => null);
-      const [next] = await testHandler({}, handler, [
-        {
-          type: "request-raw",
-        },
-      ]);
+      const [next] = await testHandler({
+        op: {},
+        handler,
+        handlerArgs: [
+          {
+            type: "request-raw",
+          },
+        ],
+      });
 
       expect(next).not.toHaveBeenCalled();
 
@@ -145,25 +315,93 @@ describe("MethodHandler", function () {
 
     it("supports the response parameter", async function () {
       const handler = jest.fn((x) => null);
-      const [next] = await testHandler({}, handler, [
-        {
-          type: "response-raw",
-        },
-      ]);
+      const [next] = await testHandler({
+        op: {},
+        handler,
+        handlerArgs: [
+          {
+            type: "response-raw",
+          },
+        ],
+      });
 
       expect(next).not.toHaveBeenCalled();
       expect(handler).toHaveBeenCalledWith(expect.toSatisfy(isExpressResponse));
     });
 
     describe("openapi path parameters", function () {
+      it("resolves $ref parameters", async function () {
+        const handler = jest.fn((x) => null);
+
+        const paramName = "pathParam";
+        const paramValue = "12345";
+
+        const [next] = await testHandler({
+          spec: {
+            components: {
+              parameters: {
+                pathParam: {
+                  in: "path",
+                  name: paramName,
+                },
+              },
+            },
+          },
+          op: {
+            parameters: [
+              {
+                $ref: `#/components/parameters/${paramName}`,
+              },
+            ],
+          },
+          handler,
+          handlerArgs: [
+            {
+              type: "openapi-parameter",
+              parameterName: paramName,
+            },
+          ],
+          opts: {},
+          mockReq: { params: { [paramName]: paramValue } },
+        });
+
+        expect(next).not.toHaveBeenCalled();
+        expect(handler).toHaveBeenCalledWith(paramValue);
+      });
+
+      it("errors on unresolved $ref parameters", async function () {
+        const test = () =>
+          testHandler({
+            op: {
+              parameters: [
+                {
+                  $ref: "#/components/parameters/pathParam",
+                },
+              ],
+            },
+            handler: jest.fn(),
+            handlerArgs: [
+              {
+                type: "openapi-parameter",
+                parameterName: "pathParam",
+              },
+            ],
+          });
+
+        expect(test()).rejects.toThrowWithMessage(
+          Error,
+          /not found in operation parameters/
+        );
+      });
+
       describe("without schema", function () {
         it("gets passed a valid path parameter", async function () {
           const handler = jest.fn((x) => null);
 
           const paramValue = "pathParamValue";
 
-          const [next] = await testHandler(
-            {
+          const [next] = await testHandler({
+            op: {
               parameters: [
                 {
                   in: "path",
@@ -172,15 +410,15 @@ describe("MethodHandler", function () {
               ],
             },
             handler,
-            [
+            handlerArgs: [
               {
                 type: "openapi-parameter",
                 parameterName: "pathParam",
               },
             ],
-            {},
-            { params: { pathParam: paramValue } }
-          );
+            opts: {},
+            mockReq: { params: { pathParam: paramValue } },
+          });
 
           expect(next).not.toHaveBeenCalled();
           expect(handler).toHaveBeenCalledWith(paramValue);
@@ -189,8 +427,8 @@ describe("MethodHandler", function () {
         it("throws a not found error when the param is not present.", async function () {
           const handler = jest.fn((x) => null);
 
-          const [next] = await testHandler(
-            {
+          const [next] = await testHandler({
+            op: {
               parameters: [
                 {
                   in: "path",
@@ -199,15 +437,15 @@ describe("MethodHandler", function () {
               ],
             },
             handler,
-            [
+            handlerArgs: [
               {
                 type: "openapi-parameter",
                 parameterName: "pathParam",
               },
             ],
-            {},
-            { params: {} }
-          );
+            opts: {},
+            mockReq: { params: {} },
+          });
 
           expect(next).toHaveBeenCalled();
           expect(next.mock.calls[0][0]).toBeInstanceOf(NotFound);
@@ -215,15 +453,82 @@ describe("MethodHandler", function () {
       });
 
       describe("with schema", function () {
-        test.todo("Resolves $ref parameters");
+        it("resolves a $ref schema", async function () {
+          const handler = jest.fn((x) => null);
+
+          const paramName = "pathParam";
+          const paramValue = "12345";
+
+          const [next] = await testHandler({
+            spec: {
+              components: {
+                schemas: {
+                  testSchema: {
+                    type: "string",
+                    minLength: 5,
+                    maxLength: 5,
+                  },
+                },
+              },
+            },
+            op: {
+              parameters: [
+                {
+                  name: paramName,
+                  in: "path",
+                  schema: { $ref: "#/components/schemas/testSchema" },
+                },
+              ],
+            },
+            handler,
+            handlerArgs: [
+              {
+                type: "openapi-parameter",
+                parameterName: paramName,
+              },
+            ],
+            opts: {},
+            mockReq: { params: { [paramName]: paramValue } },
+          });
+
+          expect(next).not.toHaveBeenCalled();
+          expect(handler).toHaveBeenCalledWith(paramValue);
+        });
+
+        it("throws an error on unresolved $ref schema", async function () {
+          const test = () =>
+            testHandler({
+              op: {
+                parameters: [
+                  {
+                    name: "pathParam",
+                    in: "path",
+                    schema: { $ref: "#/components/schemas/testSchema" },
+                  },
+                ],
+              },
+              handler: jest.fn(),
+              handlerArgs: [
+                {
+                  type: "openapi-parameter",
+                  parameterName: "pathParam",
+                },
+              ],
+            });
+
+          expect(test()).rejects.toThrowWithMessage(
+            Error,
+            /Could not resolve schema reference/
+          );
+        });
 
         it("gets passed a valid path parameter", async function () {
           const handler = jest.fn((x) => null);
 
           const paramValue = "12345";
 
-          const [next] = await testHandler(
-            {
+          const [next] = await testHandler({
+            op: {
               parameters: [
                 {
                   in: "path",
@@ -233,15 +538,15 @@ describe("MethodHandler", function () {
               ],
             },
             handler,
-            [
+            handlerArgs: [
               {
                 type: "openapi-parameter",
                 parameterName: "pathParam",
               },
             ],
-            {},
-            { params: { pathParam: paramValue } }
-          );
+            opts: {},
+            mockReq: { params: { pathParam: paramValue } },
+          });
 
           expect(next).not.toHaveBeenCalled();
           expect(handler).toHaveBeenCalledWith(paramValue);
@@ -250,8 +555,8 @@ describe("MethodHandler", function () {
         it("throws a not found error when the param is not present.", async function () {
           const handler = jest.fn((x) => null);
 
-          const [next] = await testHandler(
-            {
+          const [next] = await testHandler({
+            op: {
               parameters: [
                 {
                   in: "path",
@@ -260,15 +565,15 @@ describe("MethodHandler", function () {
               ],
             },
             handler,
-            [
+            handlerArgs: [
               {
                 type: "openapi-parameter",
                 parameterName: "pathParam",
               },
             ],
-            {},
-            { params: {} }
-          );
+            opts: {},
+            mockReq: { params: {} },
+          });
           expect(next).toHaveBeenCalled();
           expect(next.mock.calls[0][0]).toBeInstanceOf(NotFound);
         });
@@ -276,8 +581,8 @@ describe("MethodHandler", function () {
         it("throws a not found error when the param is not valid.", async function () {
           const handler = jest.fn((x) => null);
 
-          const [next] = await testHandler(
-            {
+          const [next] = await testHandler({
+            op: {
               parameters: [
                 {
                   in: "path",
@@ -287,15 +592,15 @@ describe("MethodHandler", function () {
               ],
             },
             handler,
-            [
+            handlerArgs: [
               {
                 type: "openapi-parameter",
                 parameterName: "pathParam",
               },
             ],
-            {},
-            { params: { pathParam: "invalid" } }
-          );
+            opts: {},
+            mockReq: { params: { pathParam: "invalid" } },
+          });
 
           expect(next).toHaveBeenCalled();
           expect(next.mock.calls[0][0]).toBeInstanceOf(NotFound);
@@ -306,8 +611,8 @@ describe("MethodHandler", function () {
 
           const paramValue = "54";
 
-          const [next] = await testHandler(
-            {
+          const [next] = await testHandler({
+            op: {
               parameters: [
                 {
                   in: "path",
@@ -317,15 +622,15 @@ describe("MethodHandler", function () {
               ],
             },
             handler,
-            [
+            handlerArgs: [
               {
                 type: "openapi-parameter",
                 parameterName: "pathParam",
               },
             ],
-            {},
-            { params: { pathParam: paramValue } }
-          );
+            opts: {},
+            mockReq: { params: { pathParam: paramValue } },
+          });
 
           expect(next).not.toHaveBeenCalled();
           expect(handler).toHaveBeenCalledWith(Number(paramValue));
@@ -339,8 +644,8 @@ describe("MethodHandler", function () {
           const handler = jest.fn((x) => null);
           const paramValue = "queryValue";
 
-          const [next] = await testHandler(
-            {
+          const [next] = await testHandler({
+            op: {
               parameters: [
                 {
                   in: "query",
@@ -349,15 +654,15 @@ describe("MethodHandler", function () {
               ],
             },
             handler,
-            [
+            handlerArgs: [
               {
                 type: "openapi-parameter",
                 parameterName: "queryParam",
               },
             ],
-            {},
-            { query: { queryParam: paramValue } }
-          );
+            opts: {},
+            mockReq: { query: { queryParam: paramValue } },
+          });
           expect(next).not.toHaveBeenCalled();
           expect(handler).toHaveBeenCalledWith(paramValue);
         });
@@ -365,8 +670,8 @@ describe("MethodHandler", function () {
         it("provides undefined when the optional param is not present.", async function () {
           const handler = jest.fn((x) => null);
 
-          const [next] = await testHandler(
-            {
+          const [next] = await testHandler({
+            op: {
               parameters: [
                 {
                   in: "query",
@@ -375,15 +680,15 @@ describe("MethodHandler", function () {
               ],
             },
             handler,
-            [
+            handlerArgs: [
               {
                 type: "openapi-parameter",
                 parameterName: "queryParam",
               },
             ],
-            {},
-            { query: {} }
-          );
+            opts: {},
+            mockReq: { query: {} },
+          });
 
           expect(next).not.toHaveBeenCalled();
           expect(handler).toHaveBeenCalledWith(undefined);
@@ -392,8 +697,8 @@ describe("MethodHandler", function () {
         it("throws a bad request error when the required param is not present.", async function () {
           const handler = jest.fn((x) => null);
 
-          const [next] = await testHandler(
-            {
+          const [next] = await testHandler({
+            op: {
               parameters: [
                 {
                   in: "query",
@@ -403,15 +708,15 @@ describe("MethodHandler", function () {
               ],
             },
             handler,
-            [
+            handlerArgs: [
               {
                 type: "openapi-parameter",
                 parameterName: "queryParam",
               },
             ],
-            {},
-            { query: {} }
-          );
+            opts: {},
+            mockReq: { query: {} },
+          });
 
           expect(next).toHaveBeenCalled();
           expect(next.mock.calls[0][0]).toBeInstanceOf(BadRequest);
@@ -424,8 +729,8 @@ describe("MethodHandler", function () {
 
           const paramValue = "12345";
 
-          const [next] = await testHandler(
-            {
+          const [next] = await testHandler({
+            op: {
               parameters: [
                 {
                   in: "query",
@@ -435,15 +740,15 @@ describe("MethodHandler", function () {
               ],
             },
             handler,
-            [
+            handlerArgs: [
               {
                 type: "openapi-parameter",
                 parameterName: "queryParam",
               },
             ],
-            {},
-            { query: { queryParam: paramValue } }
-          );
+            opts: {},
+            mockReq: { query: { queryParam: paramValue } },
+          });
 
           expect(next).not.toHaveBeenCalled();
           expect(handler).toHaveBeenCalledWith(paramValue);
@@ -452,8 +757,8 @@ describe("MethodHandler", function () {
         it("passes undefined when the param is not present.", async function () {
           const handler = jest.fn((x) => null);
 
-          const [next] = await testHandler(
-            {
+          const [next] = await testHandler({
+            op: {
               parameters: [
                 {
                   in: "query",
@@ -462,15 +767,15 @@ describe("MethodHandler", function () {
               ],
             },
             handler,
-            [
+            handlerArgs: [
               {
                 type: "openapi-parameter",
                 parameterName: "queryParam",
               },
             ],
-            {},
-            { query: {} }
-          );
+            opts: {},
+            mockReq: { query: {} },
+          });
 
           expect(next).not.toHaveBeenCalled();
           expect(handler).toHaveBeenCalledWith(undefined);
@@ -479,8 +784,8 @@ describe("MethodHandler", function () {
         it("throws a bad request error when the required param is not present.", async function () {
           const handler = jest.fn((x) => null);
 
-          const [next] = await testHandler(
-            {
+          const [next] = await testHandler({
+            op: {
               parameters: [
                 {
                   in: "query",
@@ -490,15 +795,15 @@ describe("MethodHandler", function () {
               ],
             },
             handler,
-            [
+            handlerArgs: [
               {
                 type: "openapi-parameter",
                 parameterName: "queryParam",
               },
             ],
-            {},
-            { query: {} }
-          );
+            opts: {},
+            mockReq: { query: {} },
+          });
 
           expect(next).toHaveBeenCalled();
           expect(next.mock.calls[0][0]).toBeInstanceOf(BadRequest);
@@ -507,8 +812,8 @@ describe("MethodHandler", function () {
         it("throws a bad request error when the param is not valid.", async function () {
           const handler = jest.fn((x) => null);
 
-          const [next] = await testHandler(
-            {
+          const [next] = await testHandler({
+            op: {
               parameters: [
                 {
                   in: "query",
@@ -518,15 +823,15 @@ describe("MethodHandler", function () {
               ],
             },
             handler,
-            [
+            handlerArgs: [
               {
                 type: "openapi-parameter",
                 parameterName: "queryParam",
               },
             ],
-            {},
-            { query: { queryParam: "invalid" } }
-          );
+            opts: {},
+            mockReq: { query: { queryParam: "invalid" } },
+          });
 
           expect(next).toHaveBeenCalled();
           expect(next.mock.calls[0][0]).toBeInstanceOf(BadRequest);
@@ -537,8 +842,8 @@ describe("MethodHandler", function () {
 
           const paramValue = "54";
 
-          const [next] = await testHandler(
-            {
+          const [next] = await testHandler({
+            op: {
               parameters: [
                 {
                   in: "query",
@@ -548,15 +853,15 @@ describe("MethodHandler", function () {
               ],
             },
             handler,
-            [
+            handlerArgs: [
               {
                 type: "openapi-parameter",
                 parameterName: "queryParam",
               },
             ],
-            {},
-            { query: { queryParam: paramValue } }
-          );
+            opts: {},
+            mockReq: { query: { queryParam: paramValue } },
+          });
 
           expect(next).not.toHaveBeenCalled();
           expect(handler).toHaveBeenCalledWith(Number(paramValue));
@@ -571,17 +876,17 @@ describe("MethodHandler", function () {
 
           const bodyValue = "hello world";
 
-          const [next] = await testHandler(
-            {},
+          const [next] = await testHandler({
+            op: {},
             handler,
-            [
+            handlerArgs: [
               {
                 type: "request-body",
               },
             ],
-            {},
-            { body: bodyValue }
-          );
+            opts: {},
+            mockReq: { body: bodyValue },
+          });
 
           expect(next).not.toHaveBeenCalled();
           expect(handler).toHaveBeenCalledWith(bodyValue);
@@ -589,79 +894,104 @@ describe("MethodHandler", function () {
       });
 
       describe("with an openapi requstBody", function () {
-        test.todo("resolves $ref bodies");
+        it("resolves $ref bodies", async function () {
+          const handler = jest.fn((x) => null);
+
+          const bodyValue = "hello world";
+
+          const [next] = await testHandler({
+            spec: {
+              components: {
+                requestBodies: {
+                  testBody: {
+                    content: {
+                      "*/*": {},
+                    },
+                    required: true,
+                  },
+                },
+              },
+            },
+            op: {
+              requestBody: { $ref: "#/components/requestBodies/testBody" },
+            },
+            handler,
+            handlerArgs: [
+              {
+                type: "request-body",
+              },
+            ],
+            opts: {},
+            mockReq: { body: bodyValue },
+          });
+
+          expect(next).not.toHaveBeenCalled();
+          expect(handler).toHaveBeenCalledWith(bodyValue);
+        });
+
+        it("errors on unresolved $ref bodies", async function () {
+          const handler = jest.fn((x) => null);
+
+          const bodyValue = "hello world";
+
+          const test = () =>
+            testHandler({
+              op: {
+                requestBody: { $ref: "#/components/requestBodies/testBody" },
+              },
+              handler,
+              handlerArgs: [
+                {
+                  type: "request-body",
+                },
+              ],
+              opts: {},
+              mockReq: { body: bodyValue },
+            });
+
+          expect(test()).rejects.toThrowWithMessage(
+            Error,
+            /Could not resolve requestBody reference/
+          );
+        });
 
         it("returns bad request when a required body is not supplied", async function () {
           const handler = jest.fn((x) => null);
 
           const bodyValue = undefined;
 
-          const [next] = await testHandler(
-            {
+          const [next] = await testHandler({
+            op: {
               requestBody: {
                 required: true,
                 content: {},
               },
             },
             handler,
-            [
+            handlerArgs: [
               {
                 type: "request-body",
               },
             ],
-            {},
-            { body: bodyValue }
-          );
+            opts: {},
+            mockReq: { body: bodyValue },
+          });
 
           expect(next).toHaveBeenCalled();
           expect(next.mock.calls[0][0]).toBeInstanceOf(BadRequest);
         });
 
-        it("returns bad request when a body does not match the schema", async function () {
-          const handler = jest.fn((x) => null);
+        describe("schemas", function () {
+          it("resolves $ref schemas", async function () {
+            const handler = jest.fn((x) => null);
 
-          const bodyValue = "12345";
+            const bodyValue = "12345";
 
-          const [next] = await testHandler(
-            {
-              requestBody: {
-                required: true,
-                content: {
-                  default: {
-                    schema: {
-                      type: "string",
-                      minLength: 10,
-                    },
-                  },
-                },
-              },
-            },
-            handler,
-            [
-              {
-                type: "request-body",
-              },
-            ],
-            {},
-            { body: bodyValue }
-          );
-
-          expect(next).toHaveBeenCalled();
-          expect(next.mock.calls[0][0]).toBeInstanceOf(BadRequest);
-        });
-
-        it("provides the body when the body matches the schema", async function () {
-          const handler = jest.fn((x) => null);
-
-          const bodyValue = "12345";
-
-          const [next] = await testHandler(
-            {
-              requestBody: {
-                required: true,
-                content: {
-                  default: {
-                    schema: {
+            const [next] = await testHandler({
+              spec: {
+                components: {
+                  schemas: {
+                    bodySchema: {
                       type: "string",
                       minLength: 5,
                       maxLength: 5,
@@ -669,88 +999,201 @@ describe("MethodHandler", function () {
                   },
                 },
               },
-            },
-            handler,
-            [
-              {
-                type: "request-body",
-              },
-            ],
-            {},
-            { body: bodyValue }
-          );
-
-          expect(next).not.toHaveBeenCalled();
-          expect(handler).toHaveBeenCalledWith(bodyValue);
-        });
-
-        it("selects the right validator for the content type", async function () {
-          const handler = jest.fn((x) => null);
-
-          const bodyValue = "hello world";
-
-          const [next] = await testHandler(
-            {
-              requestBody: {
-                required: true,
-                content: {
-                  default: {
-                    schema: {
-                      type: "string",
-                    },
-                  },
-                  "foo/bar": {
-                    schema: {
-                      type: "integer",
+              op: {
+                requestBody: {
+                  required: true,
+                  content: {
+                    "*/*": {
+                      schema: { $ref: "#/components/schemas/bodySchema" },
                     },
                   },
                 },
               },
-            },
-            handler,
-            [
-              {
-                type: "request-body",
-              },
-            ],
-            {},
-            { body: bodyValue, headers: { "content-type": "foo/bar" } }
-          );
+              handler,
+              handlerArgs: [
+                {
+                  type: "request-body",
+                },
+              ],
+              opts: {},
+              mockReq: { body: bodyValue },
+            });
 
-          expect(next).toHaveBeenCalled();
-          expect(next.mock.calls[0][0]).toBeInstanceOf(BadRequest);
-        });
+            expect(next).not.toHaveBeenCalled();
+            expect(handler).toHaveBeenCalledWith(bodyValue);
+          });
 
-        it("coerces values", async function () {
-          const handler = jest.fn((x) => null);
+          it("errors on unresolved $ref schemas", async function () {
+            const handler = jest.fn((x) => null);
 
-          const bodyValue = "12345";
+            const bodyValue = "12345";
 
-          const [next] = await testHandler(
-            {
-              requestBody: {
-                required: true,
-                content: {
-                  default: {
-                    schema: {
-                      type: "integer",
+            const test = () =>
+              testHandler({
+                op: {
+                  requestBody: {
+                    required: true,
+                    content: {
+                      "text/plain": {
+                        schema: { $ref: "#/components/schemas/bodySchema" },
+                      },
+                    },
+                  },
+                },
+                handler,
+                handlerArgs: [
+                  {
+                    type: "request-body",
+                  },
+                ],
+                opts: {},
+                mockReq: { body: bodyValue },
+              });
+          });
+
+          it("returns bad request when a body does not match the schema", async function () {
+            const handler = jest.fn((x) => null);
+
+            const bodyValue = "12345";
+
+            const [next] = await testHandler({
+              op: {
+                requestBody: {
+                  required: true,
+                  content: {
+                    "*/*": {
+                      schema: {
+                        type: "string",
+                        minLength: 10,
+                      },
                     },
                   },
                 },
               },
-            },
-            handler,
-            [
-              {
-                type: "request-body",
-              },
-            ],
-            {},
-            { body: bodyValue }
-          );
+              handler,
+              handlerArgs: [
+                {
+                  type: "request-body",
+                },
+              ],
+              opts: {},
+              mockReq: { body: bodyValue },
+            });
 
-          expect(next).not.toHaveBeenCalled();
-          expect(handler).toHaveBeenCalledWith(Number(bodyValue));
+            expect(next).toHaveBeenCalled();
+            expect(next.mock.calls[0][0]).toBeInstanceOf(BadRequest);
+          });
+
+          it("provides the body when the body matches the schema", async function () {
+            const handler = jest.fn((x) => null);
+
+            const bodyValue = "12345";
+
+            const [next] = await testHandler({
+              op: {
+                requestBody: {
+                  required: true,
+                  content: {
+                    "*/*": {
+                      schema: {
+                        type: "string",
+                        minLength: 5,
+                        maxLength: 5,
+                      },
+                    },
+                  },
+                },
+              },
+              handler,
+              handlerArgs: [
+                {
+                  type: "request-body",
+                },
+              ],
+              opts: {},
+              mockReq: { body: bodyValue },
+            });
+
+            expect(next).not.toHaveBeenCalled();
+            expect(handler).toHaveBeenCalledWith(bodyValue);
+          });
+
+          it("selects the right validator for the content type", async function () {
+            const handler = jest.fn((x) => null);
+
+            const bodyValue = "hello world";
+
+            const [next] = await testHandler({
+              op: {
+                requestBody: {
+                  required: true,
+                  content: {
+                    "*/*": {
+                      schema: {
+                        type: "string",
+                      },
+                    },
+                    "foo/*": {
+                      schema: {
+                        type: "string",
+                      },
+                    },
+                    "foo/bar": {
+                      schema: {
+                        type: "integer",
+                      },
+                    },
+                  },
+                },
+              },
+              handler,
+              handlerArgs: [
+                {
+                  type: "request-body",
+                },
+              ],
+              opts: {},
+              mockReq: {
+                body: bodyValue,
+                headers: { "content-type": "foo/bar" },
+              },
+            });
+
+            expect(next).toHaveBeenCalled();
+            expect(next.mock.calls[0][0]).toBeInstanceOf(BadRequest);
+          });
+
+          it("coerces values", async function () {
+            const handler = jest.fn((x) => null);
+
+            const bodyValue = "12345";
+
+            const [next] = await testHandler({
+              op: {
+                requestBody: {
+                  required: true,
+                  content: {
+                    "*/*": {
+                      schema: {
+                        type: "integer",
+                      },
+                    },
+                  },
+                },
+              },
+              handler,
+              handlerArgs: [
+                {
+                  type: "request-body",
+                },
+              ],
+              opts: {},
+              mockReq: { body: bodyValue },
+            });
+
+            expect(next).not.toHaveBeenCalled();
+            expect(handler).toHaveBeenCalledWith(Number(bodyValue));
+          });
         });
       });
     });

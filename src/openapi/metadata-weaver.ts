@@ -47,7 +47,7 @@ export function createOpenAPIFromControllers(
   opts.operationSpecExtractors.unshift(extractSOCCustomMethodSpec);
 
   let spec: OpenAPIObject = {
-    openapi: "3.0.0",
+    openapi: "3.1.0",
     info,
     paths: {},
   };
