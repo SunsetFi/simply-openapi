@@ -3,7 +3,7 @@ import {
   OperationHandlerMiddlewareContext,
   OperationHandlerMiddlewareNextFunction,
 } from "../handler-types";
-import { nameOperationFromContext } from "../utils/operations";
+import { nameOperationFromContext } from "../utils/utils";
 
 export async function operationHandlerResponseObjectMiddleware(
   context: OperationHandlerMiddlewareContext,

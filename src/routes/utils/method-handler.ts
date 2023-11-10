@@ -12,6 +12,7 @@ import {
   RequestBodyObject,
   SchemaObject,
   ReferenceObject,
+  OpenAPIObject,
 } from "openapi3-ts/oas31";
 import { NotFound, BadRequest } from "http-errors";
 import { isObject, isFunction, mapValues, cloneDeep } from "lodash";
@@ -29,7 +30,8 @@ import ajv from "../../ajv";
 
 import { OperationHandlerMiddleware } from "../handler-types";
 
-import { MiddlewareManager } from "./middleware-manager";
+import { OperationHandlerMiddlewareManager } from "./OperationHandlerMiddlewareManager";
+import { resolveReference } from "../../utils";
 
 export interface MethodHandlerOpts {
   /**
@@ -84,6 +86,7 @@ export class MethodHandler {
   private _argumentCollectors: ArgumentCollector[];
 
   constructor(
+    private _spec: OpenAPIObject,
     private _path: string,
     private _pathItem: PathItemObject,
     private _method: string,
@@ -189,7 +192,7 @@ export class MethodHandler {
         collector(req, res)
       );
 
-      var middlewareManager = new MiddlewareManager(
+      var middlewareManager = new OperationHandlerMiddlewareManager(
         this._handler.bind(this._controller)
       );
       // TODO: Is this order right?  We want to run our local middleware closer to the handling than the external middleware.
@@ -254,7 +257,7 @@ export class MethodHandler {
   ): ArgumentCollector {
     // Find the parameter object in the OpenAPI operation
     const param: ParameterObject | undefined = op.parameters?.find(
-      (param) => "name" in param && param.name === arg.parameterName
+      (param) => resolveReference(this._spec, param).name === arg.parameterName
     ) as ParameterObject;
 
     if (!param) {
@@ -275,7 +278,9 @@ export class MethodHandler {
       }
     };
 
-    if (!param.schema) {
+    let schema = param.schema;
+
+    if (!schema) {
       return (req: Request, _res) => {
         const value =
           param.in === "path"
@@ -286,13 +291,7 @@ export class MethodHandler {
       };
     }
 
-    if (isReferenceObject(param.schema)) {
-      // TODO: Get the full openapi as a reference and resolve this
-      // TODO: Log what handler this is for.
-      throw new Error(
-        `Parameter ${arg.parameterName} has a schema reference.  References are not supported at this time.`
-      );
-    }
+    schema = resolveReference(this._spec, schema);
 
     const validationSchema = {
       type: "object",
@@ -342,7 +341,6 @@ export class MethodHandler {
     }
 
     const compileSchema = (
-      mimeType: string,
       schema: SchemaObject | ReferenceObject | undefined
     ): ValidateFunction => {
       if (schema === undefined) {
@@ -350,13 +348,8 @@ export class MethodHandler {
         return (() => true) as any;
       }
 
-      if (isReferenceObject(schema)) {
-        // TODO: Get the full openapi as a reference and resolve this
-        // TODO: Log what handler this is for.
-        throw new Error(
-          `Body type ${mimeType} has a schema reference.  References are not supported at this time.`
-        );
-      }
+      schema = resolveReference(this._spec, schema);
+
       return this._ajv.compile({
         type: "object",
         properties: { value: schema },
@@ -365,7 +358,7 @@ export class MethodHandler {
 
     const validators: Record<string, ValidateFunction> = mapValues(
       requestBody.content,
-      ({ schema }, key) => compileSchema(key, schema)
+      ({ schema }) => compileSchema(schema)
     );
 
     return (req) => {
@@ -410,8 +403,4 @@ export class MethodHandler {
       return validateObj.value;
     };
   }
-}
-
-function isReferenceObject<T>(obj: any): obj is ReferenceObject {
-  return "$ref" in obj;
 }

@@ -1,5 +1,5 @@
 import {
-  SOCControllerMetadata,
+  SOCCommonControllerMetadata,
   SOCControllerMethodMetadata,
   mergeSOCControllerMetadata,
   mergeSOCControllerMethodMetadata,
@@ -16,7 +16,7 @@ export function UseRequestMiddleware(
 ): MethodDecorator | ClassDecorator {
   return (target: any, propertyKey?: string | symbol | undefined) => {
     function middlewareInjector<
-      T extends SOCControllerMetadata | SOCControllerMethodMetadata,
+      T extends SOCCommonControllerMetadata | SOCControllerMethodMetadata,
     >(originalMetadata: T): T {
       const expressMiddleware = [...(originalMetadata.expressMiddleware ?? [])];
       if (opts.order === "before") {
@@ -53,7 +53,7 @@ export function UseHandlerMiddleware(
 ): MethodDecorator | ClassDecorator {
   return (target: any, propertyKey?: string | symbol | undefined) => {
     function middlewareInjector<
-      T extends SOCControllerMetadata | SOCControllerMethodMetadata,
+      T extends SOCCommonControllerMetadata | SOCControllerMethodMetadata,
     >(originalMetadata: T): T {
       const handlerMiddleware = [...(originalMetadata.handlerMiddleware ?? [])];
       if (opts.order === "before") {

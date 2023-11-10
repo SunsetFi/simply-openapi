@@ -8,6 +8,6 @@ const config: Config.InitialOptions = {
   transform: {
     "^.+\\.tsx?$": ["ts-jest", { tsconfig: "<rootDir>/src/tsconfig.json" }],
   },
-  setupFilesAfterEnv: ["jest-extended/all"],
+  setupFilesAfterEnv: ["reflect-metadata", "jest-extended/all"],
 };
 export default config;

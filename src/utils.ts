@@ -1,4 +1,9 @@
-import { PathItemObject } from "openapi3-ts/dist/oas30";
+import Ptr from "@json-schema-spec/json-pointer";
+import {
+  OpenAPIObject,
+  ReferenceObject,
+  PathItemObject,
+} from "openapi3-ts/oas31";
 import { JsonValue } from "type-fest";
 
 export const requestMethods = [
@@ -45,4 +50,21 @@ export function getInstanceMethods(instance: object) {
   } while ((currentObj = Object.getPrototypeOf(currentObj)));
 
   return methods;
+}
+
+export function resolveReference<T extends object>(
+  spec: OpenAPIObject,
+  value: T | ReferenceObject
+): T {
+  if ("$ref" in value) {
+    if (!value["$ref"].startsWith("#")) {
+      throw new Error(
+        `Cannot resolve external reference "${value["$ref"]}" in the OpenAPI schema.`
+      );
+    }
+    const ptr = Ptr.parse(value["$ref"].substring(1));
+    return ptr.eval(spec);
+  }
+
+  return value;
 }

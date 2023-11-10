@@ -250,6 +250,7 @@ const mySpec = {
 Our controller to bind to `/v1/add` would then look like this.
 
 ```ts
+@BoundController()
 class MyController {
   @BindOperation("post-add")
   getHelloWorld(@BindParam("a") a: number, @BindParam("b") b: number): number {

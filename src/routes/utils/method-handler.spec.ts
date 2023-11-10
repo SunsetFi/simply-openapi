@@ -20,15 +20,22 @@ import { MockRequest } from "@jest-mock/express/dist/src/request";
 
 describe("MethodHandler", function () {
   function createSut(op: OperationObject, opts: CreateRouterOptions = {}) {
-    return new MethodHandler("path", {}, "GET", op, {
-      ...opts,
-      handlerMiddleware: [
-        // FIXME: This is seeing headersSent false even when the below middleware sends it.
-        operationHandlerFallbackResponseMiddleware,
-        operationHandlerJsonResponseMiddleware,
-        ...(opts.handlerMiddleware ?? []),
-      ],
-    });
+    return new MethodHandler(
+      { openapi: "3.0.0", info: { title: "Test", version: "1.0.0" } },
+      "path",
+      {},
+      "GET",
+      op,
+      {
+        ...opts,
+        handlerMiddleware: [
+          // FIXME: This is seeing headersSent false even when the below middleware sends it.
+          operationHandlerFallbackResponseMiddleware,
+          operationHandlerJsonResponseMiddleware,
+          ...(opts.handlerMiddleware ?? []),
+        ],
+      }
+    );
   }
 
   function getMockReq(opts: MockRequest) {
@@ -82,6 +89,15 @@ describe("MethodHandler", function () {
 
     return [next, json, req, res];
   }
+
+  describe("controller resolution", function () {
+    test.todo("resolves teh controller from custom provided options");
+  });
+
+  describe("handler resolution", function () {
+    test.todo("resolves the handler from strings by default");
+    test.todo("resolves the handler from custom provided options");
+  });
 
   describe("expressMiddleware", function () {
     it("applies the middleware", async function () {
@@ -198,6 +214,8 @@ describe("MethodHandler", function () {
       });
 
       describe("with schema", function () {
+        test.todo("Resolves $ref parameters");
+
         it("gets passed a valid path parameter", async function () {
           const handler = jest.fn((x) => null);
 
@@ -570,6 +588,8 @@ describe("MethodHandler", function () {
       });
 
       describe("with an openapi requstBody", function () {
+        test.todo("resolves $ref bodies");
+
         it("returns bad request when a required body is not supplied", async function () {
           const handler = jest.fn((x) => null);
 

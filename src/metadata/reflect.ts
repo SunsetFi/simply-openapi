@@ -5,9 +5,9 @@ function hasReflectMetadata() {
 }
 
 export function getMetadata<T>(
-  object: any,
   key: string | symbol,
-  methodName?: string | symbol
+  object: Object,
+  targetKey?: string | symbol
 ): T | undefined {
   if (!hasReflectMetadata()) {
     throw new Error(
@@ -15,14 +15,14 @@ export function getMetadata<T>(
     );
   }
 
-  return Reflect.getMetadata(key, object, methodName);
+  return Reflect.getMetadata(key, object, targetKey);
 }
 
 export function defineMetadata(
   key: string | symbol,
   value: any,
-  target: any,
-  methodName?: string | symbol
+  target: Object,
+  targetKey?: string | symbol
 ) {
   if (!hasReflectMetadata()) {
     throw new Error(
@@ -30,14 +30,14 @@ export function defineMetadata(
     );
   }
 
-  Reflect.defineMetadata(key, value, target, methodName);
+  Reflect.defineMetadata(key, value, target, targetKey);
 }
 
 export function mergeMetadata(
   key: string | symbol,
   value: any,
-  target: any,
-  methodName?: string | symbol
+  target: Object,
+  targetKey?: string | symbol
 ) {
   if (!hasReflectMetadata()) {
     throw new Error(
@@ -45,8 +45,8 @@ export function mergeMetadata(
     );
   }
 
-  let metadata = getMetadata(key, target, methodName);
+  let metadata = getMetadata(key, target, targetKey);
 
   metadata = merge(metadata, value);
-  Reflect.defineMetadata(key, metadata, target, methodName);
+  Reflect.defineMetadata(key, metadata, target, targetKey);
 }

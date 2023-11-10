@@ -4,7 +4,7 @@ import {
   OperationHandlerMiddlewareNextFunction,
 } from "../handler-types";
 
-export class MiddlewareManager {
+export class OperationHandlerMiddlewareManager {
   private middlewares: OperationHandlerMiddleware[] = [];
   private coreFunction: (...args: any[]) => any;
 

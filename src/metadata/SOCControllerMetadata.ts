@@ -7,7 +7,27 @@ import { Middleware } from "../types";
 
 const SOCControllerMetadataKey = "soc:controller";
 
-export interface SOCControllerMetadata {
+export interface SOCCommonControllerMetadata {
+  /**
+   * Middleware for transforming the arguments or response of the handler.
+   */
+  handlerMiddleware?: OperationHandlerMiddleware[];
+
+  /**
+   * Express middleware to run around the handler.
+   */
+  expressMiddleware?: Middleware[];
+}
+
+export interface SOCBoundControllerMetadata
+  extends SOCCommonControllerMetadata {
+  type: "bound";
+}
+
+export interface SOCCustomControllerMetadata
+  extends SOCCommonControllerMetadata {
+  type: "custom";
+
   /**
    * The path of this controller.  This will prefix all method paths.
    */
@@ -22,17 +42,11 @@ export interface SOCControllerMetadata {
    * A partial fragment of an OpenAPI operation object this controller contributes.
    */
   openapiFragment?: PartialDeep<OpenAPIObject>;
-
-  /**
-   * Middleware for transforming the arguments or response of the handler.
-   */
-  handlerMiddleware?: OperationHandlerMiddleware[];
-
-  /**
-   * Express middleware to run around the handler.
-   */
-  expressMiddleware?: Middleware[];
 }
+
+export type SOCControllerMetadata =
+  | SOCBoundControllerMetadata
+  | SOCCustomControllerMetadata;
 
 export function mergeSOCControllerMetadata(
   target: any,

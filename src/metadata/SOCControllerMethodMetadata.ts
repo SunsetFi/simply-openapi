@@ -21,14 +21,14 @@ export interface SOCControllerMethodCommonMetadata {
   expressMiddleware?: Middleware[];
 }
 
-export interface SOCBondControllerMethodMetadata
+export interface SOCBoundControllerMethodMetadata
   extends SOCControllerMethodCommonMetadata {
   operationId: string;
   args: SOCControllerMethodHandlerArg[];
 }
 export function isSOCBoundControllerMethodMetadata(
   metadata: SOCControllerMethodMetadata
-): metadata is SOCBondControllerMethodMetadata {
+): metadata is SOCBoundControllerMethodMetadata {
   return "operationId" in metadata;
 }
 
@@ -46,7 +46,7 @@ export function isSOCCustomControllerMethodMetadata(
 }
 
 export type SOCControllerMethodMetadata =
-  | SOCBondControllerMethodMetadata
+  | SOCBoundControllerMethodMetadata
   | SOCCustomControllerMethodMetadata;
 
 export function setSOCControllerMethodMetadata(
