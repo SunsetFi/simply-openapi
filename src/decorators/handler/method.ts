@@ -3,9 +3,9 @@ import { PartialDeep } from "type-fest";
 
 import { RequestMethod } from "../../types";
 import {
-  getSECControllerMethodMetadata,
-  isSECBoundControllerMethodMetadata,
-  mergeSECControllerMethodMetadata,
+  getSOCControllerMethodMetadata,
+  isSOCBoundControllerMethodMetadata,
+  mergeSOCControllerMethodMetadata,
 } from "../../metadata";
 
 export type MethodDecorator = (
@@ -27,8 +27,8 @@ function createMethodDecorator(method: RequestMethod): MethodDecorator {
         );
       }
 
-      const existing = getSECControllerMethodMetadata(target, methodName);
-      if (existing && isSECBoundControllerMethodMetadata(existing)) {
+      const existing = getSOCControllerMethodMetadata(target, methodName);
+      if (existing && isSOCBoundControllerMethodMetadata(existing)) {
         throw new Error(
           `Method handler ${String(
             methodName
@@ -44,7 +44,7 @@ function createMethodDecorator(method: RequestMethod): MethodDecorator {
         );
       }
 
-      mergeSECControllerMethodMetadata(
+      mergeSOCControllerMethodMetadata(
         target,
         { path, method, operationFragment: operationFragment ?? {} },
         methodName

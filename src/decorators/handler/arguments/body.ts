@@ -5,7 +5,7 @@ import {
   ContentObject,
 } from "openapi3-ts/oas31";
 
-import { mergeSECControllerMethodMetadata } from "../../../metadata";
+import { mergeSOCControllerMethodMetadata } from "../../../metadata";
 
 import { setMethodParameterType } from "./utils";
 
@@ -45,7 +45,7 @@ export function Body(
     }
 
     // Warn: We might be a bound method.  In which case, operationFragment will be totally ignored.
-    mergeSECControllerMethodMetadata(
+    mergeSOCControllerMethodMetadata(
       target,
       {
         operationFragment: {

@@ -5,10 +5,10 @@ import { NotFound, BadRequest } from "http-errors";
 import "jest-extended";
 
 import {
-  SECControllerMethodExtensionData,
-  SECControllerMethodExtensionName,
-  SECControllerMethodHandlerArg,
-} from "../../openapi/extensions/SECControllerMethod";
+  SOCControllerMethodExtensionData,
+  SOCControllerMethodExtensionName,
+  SOCControllerMethodHandlerArg,
+} from "../../openapi/extensions/SOCControllerMethod";
 
 import { MethodHandler } from "./method-handler";
 import { CreateRouterOptions } from "../router-factory";
@@ -43,11 +43,11 @@ describe("MethodHandler", function () {
   async function testHandler(
     op: Partial<OperationObject>,
     handler: (...args: any) => any,
-    handlerArgs: SECControllerMethodHandlerArg[],
+    handlerArgs: SOCControllerMethodHandlerArg[],
     opts: CreateRouterOptions = {},
     mockReq: MockRequest = {}
   ): Promise<[next: jest.Mock, json: jest.Mock, req: Request, res: Response]> {
-    const ext: SECControllerMethodExtensionData = {
+    const ext: SOCControllerMethodExtensionData = {
       controller: {},
       handler,
       handlerArgs,
@@ -55,9 +55,9 @@ describe("MethodHandler", function () {
     op = {
       responses: {},
       ...op,
-      [SECControllerMethodExtensionName]: {
+      [SOCControllerMethodExtensionName]: {
         ...ext,
-        ...op[SECControllerMethodExtensionName],
+        ...op[SOCControllerMethodExtensionName],
       },
     };
 

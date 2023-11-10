@@ -1,8 +1,8 @@
 import {
-  SECControllerMetadata,
-  SECControllerMethodMetadata,
-  mergeSECControllerMetadata,
-  mergeSECControllerMethodMetadata,
+  SOCControllerMetadata,
+  SOCControllerMethodMetadata,
+  mergeSOCControllerMetadata,
+  mergeSOCControllerMethodMetadata,
 } from "../metadata";
 import { OperationHandlerMiddleware } from "../routes";
 import { Middleware } from "../types";
@@ -16,7 +16,7 @@ export function UseRequestMiddleware(
 ): MethodDecorator | ClassDecorator {
   return (target: any, propertyKey?: string | symbol | undefined) => {
     function middlewareInjector<
-      T extends SECControllerMetadata | SECControllerMethodMetadata,
+      T extends SOCControllerMetadata | SOCControllerMethodMetadata,
     >(originalMetadata: T): T {
       const expressMiddleware = [...(originalMetadata.expressMiddleware ?? [])];
       if (opts.order === "before") {
@@ -31,13 +31,13 @@ export function UseRequestMiddleware(
     }
 
     if (propertyKey) {
-      mergeSECControllerMethodMetadata(
+      mergeSOCControllerMethodMetadata(
         target,
         (metadata) => middlewareInjector(metadata),
         propertyKey
       );
     } else {
-      mergeSECControllerMetadata(target, (metadata) =>
+      mergeSOCControllerMetadata(target, (metadata) =>
         middlewareInjector(metadata)
       );
     }
@@ -53,7 +53,7 @@ export function UseHandlerMiddleware(
 ): MethodDecorator | ClassDecorator {
   return (target: any, propertyKey?: string | symbol | undefined) => {
     function middlewareInjector<
-      T extends SECControllerMetadata | SECControllerMethodMetadata,
+      T extends SOCControllerMetadata | SOCControllerMethodMetadata,
     >(originalMetadata: T): T {
       const handlerMiddleware = [...(originalMetadata.handlerMiddleware ?? [])];
       if (opts.order === "before") {
@@ -68,13 +68,13 @@ export function UseHandlerMiddleware(
     }
 
     if (propertyKey) {
-      mergeSECControllerMethodMetadata(
+      mergeSOCControllerMethodMetadata(
         target,
         (metadata) => middlewareInjector(metadata),
         propertyKey
       );
     } else {
-      mergeSECControllerMetadata(target, (metadata) =>
+      mergeSOCControllerMetadata(target, (metadata) =>
         middlewareInjector(metadata)
       );
     }

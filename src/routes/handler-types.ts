@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { OperationObject, PathItemObject } from "openapi3-ts/oas31";
 
-import { SECControllerMethodHandlerArg } from "../openapi";
+import { SOCControllerMethodHandlerArg } from "../openapi";
 
 export interface OperationHandlerMiddlewareContext {
   /**
@@ -35,7 +35,7 @@ export interface OperationHandlerMiddlewareContext {
    * An array of tupples containing the argument to pass to the handler in index 0, and a description
    * of the argument in index 1.
    */
-  handlerArgs: [any, SECControllerMethodHandlerArg][];
+  handlerArgs: [any, SOCControllerMethodHandlerArg][];
 
   /**
    * The express request.

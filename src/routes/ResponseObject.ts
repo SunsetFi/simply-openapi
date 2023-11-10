@@ -27,7 +27,7 @@ export interface CookieSettings {
   httpOnly?: boolean;
 
   /**
-   * Convenient option for setting the expiry time relative to the current time in milliseconds.
+   * Convenient option for setting the expiry time relative to the current time in millisoconds.
    */
   maxAge?: number;
 
@@ -39,7 +39,7 @@ export interface CookieSettings {
   /**
    * Marks the cookie to be used with HTTPS only.
    */
-  secure?: boolean;
+  socure?: boolean;
 
   /**
    * Indicates if the cookie should be signed.
@@ -48,7 +48,7 @@ export interface CookieSettings {
 
   /**
    * Value of the “SameSite” Set-Cookie attribute.
-   * More information at https://tools.ietf.org/html/draft-ietf-httpbis-cookie-same-site-00#section-4.1.1.
+   * More information at https://tools.ietf.org/html/draft-ietf-httpbis-cookie-same-site-00#soction-4.1.1.
    */
   sameSite?: boolean | "lax" | "strict" | "none";
 }

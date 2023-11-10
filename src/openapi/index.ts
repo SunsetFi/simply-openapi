@@ -1,3 +1,5 @@
 export * from "./extensions";
-export * from "./strip-sec";
-export * from "./weaver";
+
+export * from "./metadata-weaver";
+export * from "./strip-soc";
+export * from "./types";

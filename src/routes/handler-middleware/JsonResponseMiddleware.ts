@@ -1,6 +1,6 @@
 import HttpStatusCodes from "http-status-codes";
 
-import { isJson } from "../../types";
+import { isJson } from "../../utils";
 
 import { nameOperationFromContext } from "../utils/operations";
 import {

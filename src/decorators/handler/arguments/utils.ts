@@ -1,13 +1,13 @@
-import { mergeSECControllerMethodMetadata } from "../../../metadata";
-import { SECControllerMethodHandlerArg } from "../../../openapi";
+import { mergeSOCControllerMethodMetadata } from "../../../metadata";
+import { SOCControllerMethodHandlerArg } from "../../../openapi";
 
 export function setMethodParameterType(
   target: any,
   propertyKey: string | symbol,
   parameterIndex: number,
-  arg: SECControllerMethodHandlerArg
+  arg: SOCControllerMethodHandlerArg
 ) {
-  mergeSECControllerMethodMetadata(
+  mergeSOCControllerMethodMetadata(
     target,
     (previous) => {
       const args = [...(previous.args ?? [])];

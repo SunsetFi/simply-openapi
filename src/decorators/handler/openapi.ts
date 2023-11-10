@@ -2,8 +2,8 @@ import { OperationObject } from "openapi3-ts/oas31";
 import { PartialDeep } from "type-fest";
 
 import {
-  getSECControllerMetadata,
-  mergeSECControllerMethodMetadata,
+  getSOCControllerMetadata,
+  mergeSOCControllerMethodMetadata,
 } from "../../metadata";
 
 /**
@@ -16,7 +16,7 @@ export function OpenAPIOperation(fragment: PartialDeep<OperationObject>) {
       throw new Error(`@OpenAPIOperation() must be applied to a method.`);
     }
 
-    mergeSECControllerMethodMetadata(
+    mergeSOCControllerMethodMetadata(
       target,
       { operationFragment: fragment },
       methodName
@@ -34,7 +34,7 @@ export function BindOperation(operationId: string) {
       throw new Error(`@BindOperation() must be applied to a method.`);
     }
 
-    const existing = getSECControllerMetadata(target);
+    const existing = getSOCControllerMetadata(target);
     if (existing?.path) {
       throw new Error(
         `Controller ${target.constructor.name} method ${String(
@@ -51,6 +51,6 @@ export function BindOperation(operationId: string) {
       );
     }
 
-    mergeSECControllerMethodMetadata(target, { operationId }, methodName);
+    mergeSOCControllerMethodMetadata(target, { operationId }, methodName);
   };
 }

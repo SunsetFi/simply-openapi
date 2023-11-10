@@ -8,8 +8,9 @@ import { Entries } from "type-fest";
 import { pick } from "lodash";
 import AJV from "ajv";
 
-import { SECControllerMethodExtensionName } from "../openapi";
-import { RequestMethod, requestMethods } from "../types";
+import { SOCControllerMethodExtensionName } from "../openapi";
+import { RequestMethod } from "../types";
+import { requestMethods } from "../utils";
 import ajv from "../ajv";
 
 import { MethodHandler } from "./utils/method-handler";
@@ -45,7 +46,7 @@ export interface CreateRouterOptions {
    * The first factory to produce a non-null handler will be used.
    *
    * In addition to factories specified here, the last factory will always be one that produces a handler based on
-   * the x-sec-controller-method extensions.
+   * the x-simply-controller-method extensions.
    */
   handlerFactories?: OperationHandlerFactory[];
 
@@ -99,7 +100,7 @@ class RouterFromSpecFactory {
     }
 
     // Factories run in order, so our default should be last.
-    _opts.handlerFactories.push(this._secOperationHandlerFactory.bind(this));
+    _opts.handlerFactories.push(this._socOperationHandlerFactory.bind(this));
 
     if (!_opts.expressMiddleware) {
       _opts.expressMiddleware = [];
@@ -139,11 +140,11 @@ class RouterFromSpecFactory {
     return router;
   }
 
-  private _secOperationHandlerFactory(
+  private _socOperationHandlerFactory(
     operation: OperationObject,
     ctx: RouteCreationContext
   ): RequestHandler | null {
-    const metadata = operation[SECControllerMethodExtensionName];
+    const metadata = operation[SOCControllerMethodExtensionName];
     if (!metadata) {
       return null;
     }

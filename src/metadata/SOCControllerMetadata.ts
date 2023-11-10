@@ -5,9 +5,9 @@ import { defineMetadata, getMetadata, mergeMetadata } from "./reflect";
 import { OperationHandlerMiddleware } from "../routes";
 import { Middleware } from "../types";
 
-const SECControllerMetadataKey = "sec:controller";
+const SOCControllerMetadataKey = "soc:controller";
 
-export interface SECControllerMetadata {
+export interface SOCControllerMetadata {
   /**
    * The path of this controller.  This will prefix all method paths.
    */
@@ -34,31 +34,31 @@ export interface SECControllerMetadata {
   expressMiddleware?: Middleware[];
 }
 
-export function mergeSECControllerMetadata(
+export function mergeSOCControllerMetadata(
   target: any,
   metadata:
-    | PartialDeep<SECControllerMetadata>
+    | PartialDeep<SOCControllerMetadata>
     | ((
-        previous: PartialDeep<SECControllerMetadata>
-      ) => PartialDeep<SECControllerMetadata>)
+        previous: PartialDeep<SOCControllerMetadata>
+      ) => PartialDeep<SOCControllerMetadata>)
 ) {
   if (typeof metadata === "function") {
-    metadata = metadata(getSECControllerMetadata(target) ?? {});
-    defineMetadata(SECControllerMetadataKey, metadata, target);
+    metadata = metadata(getSOCControllerMetadata(target) ?? {});
+    defineMetadata(SOCControllerMetadataKey, metadata, target);
   } else {
-    mergeMetadata(SECControllerMetadataKey, metadata, target);
+    mergeMetadata(SOCControllerMetadataKey, metadata, target);
   }
 }
 
-export function setSECControllerMetadata(
+export function setSOCControllerMetadata(
   target: any,
-  metadata: SECControllerMetadata
+  metadata: SOCControllerMetadata
 ) {
-  defineMetadata(SECControllerMetadataKey, metadata, target);
+  defineMetadata(SOCControllerMetadataKey, metadata, target);
 }
 
-export function getSECControllerMetadata(
+export function getSOCControllerMetadata(
   target: any
-): SECControllerMetadata | null {
-  return getMetadata(SECControllerMetadataKey, target) ?? null;
+): SOCControllerMetadata | null {
+  return getMetadata(SOCControllerMetadataKey, target) ?? null;
 }

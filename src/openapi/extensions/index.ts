@@ -1,1 +1,1 @@
-export * from "./SECControllerMethod";
+export * from "./SOCControllerMethod";

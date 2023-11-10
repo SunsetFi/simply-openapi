@@ -1,2 +1,2 @@
-export * from "./SECControllerMetadata";
-export * from "./SECControllerMethodMetadata";
+export * from "./SOCControllerMetadata";
+export * from "./SOCControllerMethodMetadata";

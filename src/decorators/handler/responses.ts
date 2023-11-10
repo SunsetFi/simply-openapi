@@ -1,7 +1,7 @@
 import { ResponseObject, ContentObject, SchemaObject } from "openapi3-ts/oas31";
 import { Response } from "express";
 
-import { mergeSECControllerMethodMetadata } from "../../metadata";
+import { mergeSOCControllerMethodMetadata } from "../../metadata";
 
 /**
  * Documents a possible response from this operation.
@@ -20,7 +20,7 @@ export function Response(
     }
 
     // Warn: We might be a bound method.  In which case, operationFragment will be totally ignored.
-    mergeSECControllerMethodMetadata(
+    mergeSOCControllerMethodMetadata(
       target,
       {
         operationFragment: {

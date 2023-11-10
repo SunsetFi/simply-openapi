@@ -18,12 +18,12 @@ import { isObject, isFunction, mapValues, cloneDeep } from "lodash";
 import AJV, { ValidateFunction } from "ajv";
 
 import {
-  SECControllerMethodExtensionData,
-  SECControllerMethodExtensionName,
-  SECControllerMethodHandlerArg,
-  SECControllerMethodHandlerBodyArg,
-  SECControllerMethodHandlerParameterArg,
-  validateSECControllerMethodExtensionData,
+  SOCControllerMethodExtensionData,
+  SOCControllerMethodExtensionName,
+  SOCControllerMethodHandlerArg,
+  SOCControllerMethodHandlerBodyArg,
+  SOCControllerMethodHandlerParameterArg,
+  validateSOCControllerMethodExtensionData,
 } from "../../openapi";
 import ajv from "../../ajv";
 
@@ -38,14 +38,14 @@ export interface MethodHandlerOpts {
   ajv?: AJV;
 
   /**
-   * Resolve a controller specified in the x-sec-controller-method extension into a controller object.
+   * Resolve a controller specified in the x-simply-controller-method extension into a controller object.
    * @param controller The controller to resolve.
    * @returns The resolved controller
    */
   resolveController?: (controller: object | string | symbol) => object;
 
   /**
-   * Resolve a method specified in the x-sec-controller-method extension into a method.
+   * Resolve a method specified in the x-simply-controller-method extension into a method.
    * @param controller The controller containing the method to resolve.
    * @param method The method to resolve.
    * @returns The resolved method
@@ -80,7 +80,7 @@ export class MethodHandler {
   private _controller: object;
   private _handler: Function;
 
-  private _extensionData: SECControllerMethodExtensionData;
+  private _extensionData: SOCControllerMethodExtensionData;
   private _argumentCollectors: ArgumentCollector[];
 
   constructor(
@@ -134,21 +134,21 @@ export class MethodHandler {
     }
 
     this._extensionData = _operation[
-      SECControllerMethodExtensionName
-    ] as SECControllerMethodExtensionData;
+      SOCControllerMethodExtensionName
+    ] as SOCControllerMethodExtensionData;
 
     if (!this._extensionData) {
       throw new Error(
-        `Operation ${_operation.operationId} is missing the ${SECControllerMethodExtensionName} extension.`
+        `Operation ${_operation.operationId} is missing the ${SOCControllerMethodExtensionName} extension.`
       );
     }
 
-    if (!validateSECControllerMethodExtensionData(this._extensionData)) {
+    if (!validateSOCControllerMethodExtensionData(this._extensionData)) {
       throw new Error(
         `Operation ${
           _operation.operationId
-        } has an invalid ${SECControllerMethodExtensionName} extension: ${this._ajv.errorsText(
-          validateSECControllerMethodExtensionData.errors
+        } has an invalid ${SOCControllerMethodExtensionName} extension: ${this._ajv.errorsText(
+          validateSOCControllerMethodExtensionData.errors
         )}}`
       );
     }
@@ -230,7 +230,7 @@ export class MethodHandler {
   }
 
   private _buildArgumentCollector(
-    arg: SECControllerMethodHandlerArg,
+    arg: SOCControllerMethodHandlerArg,
     op: OperationObject
   ): ArgumentCollector {
     // TODO: Parameter interceptor.
@@ -249,7 +249,7 @@ export class MethodHandler {
   }
 
   private _buildParameterCollector(
-    arg: SECControllerMethodHandlerParameterArg,
+    arg: SOCControllerMethodHandlerParameterArg,
     op: OperationObject
   ): ArgumentCollector {
     // Find the parameter object in the OpenAPI operation
@@ -326,7 +326,7 @@ export class MethodHandler {
   }
 
   private _buildBodyCollector(
-    arg: SECControllerMethodHandlerBodyArg,
+    arg: SOCControllerMethodHandlerBodyArg,
     op: OperationObject
   ): ArgumentCollector {
     const requestBody = op.requestBody as RequestBodyObject | undefined;

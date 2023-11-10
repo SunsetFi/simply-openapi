@@ -5,9 +5,9 @@ No heavy frameworks, no IOC, just a simple robust express controller library usi
 Simply OpenAPI Controllers is an OpenAPI-First controller library. It produces fully robust method handlers on controllers by consuming an OpenAPI 3.1 specification and calling your handlers
 with all data pre-validated and coerced according to your specification.
 
-Don't have OpenAPI specs? No problem! SEC also provides decorators for your classes and methods that will create the openapi spec for you according to your handler usage and declaration.
+Don't have OpenAPI specs? No problem! SOC also provides decorators for your classes and methods that will create the openapi spec for you according to your handler usage and declaration.
 
-SEC is designed to be a single-purpose library. It solves the use case of producing robust controllers and methods for web request handling, and does not dictate any design patterns beyond what it needs to do its job.  
+SOC is designed to be a single-purpose library. It solves the use case of producing robust controllers and methods for web request handling, and does not dictate any design patterns beyond what it needs to do its job.  
 It is highly extensible, supporting both the typical express middleware, plus its own middleware for method handlers, allowing you to integrate with the method creation for customizing both the inputs and outputs of your controller methods.
 
 At its heart, this library provides two complementary systems:
@@ -149,17 +149,54 @@ At the basics, express middleware is supported out of the box. Not only can you 
 
 A middleware system for handlers is provided, allowing both the inputs to your methods as well as the method responses to be tweaked, transformed, and handled with ease. As with express middlewares, these middlewares can be injected at the global level, class level, and individual methods.
 
-SEC even uses this middleware system for its own core features, meaning any middleware you provide can override any default behavior of SEC. Need specialized handling of your method response to your express response? Need customized error handling? Want to return DTOs from your methods and serialize them dependent on request content types? No problem! Provide a handler middleware you are good to go!
+SOC even uses this middleware system for its own core features, meaning any middleware you provide can override any default behavior of SOC. Need specialized handling of your method response to your express response? Need customized error handling? Want to return DTOs from your methods and serialize them dependent on request content types? No problem! Provide a handler middleware you are good to go!
 
 ## Usage
 
-There are 3 ways to use SEC:
+There are 2 ways to use SOC:
+
+- [Produce both routers and OpenAPI schema from controllers and handler methods using decorators](#producing-routers-and-openapi-specs-from-controller-and-handler-decorators)
+  Use this method if you do not wish to write your own OpenAPI specification and want to focus on writing handlers.
 
 - [Produce routers from predefined OpenAPI schema and annotated controllers](#producing-routers-from-existing-openapi-specs)
   Use this method if you want to have strongly declared API contracts that are auditable from outside the code.
-- [Produce both routers and OpenAPI schema from controllers and handler methods using decorators](#producing-routers-and-openapi-specs-from-controller-and-handler-decorators)
-  Use this method if you do not wish to write your own OpenAPI specification and want to focus on writing handlers.
-- [Produce routers from OpenAPI schema adorned with `x-sec` extensions](#producing-routers-from-openapi-spec-annotated-with-the-sec-extensions)
+
+### Producing Routers and OpenAPI specs from controller and handler decorators
+
+If you want to focus on the code and leave the OpenAPI specs to be auto-generated, you can produce both the routers and the specs entirely from decorators adorning Controller classes
+
+```ts
+@Controller("/v1", { tags: ["Math"] })
+class MyController {
+  @Post("/add", { summary: "Adds two numbers", tags: ["Addition"] })
+  @JsonResonse(200, "The sum of the two numbers", { type: "number" })
+  addNumbers(
+    @QueryParam("a", { type: "number" }) a: number,
+    @QueryParam("b", { type: "number" }) b: number
+  ) {
+    return a + b;
+  }
+}
+```
+
+This is sufficient to create a fully formed OpenAPI specification with the same level of detail as the manually-written OpenAPI spec above.
+If desired, even more detail could be added through additional decorators. See [Decorator reference](#decorator-reference).
+
+Since simply-openapi-controllers derives its routers from openapi, we must first create our OpenAPI specification from our controllers:
+
+```ts
+const openApiSpec = createOpenAPIFromControllers({ title: "My Application" }, [
+  new MyController(),
+]);
+```
+
+Once you have produced the spec, creating a router to handle it done the same way as the manual example:
+
+```ts
+const routerFromSpec = createRouterFromSpec(annotatedSpec);
+```
+
+You are now ready to use the router in your app. See [Using the produced router](#using-the-produced-router).
 
 ### Producing routers from existing OpenAPI specs
 
@@ -167,7 +204,7 @@ When you have OpenAPI specs already written and you just want to attach controll
 This decorator allows you to attach controller methods to arbitrary OpenAPI Operation by their operation id.
 
 When using this decorator, it is important to use `@BindParam` and `@BindBody` decorators instead of the typical `@PathParam`, `@QueryParam`, and `@Body` decorators, as the latter will try to redefine
-openapi specs. If this mixup occurs, SEC will throw an error.
+openapi specs. If this mixup occurs, SOC will throw an error.
 
 As an example, lets take this OpenAPI specification and make a handler for it.
 
@@ -221,8 +258,8 @@ class MyController {
 }
 ```
 
-Note how the types of both parameters are numbers, not strings. This is because the OpenAPI doc typed the query parameters as numbers, and SEC obediently casted the values to javascript numeric values before passing it to the handler function.
-If this method was to be called with non-numeric query values, SEC's handler will return a 400 Bad Request explaining the error, and the handler will not be called.
+Note how the types of both parameters are numbers, not strings. This is because the OpenAPI doc typed the query parameters as numbers, and SOC obediently casted the values to javascript numeric values before passing it to the handler function.
+If this method was to be called with non-numeric query values, SOC's handler will return a 400 Bad Request explaining the error, and the handler will not be called.
 
 Also note that the response is typed as number. You may optionally enforce this at runtime. See [Enforcing return types at runtime](#enforcing-return-types-at-runtime)
 
@@ -233,14 +270,14 @@ First, we need to take our openapi spec and annotate it with the extensions that
 ```ts
 import { attachBoundControllersToOpenAPI } from "simply-openapi-controllers";
 
-const annotatedSpec = attachBoundControllersToOpenAPI(mySpec, [
+const annotatedSpec = addendOpenAPIFromControllers(mySpec, [
   new MyController(),
 ]);
 ```
 
 This will create a new OpenAPI spec that contains metadata describing our controllers and handlers. This will be a fully valid OpenAPI specification, with added extended data describing the controllers and methods on each operation that the controller wants to handle.
 
-Note that during this process, if one of your controllers asks for an operation or binding parameter that is not defined in the openapi spec, an error will be thrown describing the issue.
+Note that the annotated spec will be a new deep copy from the original spec, so this function is safe to use on specs you do not wish to modify.
 
 Now that we have our annotated spec, we can create an express router that implements it:
 
@@ -250,143 +287,17 @@ const routerFromSpec = createRouterFromSpec(annotatedSpec);
 
 You are now ready to use the router in your app. See [Using the produced router](#using-the-produced-router).
 
-### Producing Routers and OpenAPI specs from controller and handler decorators
-
-If you want to focus on the code and leave the OpenAPI specs to be auto-generated, you can produce both the routers and the specs entirely from decorators adorning Controller classes
-
-```ts
-@Controller("/v1", { tags: ["Math"] })
-class MyController {
-  @Post("/add", { summary: "Adds two numbers", tags: ["Addition"] })
-  @JsonResonse(200, "The sum of the two numbers", { type: "number" })
-  addNumbers(
-    @QueryParam("a", { type: "number" }) a: number,
-    @QueryParam("b", { type: "number" }) b: number
-  ) {
-    return a + b;
-  }
-}
-```
-
-This is sufficient to create a fully formed OpenAPI specification with the same level of detail as the manually-written OpenAPI spec above.
-If desired, even more detail could be added through additional decorators. See [Decorator reference](#decorator-reference).
-
-Since simply-openapi-controllers derives its routers from openapi, we must first create our OpenAPI specification from our controllers:
-
-```ts
-const openApiSpec = createOpenAPIFromControllers([new MyController()]);
-```
-
-Note that if you are integrating into an existing app and you want to combine your new controllers with already existing OpenApi specs, you can produce only the path object with `createOpenAPIPathsFromControllers`.
-
-Once you have produced the spec, creating a router to handle it done the same way as the manual example:
-
-```ts
-const routerFromSpec = createRouterFromSpec(annotatedSpec);
-```
-
-You are now ready to use the router in your app. See [Using the produced router](#using-the-produced-router).
-
-### Producing routers from OpenAPI spec annotated with the SEC extensions
-
-Despite all the decorators, the root spec SEC operates on is an OpenAPI specification object. It is possible to write these entirely by hand if so desired.
-
-All metadata needed by SEC to wire up controllers is stored on the `x-sec-controller-method` extension on Operation objects.
-
-TODO: More friendly walkthrough on setting this up. Don't just dump typescript typings here.
-
-The `x-sec-controller-method` extension contains an object with the following properties:
-
-```ts
-export interface SECControllerMethodExtensionData {
-  /**
-   * The class instance of the controller class.
-   * If this is a string or symbol, then the resolveController option must be passed to createRouterFromSpec to successfully create a controller.
-   */
-  controller: object | string | symbol;
-
-  /**
-   * The handler method of the controller class.
-   * If this is a string or symbol, then createRouterFromSpec will attempt to find a method by that key on the controller.
-   * If other behavior is desired, this may be overridden by passing the resolveHandler option to createRouterFromSpec.
-   */
-  handler: Function | string | symbol;
-
-  /**
-   * An array of objects describing the purpose of each argument to the handler function.
-   * The order if this array should match the order of the parameters in the function that they pertain to.
-   */
-  handlerArgs?: SECControllerMethodHandlerArg[];
-
-  /**
-   * Middleware for wrapping the handler function.
-   * These can replace parameters and reinterpret the handler's results as needed.
-   *
-   * These middlewares are responsible for sending the return value of the handler to the response.
-   * While defaults are provided to do this, you can customize the behavior of the responses by overriding this behavior here.
-   */
-  handlerMiddleware?: OperationHandlerMiddleware[];
-
-  /**
-   * Express middleware to run around the handler.
-   */
-  expressMiddleware?: Middleware[];
-}
-
-/**
- * Metadata about the argument of a controller method handler function.
- */
-export type SECControllerMethodHandlerArg =
-  | SECControllerMethodHandlerParameterArg
-  | SECControllerMethodHandlerBodyArg
-  | SECControllerMethodHandlerRequestArg
-  | SECControllerMethodHandlerResponseArg;
-
-/**
- * Describes an argument that pulls data from an OpenAPI parameter.
- */
-export interface SECControllerMethodHandlerParameterArg {
-  type: "openapi-parameter";
-
-  /**
-   * The name of the OpenAPI parameter in the operation to insert into this argument.
-   */
-  parameterName: string;
-}
-
-/**
- * Describes an argument that pulls data from the request body.
- */
-export interface SECControllerMethodHandlerBodyArg {
-  type: "request-body";
-}
-
-/**
- * Describes an argument that expects the HTTP request.
- */
-export interface SECControllerMethodHandlerRequestArg {
-  type: "request-raw";
-}
-
-/**
- * Describes an argument that expects the HTTP response.
- */
-export interface SECControllerMethodHandlerResponseArg {
-  type: "response-raw";
-}
-```
-
 ## Using the produced router
 
-The created router is entirely self-contained, and all SEC features should work out of the box simply by connecting the router to your express app. As SEC is focused only on the request handler level, it provides no requirements on how you create or customize your express app.
+The created router is entirely self-contained, and all SOC features should work out of the box simply by connecting the router to your express app. As SOC is focused only on the request handler level, it provides no requirements on how you create or customize your express app.
 
-However, despite these defaults, you are still able to influence SEC's behavior by supplanting its middleware with your own.
+However, despite these defaults, you are still able to influence SOC's behavior by supplanting its middleware with your own.
 
 ### Overriding the default express middleware
 
-The routers produced by SEC are miniamlistic and only cover mapping openapi requests to handlers and provide the minimial middleware to do this job.
+The routers produced by SOC are miniamlistic and only cover mapping openapi requests to handlers and provide the minimial middleware to do this job.
 
-The middlewares SEC defaults within its handlers are:
+The middlewares SOC defaults within its handlers are:
 
 - body-parser.json({strict: true})
 - error handling for errors produced by the `http-errors` npm library, or those providing similar properties on thrown error objects.
@@ -396,7 +307,7 @@ You are free to override both of these middleware choices.
 - body-parser is wrapped in a check that will not parse the body if req.body is already set, so as to not inferfere with your own body-parsing. You can supply your own middleware to override this.
 - error handling can be overriden by providing your own error handler to the expressMiddleware option of createRouterFromSpec
 
-Note that the built in error handler will use console.error to record errors, which is not ideal if you have your own logging framework. You can override this behavior by providing your own logger to SEC's middleware creator.
+Note that the built in error handler will use console.error to record errors, which is not ideal if you have your own logging framework. You can override this behavior by providing your own logger to SOC's middleware creator.
 
 ```ts
 import pino from "pino";
@@ -420,8 +331,8 @@ For best results, you should consider providing your own middleware for various 
 
 You have a few choices of where to add your middleware:
 
-- Globablly at your express app, or any router that preceeds the SEC router.
-- In the SEC router, using the `expressMiddleware` option of `createRouterFromSpec`
+- Globablly at your express app, or any router that preceeds the SOC router.
+- In the SOC router, using the `expressMiddleware` option of `createRouterFromSpec`
 - Targeting whole controllers, using the @UseRequestMiddleware() decorator
 - Targeting individual handler methods, using the @UseRequestMiddleware() decorator.
 
@@ -460,7 +371,7 @@ class MyController {
 }
 ```
 
-## Escaping SEC and using raw express requests and responses
+## Escaping SOC and using raw express requests and responses
 
 Accessing express requests and responses directly can cause complications for development, as it complicates unit testing and hides the declarative requirements of your handler function.
 
@@ -480,7 +391,7 @@ class MyController {
 Of particular note, if you plan on handling the response completely, ensure your method returns either undefined or a promise resolving to undefined. Passing results from
 your handler will be intercepted by handler middleware and interpreted as endpoint results to be sent to the client.
 
-All default result handlers in SEC interpret an undefined result to mean that the response was already handled and no further work is needed. However, there is a safty fallback in place
+All default result handlers in SOC interpret an undefined result to mean that the response was already handled and no further work is needed. However, there is a safty fallback in place
 where if a function returns undefined, the very last handler middleware will ensure that res.headersSent is true. If not, it will throw an error. This is to guard against accidentally
 not sending any response at all and leaving the request hanging. If this behavior is undesired, pass `ensureResponsesHandled: false` to the createRouterFromSpec function options.
 
