@@ -1,0 +1,6 @@
+- Review all places in the spec where $ref may be used; implement and test it.
+  - Missing path items!
+  - See predefined locations for #/components
+- Instead of taking AJV, take a validator factory. Let users use something other than AJV.
+- make a pipeline for parameters. Validation, coersion, and whatever else users want
+  - This should support making custom parameter types, to replace the function-based custom decorators of SEC 1
