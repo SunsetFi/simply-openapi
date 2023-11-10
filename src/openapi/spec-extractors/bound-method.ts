@@ -18,16 +18,10 @@ export const extractSOCBoundMethodSpec: OpenAPIObjectExtractor = (
   controller: ControllerInstance,
   methodName: string | symbol
 ) => {
-  // Controller is optional here
-  const controllerMetadata = getSOCControllerMetadata(controller) ?? {
-    type: "bound",
-  };
-  const metadata = getSOCControllerMethodMetadata(controller, methodName);
-  if (!metadata) {
-    return undefined;
-  }
+  const controllerMetadata = getSOCControllerMetadata(controller);
 
-  if (!isSOCBoundControllerMethodMetadata(metadata)) {
+  const metadata = getSOCControllerMethodMetadata(controller, methodName);
+  if (!metadata || !isSOCBoundControllerMethodMetadata(metadata)) {
     return undefined;
   }
 

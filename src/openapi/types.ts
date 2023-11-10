@@ -6,7 +6,7 @@ export type OpenAPIObjectExtractor = (
   controller: ControllerInstance,
   methodName: string | symbol
 ) =>
-  | OpenAPIObject
+  | Partial<OpenAPIObject>
   | ((operation: OpenAPIObject) => OpenAPIObject)
   | null
   | undefined;

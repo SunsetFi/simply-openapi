@@ -46,14 +46,14 @@ export function createOpenAPIFromControllers(
   // Push ours first, so others can override us.
   opts.operationSpecExtractors.unshift(extractSOCCustomMethodSpec);
 
-  const spec: OpenAPIObject = {
+  let spec: OpenAPIObject = {
     openapi: "3.0.0",
     info,
     paths: {},
   };
 
   for (const controller of controllers) {
-    addOpenAPIPathsFromController(
+    spec = addOpenAPIPathsFromController(
       controller,
       spec,
       opts.operationSpecExtractors ?? [],
@@ -87,7 +87,7 @@ export function addendOpenAPIFromControllers(
   spec = cloneDeep(spec);
   spec.paths = spec.paths ?? {};
   for (const controller of controllers) {
-    addOpenAPIPathsFromController(
+    spec = addOpenAPIPathsFromController(
       controller,
       spec,
       opts.operationSpecExtractors ?? [],
@@ -103,12 +103,10 @@ function addOpenAPIPathsFromController(
   spec: OpenAPIObject,
   extractors: OpenAPIObjectExtractor[],
   ignoreEmptyControllers: boolean
-) {
-  const controllerMetadata = getSOCControllerMetadata(controller);
-
+): OpenAPIObject {
   let boundAtLeastOneMethod = false;
   for (const method of getInstanceMethods(controller)) {
-    extractors.reduce((spec, extractor) => {
+    spec = extractors.reduce((spec, extractor) => {
       const result = extractor(controller, method.name);
       if (result) {
         boundAtLeastOneMethod = true;
@@ -122,13 +120,11 @@ function addOpenAPIPathsFromController(
     }, spec);
   }
 
-  if (
-    !ignoreEmptyControllers &&
-    !controllerMetadata &&
-    !boundAtLeastOneMethod
-  ) {
+  if (!ignoreEmptyControllers && !boundAtLeastOneMethod) {
     throw new Error(
-      `Controller ${controller.constructor.name} has no controller decorator and no openapi methods were found.  Please ensure this is a valid controller, or set the ignoreEmptyControllers option to true.`
+      `Controller ${controller.constructor.name} has no SOC-decorated methods.  Please ensure this is a valid controller, or set the ignoreEmptyControllers option to true.`
     );
   }
+
+  return spec;
 }

@@ -1,4 +1,4 @@
-import { OpenAPIObject, OperationObject, PathsObject } from "openapi3-ts/oas31";
+import { OpenAPIObject, OperationObject } from "openapi3-ts/oas31";
 import { get, merge } from "lodash";
 import { set } from "lodash/fp";
 
@@ -20,20 +20,23 @@ export const extractSOCCustomMethodSpec: OpenAPIObjectExtractor = (
   methodName: string | symbol
 ) => {
   const controllerMetadata = getSOCControllerMetadata(controller);
+
   const metadata = getSOCControllerMethodMetadata(controller, methodName);
-  if (
-    !controllerMetadata ||
-    controllerMetadata.type !== "custom" ||
-    !metadata
-  ) {
+  if (!metadata || !isSOCCustomControllerMethodMetadata(metadata)) {
     return undefined;
   }
 
-  if (!isSOCCustomControllerMethodMetadata(metadata)) {
-    return undefined;
+  if (controllerMetadata && controllerMetadata.type === "bound") {
+    throw new Error(
+      `Cannot extract OpenAPI spec for method ${String(
+        methodName
+      )} of controller ${
+        controller.constructor.name
+      } because it is a bound controller and the method is not a bound operation method.`
+    );
   }
 
-  const path = joinUrlPaths(controllerMetadata.path ?? "/", metadata.path);
+  const path = joinUrlPaths(controllerMetadata?.path ?? "/", metadata.path);
 
   const extension: SOCControllerMethodExtensionData = {
     controller,
@@ -52,6 +55,7 @@ export const extractSOCCustomMethodSpec: OpenAPIObjectExtractor = (
 
   return (spec: OpenAPIObject) => {
     const op: OperationObject = {
+      operationId: `${controller.constructor.name}.${String(methodName)}`,
       ...merge(
         {},
         get(spec, ["paths", path, metadata.method], {}),
@@ -59,7 +63,7 @@ export const extractSOCCustomMethodSpec: OpenAPIObjectExtractor = (
       ),
       tags: [
         ...get(spec, ["paths", path, metadata.method, "tags"], []),
-        ...(controllerMetadata.tags ?? []),
+        ...(controllerMetadata?.tags ?? []),
         ...(metadata.operationFragment.tags ?? []),
       ],
       [SOCControllerMethodExtensionName]: extension,

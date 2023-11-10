@@ -1,4 +1,4 @@
-import { OpenAPIObject } from "openapi3-ts/oas31";
+import { OpenAPIObject, OperationObject } from "openapi3-ts/oas31";
 import { merge } from "lodash";
 import { Request, Response, NextFunction } from "express";
 import "jest-extended";
@@ -16,9 +16,9 @@ import {
   OperationHandlerMiddlewareNextFunction,
 } from "../../routes";
 
-import { extractSOCBoundMethodSpec } from "./bound-method";
+import { extractSOCCustomMethodSpec } from "./custom-method";
 
-describe("extractSOCBoundMethodSpec", function () {
+describe("extractSOCCustomMethodSpec", function () {
   function createTestInstance(
     methodMetadata: SOCControllerMethodMetadata | null,
     controllerMetadata: SOCControllerMetadata | null
@@ -64,7 +64,7 @@ describe("extractSOCBoundMethodSpec", function () {
       controllerMetadata
     );
 
-    let result = extractSOCBoundMethodSpec(controller, methodName);
+    let result = extractSOCCustomMethodSpec(controller, methodName);
     if (typeof result === "function") {
       result = result(finalInput);
     }
@@ -80,67 +80,47 @@ describe("extractSOCBoundMethodSpec", function () {
     expect(invoke(null)[0]).toBeUndefined();
   });
 
-  it("no-ops when a custom method metadata is present", function () {
+  it("no-ops when a bound method metadata is present", function () {
     const metadata: SOCControllerMethodMetadata = {
-      path: "/test",
-      method: "get",
+      operationId: "foobar",
       args: [],
-      operationFragment: {},
     };
 
     expect(invoke(metadata)[0]).toBeUndefined();
   });
 
-  it("errors when the operation does not exist", function () {
-    const operationId = "foobar";
-
+  it("throws if a custom method is present on a bound controller", function () {
     const test = () =>
       invoke(
         {
-          operationId,
+          method: "get",
+          path: "/foo",
           args: [],
+          operationFragment: {},
         },
-        null,
         {
-          paths: {
-            "/foo": {
-              get: {
-                operationId: "notfoobar",
-                responses: {},
-              },
-            },
-          },
+          type: "bound",
         }
       );
 
-    expect(test).toThrowWithMessage(Error, new RegExp(operationId));
+    expect(test).toThrowWithMessage(Error, /is a bound controller/);
   });
 
-  it("decorates a bound operation", function () {
-    const operationId = "foobar";
+  it("creates the extension for a custom method", function () {
+    const path = "/foo";
+    const method = "get";
 
-    const [result, controller, methodName] = invoke(
-      {
-        operationId,
-        args: [],
-      },
-      null,
-      {
-        paths: {
-          "/foo": {
-            get: {
-              operationId,
-              responses: {},
-            },
-          },
-        },
-      }
-    );
+    const [result, controller, methodName] = invoke({
+      method,
+      path,
+      args: [],
+      operationFragment: {},
+    });
 
     expect(result).toMatchObject({
       paths: {
-        "/foo": {
-          get: {
+        [path]: {
+          [method]: {
             [SOCControllerMethodExtensionName]: {
               controller,
               handler: methodName,
@@ -154,165 +134,101 @@ describe("extractSOCBoundMethodSpec", function () {
     });
   });
 
-  describe("parameters", function () {
-    it("decorates bound parameters", function () {
-      const operationId = "foobar";
-      const parameterName = "param1";
+  it("applies the fragment", function () {
+    const path = "/foo";
+    const method = "get";
 
-      const [result, controller, methodName] = invoke(
-        {
-          operationId,
-          args: [
-            {
-              type: "openapi-parameter",
-              parameterName,
-            },
-          ],
-        },
-        null,
-        {
-          paths: {
-            "/foo": {
-              get: {
-                operationId,
-                parameters: [
-                  {
-                    name: parameterName,
-                    in: "query",
-                  },
-                ],
-                responses: {},
-              },
-            },
+    const operationFragment: Partial<OperationObject> = {
+      tags: ["foo"],
+    };
+
+    const [result] = invoke({
+      method,
+      path,
+      args: [],
+      operationFragment,
+    });
+
+    expect(result).toMatchObject({
+      paths: {
+        [path]: {
+          [method]: {
+            ...operationFragment,
           },
+        },
+      },
+    });
+  });
+
+  describe("tags", function () {
+    it("applies controller tags", function () {
+      const path = "/foo";
+      const method = "get";
+      const tags = ["tag"];
+
+      const operationFragment: Partial<OperationObject> = {};
+
+      const [result] = invoke(
+        {
+          method,
+          path,
+          args: [],
+          operationFragment,
+        },
+        {
+          type: "custom",
+          tags,
         }
       );
 
       expect(result).toMatchObject({
         paths: {
-          "/foo": {
-            get: {
-              [SOCControllerMethodExtensionName]: {
-                controller,
-                handler: methodName,
-                handlerArgs: [
-                  {
-                    type: "openapi-parameter",
-                    parameterName,
-                  },
-                ],
-                expressMiddleware: [],
-                handlerMiddleware: [],
-              },
+          [path]: {
+            [method]: {
+              tags,
             },
           },
         },
       });
     });
 
-    it("decorates bound referenced parameters", function () {
-      const operationId = "foobar";
-      const parameterName = "param1";
+    it("merges controller and method tags", function () {
+      const path = "/foo";
+      const method = "get";
+      const controllerTags = ["controller-tag"];
+      const methodTags = ["method-tag"];
 
-      const [result, controller, methodName] = invoke(
+      const operationFragment: Partial<OperationObject> = {
+        tags: methodTags,
+      };
+
+      const [result] = invoke(
         {
-          operationId,
-          args: [
-            {
-              type: "openapi-parameter",
-              parameterName,
-            },
-          ],
+          method,
+          path,
+          args: [],
+          operationFragment,
         },
-        null,
         {
-          paths: {
-            "/foo": {
-              get: {
-                operationId,
-                parameters: [
-                  {
-                    $ref: `#/components/parameters/${parameterName}`,
-                  },
-                ],
-                responses: {},
-              },
-            },
-          },
-          components: {
-            parameters: {
-              [parameterName]: {
-                name: parameterName,
-                in: "query",
-              },
-            },
-          },
+          type: "custom",
+          tags: controllerTags,
         }
       );
 
       expect(result).toMatchObject({
         paths: {
-          "/foo": {
-            get: {
-              [SOCControllerMethodExtensionName]: {
-                controller,
-                handler: methodName,
-                handlerArgs: [
-                  {
-                    type: "openapi-parameter",
-                    parameterName,
-                  },
-                ],
-                expressMiddleware: [],
-                handlerMiddleware: [],
-              },
+          [path]: {
+            [method]: {
+              tags: [...controllerTags, ...methodTags],
             },
           },
         },
       });
-    });
-
-    it("throws when a bound parameter is not found", function () {
-      const operationId = "foobar";
-      const parameterName = "param1";
-
-      const testFunc = () =>
-        invoke(
-          {
-            operationId,
-            args: [
-              {
-                type: "openapi-parameter",
-                parameterName,
-              },
-            ],
-          },
-          null,
-          {
-            paths: {
-              "/foo": {
-                get: {
-                  operationId,
-                  parameters: [
-                    {
-                      name: "anotherparam",
-                      in: "query",
-                    },
-                  ],
-                  responses: {},
-                },
-              },
-            },
-          }
-        );
-
-      expect(testFunc).toThrowWithMessage(Error, new RegExp(parameterName));
     });
   });
 
   describe("express middleware", function () {
     it("configures controller middleware", function () {
-      const operationId = "foobar";
       const middleware = (
         req: Request,
         res: Response,
@@ -321,18 +237,19 @@ describe("extractSOCBoundMethodSpec", function () {
 
       const [result] = invoke(
         {
-          operationId,
+          method: "get",
+          path: "/foo",
           args: [],
+          operationFragment: {},
         },
         {
-          type: "bound",
+          type: "custom",
           expressMiddleware: [middleware],
         },
         {
           paths: {
             "/foo": {
               get: {
-                operationId,
                 responses: {},
               },
             },
@@ -363,8 +280,10 @@ describe("extractSOCBoundMethodSpec", function () {
 
       const [result] = invoke(
         {
-          operationId,
+          method: "get",
+          path: "/foo",
           args: [],
+          operationFragment: {},
           expressMiddleware: [middleware],
         },
         null,
@@ -408,12 +327,14 @@ describe("extractSOCBoundMethodSpec", function () {
 
       const [result] = invoke(
         {
-          operationId,
+          method: "get",
+          path: "/foo",
           args: [],
+          operationFragment: {},
           expressMiddleware: [methodMiddleware],
         },
         {
-          type: "bound",
+          type: "custom",
           expressMiddleware: [controllerMiddleware],
         },
         {
@@ -452,11 +373,13 @@ describe("extractSOCBoundMethodSpec", function () {
 
       const [result] = invoke(
         {
-          operationId,
+          method: "get",
+          path: "/foo",
           args: [],
+          operationFragment: {},
         },
         {
-          type: "bound",
+          type: "custom",
           handlerMiddleware: [middleware],
         },
         {
@@ -493,8 +416,10 @@ describe("extractSOCBoundMethodSpec", function () {
 
       const [result] = invoke(
         {
-          operationId,
+          method: "get",
+          path: "/foo",
           args: [],
+          operationFragment: {},
           handlerMiddleware: [middleware],
         },
         null,
@@ -536,12 +461,14 @@ describe("extractSOCBoundMethodSpec", function () {
 
       const [result] = invoke(
         {
-          operationId,
+          method: "get",
+          path: "/foo",
           args: [],
+          operationFragment: {},
           handlerMiddleware: [methodMiddleware],
         },
         {
-          type: "bound",
+          type: "custom",
           handlerMiddleware: [controllerMiddleware],
         },
         {
