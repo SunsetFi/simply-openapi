@@ -328,14 +328,14 @@ const router = createRouterFromSpec(openApiSpec, {
 For best results, you should consider providing your own middleware for various purposes:
 
 - Handling arbitrary non-http errors (ideally at the express application level)
-- authentication and security (either globally, across the spec with the expressMiddleware option, or per-controler or per-method with the @UseRequestMiddleware() decorator)
+- authentication and security (either globally, across the spec with the expressMiddleware option, or per-controler or per-method with the @UseExpressMiddleware() decorator)
 
 You have a few choices of where to add your middleware:
 
 - Globablly at your express app, or any router that preceeds the SOC router.
 - In the SOC router, using the `expressMiddleware` option of `createRouterFromSpec`
-- Targeting whole controllers, using the @UseRequestMiddleware() decorator
-- Targeting individual handler methods, using the @UseRequestMiddleware() decorator.
+- Targeting whole controllers, using the @UseExpressMiddleware() decorator
+- Targeting individual handler methods, using the @UseExpressMiddleware() decorator.
 
 ## Returning status codes, headers, cookies, and non-json bodies.
 

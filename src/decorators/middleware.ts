@@ -7,12 +7,12 @@ import {
 import { OperationHandlerMiddleware } from "../routes";
 import { Middleware } from "../types";
 
-export interface UseRequestMiddlewareOpts {
+export interface UseExpressMiddlewareOpts {
   order?: "before" | "after";
 }
-export function UseRequestMiddleware(
+export function UseExpressMiddleware(
   middleware: Middleware,
-  opts: UseRequestMiddlewareOpts = { order: "after" }
+  opts: UseExpressMiddlewareOpts = { order: "after" }
 ): MethodDecorator | ClassDecorator {
   return (target: any, propertyKey?: string | symbol | undefined) => {
     function middlewareInjector<
@@ -49,7 +49,7 @@ export interface UseHandlerMiddlewareOpts {
 }
 export function UseHandlerMiddleware(
   middleware: OperationHandlerMiddleware,
-  opts: UseRequestMiddlewareOpts = { order: "after" }
+  opts: UseExpressMiddlewareOpts = { order: "after" }
 ): MethodDecorator | ClassDecorator {
   return (target: any, propertyKey?: string | symbol | undefined) => {
     function middlewareInjector<

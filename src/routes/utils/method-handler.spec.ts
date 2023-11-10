@@ -1,5 +1,6 @@
 import { OperationObject } from "openapi3-ts/oas31";
 import { getMockReq as getMockReqReal, getMockRes } from "@jest-mock/express";
+import { MockRequest } from "@jest-mock/express/dist/src/request";
 import { Request, Response } from "express";
 import { NotFound, BadRequest } from "http-errors";
 import "jest-extended";
@@ -10,13 +11,13 @@ import {
   SOCControllerMethodHandlerArg,
 } from "../../openapi/extensions/SOCControllerMethod";
 
-import { MethodHandler } from "./method-handler";
 import { CreateRouterOptions } from "../router-factory";
 import {
   operationHandlerFallbackResponseMiddleware,
   operationHandlerJsonResponseMiddleware,
 } from "../handler-middleware";
-import { MockRequest } from "@jest-mock/express/dist/src/request";
+
+import { MethodHandler } from "./method-handler";
 
 describe("MethodHandler", function () {
   function createSut(op: OperationObject, opts: CreateRouterOptions = {}) {
