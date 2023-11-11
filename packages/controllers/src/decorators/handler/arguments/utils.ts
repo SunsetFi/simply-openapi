@@ -1,6 +1,10 @@
 import { ParameterObject, BaseParameterObject } from "openapi3-ts/oas31";
 
-import { mergeSOCControllerMethodMetadata } from "../../../metadata";
+import {
+  SOCCustomControllerMethodMetadata,
+  isSOCCustomControllerMethodMetadata,
+  mergeSOCControllerMethodMetadata,
+} from "../../../metadata";
 import { SOCControllerMethodHandlerArg } from "../../../openapi";
 
 export function createParameterDecorator(
@@ -17,19 +21,25 @@ export function createParameterDecorator(
       throw new Error(`@QueryParam() must be applied to a method.`);
     }
 
-    // Warn: We might be a bound method.  In which case, operationFragment will be totally ignored.
     mergeSOCControllerMethodMetadata(
       target,
-      {
-        operationFragment: {
-          parameters: [
-            {
-              in: paramIn,
-              name,
-              ...paramObject,
-            },
-          ],
-        },
+      (previous) => {
+        // We cannot ensure the type as param decorators are resolved before method decorators.
+        // If this is a bound method, we might be writing totally useless operationFragments.
+        const metadata = previous as SOCCustomControllerMethodMetadata;
+        const parameters = [...(metadata.operationFragment?.parameters ?? [])];
+        parameters[parameterIndex] = {
+          in: paramIn,
+          name,
+          ...paramObject,
+        };
+        return {
+          ...previous,
+          operationFragment: {
+            ...metadata.operationFragment,
+            parameters,
+          },
+        };
       },
       propertyKey
     );

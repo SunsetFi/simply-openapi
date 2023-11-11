@@ -1,4 +1,8 @@
-import { mergeSOCControllerMethodMetadata } from "../../metadata";
+import {
+  SOCCustomControllerMetadata,
+  getSOCControllerMetadata,
+  mergeSOCControllerMethodMetadata,
+} from "../../metadata";
 
 /**
  * Marks this method has handling a specific OpenAPI operation by its operation id.
@@ -12,6 +16,13 @@ export function BindOperation(operationId: string) {
 
     // Early on we considered not letting this be used on path controllers, but I am allowing it for cases
     // where mixed external and internal openapi definitions are desired.
+
+    const metadata = getSOCControllerMetadata(target);
+    if (metadata && (metadata as SOCCustomControllerMetadata).openapiFragment) {
+      throw new Error(
+        `@BindOperation() cannot be used on methods that also are bound to produce OpenAPI specs.  Did you try to mix it with @OpenAPIOperation, @PathParam, @QueryParam, or a method decorator?`
+      );
+    }
 
     mergeSOCControllerMethodMetadata(target, { operationId }, methodName);
   };
