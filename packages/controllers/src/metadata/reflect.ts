@@ -1,7 +1,24 @@
-import { merge } from "lodash";
-
 function hasReflectMetadata() {
   return typeof Reflect.getMetadata === "function";
+}
+
+export function getConstructorMetadata<T>(
+  key: string | symbol,
+  object: Object,
+  targetKey?: string | symbol
+): T | undefined {
+  const prototype = (object as any).prototype;
+  if (prototype && prototype.constructor === object) {
+    // Assume its the class constructor itself.
+    // Note: It is not enough to check for an instance with target.constructor as some constructors themselves have constructors.
+    return getMetadata(key, object, targetKey);
+  } else if (object.constructor) {
+    // Assume its an instance
+    return getMetadata(key, object.constructor, targetKey);
+  } else {
+    // No idea what this is, just set it.
+    return getMetadata(key, object, targetKey);
+  }
 }
 
 export function getMetadata<T>(
@@ -30,6 +47,26 @@ export function getMetadata<T>(
   return metadata;
 }
 
+export function defineConstructorMetadata<T>(
+  key: string | symbol,
+  value: any,
+  object: Object,
+  targetKey?: string | symbol
+) {
+  const prototype = (object as any).prototype;
+  if (prototype && prototype.constructor === object) {
+    // Assume its the class constructor itself.
+    // Note: It is not enough to check for an instance with target.constructor as some constructors themselves have constructors.
+    defineMetadata(key, value, object, targetKey);
+  } else if (object.constructor) {
+    // Assume its an instance or prototype
+    defineMetadata(key, value, object.constructor, targetKey);
+  } else {
+    // No idea what this is, just get it.
+    defineMetadata(key, value, object, targetKey);
+  }
+}
+
 export function defineMetadata(
   key: string | symbol,
   value: any,
@@ -43,22 +80,4 @@ export function defineMetadata(
   }
 
   Reflect.defineMetadata(key, value, target, targetKey);
-}
-
-export function mergeMetadata(
-  key: string | symbol,
-  value: any,
-  target: Object,
-  targetKey?: string | symbol
-) {
-  if (!hasReflectMetadata()) {
-    throw new Error(
-      "Reflect.defineMetadata is not available. Please install the reflect-metadata package."
-    );
-  }
-
-  let metadata = getMetadata(key, target, targetKey);
-
-  metadata = merge(metadata, value);
-  Reflect.defineMetadata(key, metadata, target, targetKey);
 }

@@ -1,10 +1,11 @@
 import { PartialDeep } from "type-fest";
 import { OperationObject } from "openapi3-ts/dist/oas31";
+import { merge } from "lodash";
 
 import { SOCControllerMethodHandlerArg } from "../openapi";
 import { Middleware, RequestMethod } from "../types";
 
-import { defineMetadata, getMetadata, mergeMetadata } from "./reflect";
+import { defineConstructorMetadata, getConstructorMetadata } from "./reflect";
 import { OperationHandlerMiddleware } from "../routes";
 
 const SOCControllerMethodMetadataKey = "soc:controller-method";
@@ -54,7 +55,12 @@ export function setSOCControllerMethodMetadata(
   metadata: SOCControllerMethodMetadata,
   methodName: string | symbol
 ) {
-  defineMetadata(SOCControllerMethodMetadataKey, metadata, target, methodName);
+  defineConstructorMetadata(
+    SOCControllerMethodMetadataKey,
+    metadata,
+    target,
+    methodName
+  );
 }
 
 export function mergeSOCControllerMethodMetadata(
@@ -69,14 +75,20 @@ export function mergeSOCControllerMethodMetadata(
   if (typeof metadata === "function") {
     const previous = getSOCControllerMethodMetadata(target, methodName);
     metadata = metadata(previous ?? {});
-    defineMetadata(
+    defineConstructorMetadata(
       SOCControllerMethodMetadataKey,
       metadata,
       target,
       methodName
     );
   } else {
-    mergeMetadata(SOCControllerMethodMetadataKey, metadata, target, methodName);
+    const previous = getSOCControllerMethodMetadata(target, methodName);
+    defineConstructorMetadata(
+      SOCControllerMethodMetadataKey,
+      merge(previous, metadata),
+      target,
+      methodName
+    );
   }
 }
 
@@ -85,6 +97,10 @@ export function getSOCControllerMethodMetadata(
   methodName: string | symbol
 ): SOCControllerMethodMetadata | null {
   return (
-    getMetadata(SOCControllerMethodMetadataKey, target, methodName) ?? null
+    getConstructorMetadata(
+      SOCControllerMethodMetadataKey,
+      target,
+      methodName
+    ) ?? null
   );
 }

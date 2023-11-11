@@ -1,7 +1,8 @@
 import { OpenAPIObject } from "openapi3-ts/oas31";
 import { PartialDeep } from "type-fest";
+import { merge } from "lodash";
 
-import { defineMetadata, getMetadata, mergeMetadata } from "./reflect";
+import { defineConstructorMetadata, getConstructorMetadata } from "./reflect";
 import { OperationHandlerMiddleware } from "../routes";
 import { ControllerObject, Middleware } from "../types";
 
@@ -58,9 +59,14 @@ export function mergeSOCControllerMetadata(
 ) {
   if (typeof metadata === "function") {
     metadata = metadata(getSOCControllerMetadata(target) ?? {});
-    defineMetadata(SOCControllerMetadataKey, metadata, target);
+    defineConstructorMetadata(SOCControllerMetadataKey, metadata, target);
   } else {
-    mergeMetadata(SOCControllerMetadataKey, metadata, target);
+    const previous = getSOCControllerMetadata(target);
+    defineConstructorMetadata(
+      SOCControllerMetadataKey,
+      merge(previous, metadata),
+      target
+    );
   }
 }
 
@@ -68,22 +74,11 @@ export function setSOCControllerMetadata(
   target: any,
   metadata: SOCControllerMetadata
 ) {
-  defineMetadata(SOCControllerMetadataKey, metadata, target);
+  defineConstructorMetadata(SOCControllerMetadataKey, metadata, target);
 }
 
 export function getSOCControllerMetadata(
   target: ControllerObject
 ): SOCControllerMetadata | null {
-  const prototype = (target as any).prototype;
-  if (prototype && prototype.constructor === target) {
-    // Assume its the class constructor itself.
-    // Note: It is not enough to check for an instance with target.constructor as some constructors themselves have constructors.
-    return getMetadata(SOCControllerMetadataKey, target) ?? null;
-  } else if (target.constructor) {
-    // Assume its an instance
-    return getMetadata(SOCControllerMetadataKey, target.constructor) ?? null;
-  } else {
-    // No idea what this is, just get it.
-    return getMetadata(SOCControllerMetadataKey, target) ?? null;
-  }
+  return getConstructorMetadata(SOCControllerMetadataKey, target) ?? null;
 }

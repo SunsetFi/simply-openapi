@@ -35,17 +35,6 @@ export function isJson(x: any): x is JsonValue {
   );
 }
 
-export function getInstanceMethods(instance: object) {
-  const methods: Function[] = [];
-  scanObjectProperties(instance, (instance, key, value) => {
-    if (typeof value === "function") {
-      methods.push(value);
-    }
-  });
-
-  return methods;
-}
-
 // Javascript throws TypeErrors if we try to access certain properties.
 const forbiddenProperties: (string | symbol)[] = [
   "constructor",
@@ -54,6 +43,40 @@ const forbiddenProperties: (string | symbol)[] = [
   "callee",
   "arguments",
 ];
+export function getClassMethods(object: object) {
+  const methods: Function[] = [];
+
+  function scanObject(obj: object) {
+    do {
+      for (const propertyName of [
+        ...Object.getOwnPropertyNames(obj),
+        ...Object.getOwnPropertySymbols(obj),
+      ]) {
+        if (forbiddenProperties.includes(propertyName)) {
+          continue;
+        }
+        const value = (obj as any)[propertyName];
+        if (typeof value === "function") {
+          methods.push(value);
+        }
+      }
+    } while ((obj = Object.getPrototypeOf(obj)));
+  }
+
+  const prototype = (object as any).prototype;
+  if (prototype && prototype.constructor === object) {
+    // This is a class constructor
+    scanObject(prototype);
+  } else if (object.constructor) {
+    // This is an instance
+    scanObject(object);
+  } else {
+    // No idea what this is
+    scanObject(Object);
+  }
+
+  return methods;
+}
 
 /**
  * Scans through both prototypes (for functions for constructors) and the object prototype stack (for live instances)

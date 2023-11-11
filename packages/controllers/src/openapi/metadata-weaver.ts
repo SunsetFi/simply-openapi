@@ -1,7 +1,7 @@
 import { InfoObject, OpenAPIObject } from "openapi3-ts/oas31";
 import { cloneDeep, merge } from "lodash";
 
-import { getInstanceMethods, nameController } from "../utils";
+import { getClassMethods, nameController } from "../utils";
 import { ControllerObject } from "../types";
 
 import { OpenAPIObjectExtractor } from "./types";
@@ -105,7 +105,7 @@ function addOpenAPIPathsFromController(
   ignoreEmptyControllers: boolean
 ): OpenAPIObject {
   let boundAtLeastOneMethod = false;
-  for (const method of getInstanceMethods(controller)) {
+  for (const method of getClassMethods(controller)) {
     spec = extractors.reduce((spec, extractor) => {
       const result = extractor(controller, method.name);
       if (result) {
