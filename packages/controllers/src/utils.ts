@@ -5,6 +5,7 @@ import {
   PathItemObject,
 } from "openapi3-ts/oas31";
 import { JsonValue } from "type-fest";
+import { ControllerObject } from "./types";
 
 export const requestMethods = [
   "get",
@@ -36,20 +37,66 @@ export function isJson(x: any): x is JsonValue {
 
 export function getInstanceMethods(instance: object) {
   const methods: Function[] = [];
-  let currentObj = instance;
-  do {
-    for (const propertyName of [
-      ...Object.getOwnPropertyNames(currentObj),
-      ...Object.getOwnPropertySymbols(currentObj),
-    ]) {
-      const value = (instance as any)[propertyName];
-      if (typeof value === "function") {
-        methods.push(value);
-      }
+  scanObject(instance, (instance, key, value) => {
+    if (typeof value === "function") {
+      methods.push(value);
     }
-  } while ((currentObj = Object.getPrototypeOf(currentObj)));
+  });
 
   return methods;
+}
+
+// Javascript throws TypeErrors if we try to access certain properties.
+const forbiddenProperties: (string | symbol)[] = [
+  "constructor",
+  "prototype",
+  "caller",
+  "callee",
+  "arguments",
+];
+
+/**
+ * Scans through both prototypes (for functions for constructors) and the object prototype stack (for live instances)
+ * @param obj Scans
+ */
+export function scanObject(
+  obj: object,
+  scanner: (
+    instance: object,
+    key: string | symbol,
+    value: any
+  ) => boolean | void
+) {
+  let stop = false;
+
+  function scanFrom(
+    obj: object,
+    getPrototype: (obj: object) => object | null | undefined
+  ) {
+    let currentObj: object | null | undefined = obj;
+    do {
+      for (const propertyName of [
+        ...Object.getOwnPropertyNames(currentObj),
+        ...Object.getOwnPropertySymbols(currentObj),
+      ]) {
+        if (forbiddenProperties.includes(propertyName)) {
+          continue;
+        }
+        const value = (currentObj as any)[propertyName];
+        if (scanner(currentObj, propertyName, value) === false) {
+          stop = true;
+          return;
+        }
+      }
+    } while ((currentObj = getPrototype(currentObj)));
+  }
+
+  scanFrom(obj, Object.getPrototypeOf);
+  if (stop) {
+    return;
+  }
+
+  scanFrom(obj, (obj: any) => obj.prototype);
 }
 
 export function resolveReference<T extends object>(
@@ -71,6 +118,10 @@ export function resolveReference<T extends object>(
   }
 
   return value;
+}
+
+export function nameController(controller: ControllerObject) {
+  return (controller as any).name ?? controller.constructor.name;
 }
 
 export function isNotNull<T>(x: T | null): x is T {

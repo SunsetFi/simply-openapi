@@ -207,10 +207,13 @@ export class MethodHandler {
         {
           controller: this._controller,
           handler: this._handler,
-          handlerArgs: args.map((arg, i) => [
-            arg,
-            this._extensionData.handlerArgs![i],
-          ]),
+          handlerArgs: args.map((arg, i) => {
+            const handlerArg = this._extensionData.handlerArgs?.[i];
+            if (!handlerArg) {
+              return undefined;
+            }
+            return [arg, handlerArg];
+          }),
           path: this._path,
           pathItem: this._pathItem,
           method: this._method,
@@ -233,9 +236,13 @@ export class MethodHandler {
   }
 
   private _buildArgumentCollector(
-    arg: SOCControllerMethodHandlerArg,
+    arg: SOCControllerMethodHandlerArg | undefined,
     op: OperationObject
   ): ArgumentCollector {
+    if (arg === undefined) {
+      return () => undefined;
+    }
+
     // TODO: Parameter interceptor.
     switch (arg.type) {
       case "request-raw":

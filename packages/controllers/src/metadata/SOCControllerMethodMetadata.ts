@@ -24,7 +24,7 @@ export interface SOCControllerMethodCommonMetadata {
 export interface SOCBoundControllerMethodMetadata
   extends SOCControllerMethodCommonMetadata {
   operationId: string;
-  args: SOCControllerMethodHandlerArg[];
+  args: (SOCControllerMethodHandlerArg | undefined)[];
 }
 export function isSOCBoundControllerMethodMetadata(
   metadata: SOCControllerMethodMetadata

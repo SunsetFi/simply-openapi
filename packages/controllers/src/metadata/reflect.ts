@@ -1,4 +1,5 @@
 import { merge } from "lodash";
+import { scanObject } from "../utils";
 
 function hasReflectMetadata() {
   return typeof Reflect.getMetadata === "function";
@@ -15,7 +16,16 @@ export function getMetadata<T>(
     );
   }
 
-  return Reflect.getMetadata(key, object, targetKey);
+  let metadata: T | undefined = undefined;
+
+  scanObject(object, (instance) => {
+    metadata = Reflect.getMetadata(key, instance, targetKey);
+    if (metadata !== undefined) {
+      return false;
+    }
+  });
+
+  return metadata;
 }
 
 export function defineMetadata(

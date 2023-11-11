@@ -294,6 +294,8 @@ describe("MethodHandler", function () {
   });
 
   describe("parameters", function () {
+    test.todo("Handles undefined parameters");
+
     it("supports the request parameter", async function () {
       const handler = jest.fn((arg) => null);
       const [next] = await testHandler({

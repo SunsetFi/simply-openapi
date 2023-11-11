@@ -1,10 +1,10 @@
 import { InfoObject, OpenAPIObject } from "openapi3-ts/oas31";
 import { cloneDeep, merge } from "lodash";
 
-import { getSOCControllerMetadata } from "../metadata";
-import { getInstanceMethods } from "../utils";
+import { getInstanceMethods, nameController } from "../utils";
+import { ControllerObject } from "../types";
 
-import { ControllerInstance, OpenAPIObjectExtractor } from "./types";
+import { OpenAPIObjectExtractor } from "./types";
 import {
   extractSOCBoundMethodSpec,
   extractSOCCustomMethodSpec,
@@ -36,7 +36,7 @@ export interface CreateOpenAPIPathsFromControllerOptions {
  */
 export function createOpenAPIFromControllers(
   info: InfoObject,
-  controllers: ControllerInstance[],
+  controllers: ControllerObject[],
   opts: CreateOpenAPIPathsFromControllerOptions = {}
 ): OpenAPIObject {
   if (!opts.operationSpecExtractors) {
@@ -73,7 +73,7 @@ export function createOpenAPIFromControllers(
  */
 export function addendOpenAPIFromControllers(
   spec: OpenAPIObject,
-  controllers: ControllerInstance[],
+  controllers: ControllerObject[],
   opts: CreateOpenAPIPathsFromControllerOptions = {}
 ) {
   if (!opts.operationSpecExtractors) {
@@ -99,7 +99,7 @@ export function addendOpenAPIFromControllers(
 }
 
 function addOpenAPIPathsFromController(
-  controller: ControllerInstance,
+  controller: ControllerObject,
   spec: OpenAPIObject,
   extractors: OpenAPIObjectExtractor[],
   ignoreEmptyControllers: boolean
@@ -122,7 +122,9 @@ function addOpenAPIPathsFromController(
 
   if (!ignoreEmptyControllers && !boundAtLeastOneMethod) {
     throw new Error(
-      `Controller ${controller.constructor.name} has no SOC-decorated methods.  Please ensure this is a valid controller, or set the ignoreEmptyControllers option to true.`
+      `Controller ${nameController(
+        controller
+      )} has no SOC-decorated methods.  Please ensure this is a valid controller, or set the ignoreEmptyControllers option to true.`
     );
   }
 

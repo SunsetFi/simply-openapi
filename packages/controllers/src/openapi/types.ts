@@ -1,9 +1,8 @@
 import { OpenAPIObject } from "openapi3-ts/oas31";
-
-export type ControllerInstance = object;
+import { ControllerObject } from "../types";
 
 export type OpenAPIObjectExtractor = (
-  controller: ControllerInstance,
+  controller: ControllerObject,
   methodName: string | symbol
 ) =>
   | Partial<OpenAPIObject>

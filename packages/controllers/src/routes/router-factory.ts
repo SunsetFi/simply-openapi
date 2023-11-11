@@ -8,8 +8,11 @@ import { Entries } from "type-fest";
 import { pick } from "lodash";
 import AJV from "ajv";
 
-import { SOCControllerMethodExtensionName } from "../openapi";
-import { RequestMethod } from "../types";
+import {
+  SOCControllerMethodExtensionData,
+  SOCControllerMethodExtensionName,
+} from "../openapi";
+import { ControllerInstance, RequestMethod } from "../types";
 import { requestMethods } from "../utils";
 import ajv from "../ajv";
 
@@ -49,7 +52,9 @@ export interface CreateRouterOptions {
    * @param controller The controller to resolve.
    * @returns The resolved controller
    */
-  resolveController?: (controller: object | string | symbol) => object;
+  resolveController?: (
+    controller: SOCControllerMethodExtensionData["controller"]
+  ) => ControllerInstance;
 
   /**
    * Resolver to convert a method specified in the x-simply-controller-method extension into a function reference for invocation.
@@ -61,7 +66,7 @@ export interface CreateRouterOptions {
    * @returns The resolved method
    */
   resolveHandler?: (
-    controller: object,
+    controller: ControllerInstance,
     method: Function | string | symbol
   ) => Function;
 

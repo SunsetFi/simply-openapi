@@ -166,13 +166,13 @@ There are 2 ways to use SOC:
 If you want to focus on the code and leave the OpenAPI specs to be auto-generated, you can produce both the routers and the specs entirely from decorators adorning Controller classes
 
 ```ts
-@Controller("/v1", { tags: ["Math"] })
+@Controller("/math", { tags: ["Math"] })
 class MyController {
   @Post("/add", { summary: "Adds two numbers", tags: ["Addition"] })
   @JsonResonse(200, "The sum of the two numbers", { type: "number" })
   addNumbers(
-    @QueryParam("a", { type: "number" }) a: number,
-    @QueryParam("b", { type: "number" }) b: number
+    @QueryParam("a", "number", { description: "The first number" }) a: number,
+    @QueryParam("b", "number", { description: "The second number" }) b: number
   ) {
     return a + b;
   }

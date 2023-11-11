@@ -14,18 +14,11 @@ import { setMethodParameterType } from "./utils";
  * @param name The name of the parameter.
  * @param spec The specification of the OpenAPI parameter.
  */
-export function Body(spec?: RequestBodyObject): ParameterDecorator;
 export function Body(
-  spec: Omit<RequestBodyObject, "content">,
   mediaType: string,
   schema: SchemaObject,
-  opts?: Omit<MediaTypeObject, "schema">
-): ParameterDecorator;
-export function Body(
-  spec?: Partial<RequestBodyObject>,
-  mediaType?: string,
-  schema?: SchemaObject,
-  opts?: Omit<MediaTypeObject, "schema">
+  opts?: Omit<MediaTypeObject, "schema">,
+  request?: Partial<RequestBodyObject>
 ): ParameterDecorator {
   return (
     target: any,
@@ -50,10 +43,14 @@ export function Body(
       {
         operationFragment: {
           requestBody: {
-            ...spec,
+            ...request,
             content: {
-              ...content,
-              ...spec?.content,
+              ...request?.content,
+              [mediaType]: {
+                ...request?.content?.[mediaType],
+                schema,
+                ...opts,
+              },
             },
           },
         },
@@ -77,7 +74,7 @@ export function OptionalJsonBody(
   schema: SchemaObject,
   opts?: Omit<MediaTypeObject, "schema">
 ) {
-  return Body({ description }, "application/json", schema, opts);
+  return Body("application/json", schema, opts, { description });
 }
 
 /**
@@ -86,15 +83,13 @@ export function OptionalJsonBody(
  * @param schema
  * @param opts
  */
-export function RequireJsonBody(
+export function RequiredJsonBody(
   description: string,
   schema: SchemaObject,
   opts?: Omit<MediaTypeObject, "schema">
 ) {
-  return Body(
-    { description, required: true },
-    "application/json",
-    schema,
-    opts
-  );
+  return Body("application/json", schema, opts, {
+    description,
+    required: true,
+  });
 }

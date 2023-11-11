@@ -1,48 +1,48 @@
-import { BaseParameterObject } from "openapi3-ts/oas31";
+import {
+  BaseParameterObject,
+  ReferenceObject,
+  SchemaObject,
+  SchemaObjectType,
+} from "openapi3-ts/oas31";
 
-import { mergeSOCControllerMethodMetadata } from "../../../metadata";
-
-import { setMethodParameterType } from "./utils";
-
-export type QueryParameterSettings = BaseParameterObject;
+import { createParameterDecorator } from "./utils";
 
 /**
  * Defines a query parameter in the OpenAPI spec and registers it to pass to this method argument.
  * @param name The name of the parameter.
+ * @param schema The schema of the parameter.
  * @param spec The specification of the OpenAPI parameter.
  */
 export function QueryParam(
   name: string,
-  settings?: Partial<QueryParameterSettings>
+  schema: SchemaObject | ReferenceObject | SchemaObjectType | null,
+  spec?: BaseParameterObject
 ): ParameterDecorator {
-  return (
-    target: any,
-    propertyKey: string | symbol | undefined,
-    parameterIndex: number
-  ) => {
-    if (propertyKey === undefined) {
-      throw new Error(`@QueryParam() must be applied to a method.`);
-    }
-
-    // Warn: We might be a bound method.  In which case, operationFragment will be totally ignored.
-    mergeSOCControllerMethodMetadata(
-      target,
-      {
-        operationFragment: {
-          parameters: [
-            {
-              in: "query",
-              name,
-              ...(settings ?? {}),
-            },
-          ],
-        },
-      },
-      propertyKey
-    );
-    setMethodParameterType(target, propertyKey, parameterIndex, {
-      type: "openapi-parameter",
-      parameterName: name,
-    });
+  let finalParam: BaseParameterObject = {
+    ...spec,
   };
+  if (typeof schema === "string") {
+    finalParam.schema = { type: schema };
+  } else if (schema !== null) {
+    finalParam.schema = schema;
+  }
+
+  return createParameterDecorator(name, "query", finalParam);
+}
+
+/**
+ * Defines a required query parameter in the OpenAPI spec and registers it to pass to this method argument.
+ * @param name The name of the parameter.
+ * @param schema The schema of the parameter.
+ * @param spec The specification of the OpenAPI parameter.
+ */
+export function RequiredQueryParam(
+  name: string,
+  schema: SchemaObject | ReferenceObject | SchemaObjectType | null,
+  spec?: BaseParameterObject
+): ParameterDecorator {
+  return QueryParam(name, schema, {
+    ...spec,
+    required: true,
+  });
 }

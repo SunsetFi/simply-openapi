@@ -3,6 +3,7 @@ import { OperationObject, PathItemObject } from "openapi3-ts/oas31";
 
 import { SOCControllerMethodHandlerArg } from "../openapi";
 
+export type HandledArgument = [any, SOCControllerMethodHandlerArg];
 export interface OperationHandlerMiddlewareContext {
   /**
    * The full path of this operation.
@@ -35,7 +36,7 @@ export interface OperationHandlerMiddlewareContext {
    * An array of tupples containing the argument to pass to the handler in index 0, and a description
    * of the argument in index 1.
    */
-  handlerArgs: [any, SOCControllerMethodHandlerArg][];
+  handlerArgs: (HandledArgument | undefined)[];
 
   /**
    * The express request.

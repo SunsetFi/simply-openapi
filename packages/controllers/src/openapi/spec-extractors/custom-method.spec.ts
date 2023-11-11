@@ -125,8 +125,6 @@ describe("extractSOCCustomMethodSpec", function () {
               controller,
               handler: methodName,
               handlerArgs: [],
-              expressMiddleware: [],
-              handlerMiddleware: [],
             },
           },
         },

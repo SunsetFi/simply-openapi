@@ -55,7 +55,8 @@ export interface CookieSettings {
 
 export class ResponseObject {
   // These are not marked private so as to be easier to unit test in typescript.
-  _body: any;
+  _bodyRaw: any;
+  _bodyJson: any;
   _status: number = HttpStatusCodes.OK;
   _headers: Record<string, string> = {};
   _cookies: Record<string, { value: string } & CookieSettings> = {};
@@ -71,7 +72,7 @@ export class ResponseObject {
    * Sets the body as a json value for this response.
    * This also sets the Content-Type header to application/json.
    */
-  static json(value: JsonValue): ResponseObject {
+  static json(value: any): ResponseObject {
     return new ResponseObject().json(value);
   }
 
@@ -104,7 +105,8 @@ export class ResponseObject {
    * Sets the body for this response.
    */
   body(value: any): this {
-    this._body = value;
+    this._ensureBodyNotSet();
+    this._bodyRaw = value;
     return this;
   }
 
@@ -112,8 +114,9 @@ export class ResponseObject {
    * Sets the body as a json value for this response.
    * This also sets the Content-Type header to application/json.
    */
-  json(value: JsonValue): this {
-    this._body = value;
+  json(value: any): this {
+    this._ensureBodyNotSet();
+    this._bodyJson = value;
     this._headers["Content-Type"] = "application/json";
     return this;
   }
@@ -163,8 +166,16 @@ export class ResponseObject {
       }
     }
 
-    if (this._body !== undefined) {
-      res.send(this._body);
+    if (this._bodyRaw !== undefined) {
+      res.send(this._bodyRaw);
+    } else if (this._bodyJson !== undefined) {
+      res.json(this._bodyJson);
+    }
+  }
+
+  private _ensureBodyNotSet() {
+    if (this._bodyRaw !== undefined || this._bodyJson !== undefined) {
+      throw new Error("Body has already been set.");
     }
   }
 }

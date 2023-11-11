@@ -8,15 +8,17 @@ import {
   isSOCCustomControllerMethodMetadata,
 } from "../../metadata";
 import { joinUrlPaths } from "../../urls";
+import { ControllerObject } from "../../types";
 
-import { ControllerInstance, OpenAPIObjectExtractor } from "../types";
+import { OpenAPIObjectExtractor } from "../types";
 import {
   SOCControllerMethodExtensionData,
   SOCControllerMethodExtensionName,
 } from "../extensions";
+import { nameController } from "../../utils";
 
 export const extractSOCCustomMethodSpec: OpenAPIObjectExtractor = (
-  controller: ControllerInstance,
+  controller: ControllerObject,
   methodName: string | symbol
 ) => {
   const controllerMetadata = getSOCControllerMetadata(controller);
@@ -30,32 +32,43 @@ export const extractSOCCustomMethodSpec: OpenAPIObjectExtractor = (
     throw new Error(
       `Cannot extract OpenAPI spec for method ${String(
         methodName
-      )} of controller ${
-        controller.constructor.name
-      } because it is a bound controller and the method is not a bound operation method.`
+      )} of controller ${nameController(
+        controller
+      )} because it is a bound controller and the method is not a bound operation method.`
     );
   }
 
   const path = joinUrlPaths(controllerMetadata?.path ?? "/", metadata.path);
 
+  // controller middleware should run before operation middleware
+
+  const expressMiddleware = [
+    ...(controllerMetadata?.expressMiddleware ?? []),
+    ...(metadata.expressMiddleware ?? []),
+  ];
+
+  const handlerMiddleware = [
+    ...(controllerMetadata?.handlerMiddleware ?? []),
+    ...(metadata.handlerMiddleware ?? []),
+  ];
+
   const extension: SOCControllerMethodExtensionData = {
     controller,
     handler: methodName,
     handlerArgs: metadata.args,
-    // controller middleware should run before operation middleware
-    expressMiddleware: [
-      ...(controllerMetadata?.expressMiddleware ?? ([] as any)),
-      ...(metadata.expressMiddleware ?? []),
-    ],
-    handlerMiddleware: [
-      ...(controllerMetadata?.handlerMiddleware ?? ([] as any)),
-      ...(metadata.handlerMiddleware ?? []),
-    ],
   };
+
+  if (expressMiddleware.length > 0) {
+    extension.expressMiddleware = expressMiddleware;
+  }
+
+  if (handlerMiddleware.length > 0) {
+    extension.handlerMiddleware = handlerMiddleware;
+  }
 
   return (spec: OpenAPIObject) => {
     const op: OperationObject = {
-      operationId: `${controller.constructor.name}.${String(methodName)}`,
+      operationId: `${nameController(controller)}.${String(methodName)}`,
       ...merge(
         {},
         get(spec, ["paths", path, metadata.method], {}),

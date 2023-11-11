@@ -132,7 +132,7 @@ export interface SOCControllerMethodExtensionData {
    * An array of objects describing the purpose of each argument to the handler function.
    * The order if this array should match the order of the parameters in the function that they pertain to.
    */
-  handlerArgs?: SOCControllerMethodHandlerArg[];
+  handlerArgs?: (SOCControllerMethodHandlerArg | undefined)[];
 
   /**
    * Middleware for wrapping the handler function.

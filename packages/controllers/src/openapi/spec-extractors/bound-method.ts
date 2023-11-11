@@ -6,16 +6,17 @@ import {
   getSOCControllerMethodMetadata,
   isSOCBoundControllerMethodMetadata,
 } from "../../metadata";
-import { requestMethods, resolveReference } from "../../utils";
+import { nameController, requestMethods, resolveReference } from "../../utils";
+import { ControllerObject } from "../../types";
 
-import { ControllerInstance, OpenAPIObjectExtractor } from "../types";
+import { OpenAPIObjectExtractor } from "../types";
 import {
   SOCControllerMethodExtensionData,
   SOCControllerMethodExtensionName,
 } from "../extensions";
 
 export const extractSOCBoundMethodSpec: OpenAPIObjectExtractor = (
-  controller: ControllerInstance,
+  controller: ControllerObject,
   methodName: string | symbol
 ) => {
   const controllerMetadata = getSOCControllerMetadata(controller);
@@ -29,7 +30,7 @@ export const extractSOCBoundMethodSpec: OpenAPIObjectExtractor = (
     const opData = findOperationById(spec.paths ?? {}, metadata.operationId);
     if (!opData) {
       throw new Error(
-        `Controller ${controller.constructor.name} method ${String(
+        `Controller ${nameController(controller)} method ${String(
           methodName
         )} is bound to operation ${
           metadata.operationId
@@ -40,7 +41,7 @@ export const extractSOCBoundMethodSpec: OpenAPIObjectExtractor = (
     const [path, method, operation] = opData;
 
     for (const arg of metadata.args) {
-      if (arg.type !== "openapi-parameter") {
+      if (!arg || arg.type !== "openapi-parameter") {
         continue;
       }
 
@@ -50,7 +51,7 @@ export const extractSOCBoundMethodSpec: OpenAPIObjectExtractor = (
         )
       ) {
         throw new Error(
-          `Controller ${controller.constructor.name} method ${String(
+          `Controller ${nameController(controller)} method ${String(
             methodName
           )} uses bound parameter ${arg.parameterName}, but operation ${
             metadata.operationId
