@@ -154,12 +154,20 @@ export const socControllerMethodExtensionDataSchema: JSONSchema6 = {
   properties: {
     // Controller can be object, string, or symbol.  We cannot validate for symbol.
     controller: {},
+    // Handler can be Function, string, symbol.  We cannot validate for function or symbol.
+    handler: {},
     handlerArgs: {
       type: "array",
       items: socControllerMethodHandlerArgSchema,
     },
+    handlerMiddleware: {
+      type: "array",
+    },
+    expressMiddleware: {
+      type: "array",
+    },
   },
-  required: ["controller", "handler", "handlerArgs"],
+  required: ["controller", "handler"],
 };
 
 export const validateSOCControllerMethodExtensionData = ajv.compile(
