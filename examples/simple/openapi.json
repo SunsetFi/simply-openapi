@@ -1,0 +1,211 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Simple Example",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/widgets": {
+      "get": {
+        "operationId": "WidgetsController.getAllWidgets",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "disposition",
+            "description": "Filter by disposition",
+            "schema": {
+              "type": "string",
+              "minimum": 0,
+              "enum": [
+                "happy",
+                "sad"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All widgets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "name": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "disposition": {
+                        "type": "string",
+                        "enum": [
+                          "happy",
+                          "sad"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name",
+                      "disposition"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Get all widgets",
+        "tags": [
+          "widget"
+        ]
+      },
+      "post": {
+        "operationId": "WidgetsController.createWidget",
+        "requestBody": {
+          "description": "The content of the widget",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "disposition": {
+                    "type": "string",
+                    "enum": [
+                      "happy",
+                      "sad"
+                    ]
+                  }
+                },
+                "required": [
+                  "name",
+                  "disposition"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The created widget",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "description": "The location of the created widget",
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "disposition": {
+                      "type": "string",
+                      "enum": [
+                        "happy",
+                        "sad"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "disposition"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid widget",
+            "content": {}
+          }
+        },
+        "description": "Create a widget",
+        "tags": [
+          "widget"
+        ]
+      }
+    },
+    "/widgets/:id": {
+      "get": {
+        "operationId": "WidgetsController.getWidgetById",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "description": "The ID of the widget",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The widget",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "disposition": {
+                      "type": "string",
+                      "enum": [
+                        "happy",
+                        "sad"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "disposition"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Widget not found",
+            "content": {}
+          }
+        },
+        "description": "Get a widget by ID",
+        "tags": [
+          "widget"
+        ]
+      }
+    }
+  }
+}

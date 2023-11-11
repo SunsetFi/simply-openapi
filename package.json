@@ -9,6 +9,7 @@
     "url": "git@github.com:SunsetFi/simply-openapi.git"
   },
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "examples/*"
   ]
 }
