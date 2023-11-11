@@ -4,9 +4,9 @@ import { merge } from "lodash";
 
 import { SOCControllerMethodHandlerArg } from "../openapi";
 import { Middleware, RequestMethod } from "../types";
+import { OperationHandlerMiddleware } from "../routes";
 
 import { defineConstructorMetadata, getConstructorMetadata } from "./reflect";
-import { OperationHandlerMiddleware } from "../routes";
 
 const SOCControllerMethodMetadataKey = "soc:controller-method";
 

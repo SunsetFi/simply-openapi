@@ -2,9 +2,10 @@ import { OpenAPIObject } from "openapi3-ts/oas31";
 import { PartialDeep } from "type-fest";
 import { merge } from "lodash";
 
-import { defineConstructorMetadata, getConstructorMetadata } from "./reflect";
 import { OperationHandlerMiddleware } from "../routes";
 import { ControllerObject, Middleware } from "../types";
+
+import { defineConstructorMetadata, getConstructorMetadata } from "./reflect";
 
 const SOCControllerMetadataKey = "soc:controller";
 
@@ -15,7 +16,7 @@ export interface SOCCommonControllerMetadata {
   handlerMiddleware?: OperationHandlerMiddleware[];
 
   /**
-   * Express middleware to run around the handler.
+   * Express middleware to run before the handler.
    */
   preExpressMiddleware?: Middleware[];
 }
