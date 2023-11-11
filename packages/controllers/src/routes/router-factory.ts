@@ -25,6 +25,7 @@ import {
 } from "./handler-middleware";
 import { maybeParseJson } from "./express-middleware";
 import { OperationHandlerMiddleware } from "./handler-types";
+import { openAPIToExpressPath } from "../urls";
 
 export interface RouteCreationContext {
   openApi: OpenAPIObject;
@@ -89,9 +90,14 @@ export interface CreateRouterOptions {
   handlerMiddleware?: OperationHandlerMiddleware[];
 
   /**
-   * Middleware to apply to the express router.
+   * Middleware to apply to the express router before the handler.
    */
-  expressMiddleware?: RequestHandler[];
+  preExpressMiddleware?: RequestHandler[];
+
+  /**
+   * Middleware to apply to the express router after the handler.
+   */
+  postExpressMiddleware?: RequestHandler[];
 
   /**
    * If true, ensure that all responses are handled by the handler.
@@ -136,26 +142,26 @@ class RouterFromSpecFactory {
     // Factories run in order, so our default should be last.
     _opts.handlerFactories.push(this._socOperationHandlerFactory.bind(this));
 
-    if (!_opts.expressMiddleware) {
-      _opts.expressMiddleware = [];
+    if (!_opts.preExpressMiddleware) {
+      _opts.preExpressMiddleware = [];
     }
 
-    _opts.expressMiddleware.push(maybeParseJson);
+    _opts.preExpressMiddleware.push(maybeParseJson);
 
     if (!_opts.handlerMiddleware) {
       _opts.handlerMiddleware = [];
-    }
-
-    // Middleware runs inside out, so our defaults should be first, to allow
-    // user-supplied middleware to run before us.
-    if (_opts.ensureResponsesHandled !== false) {
-      _opts.handlerMiddleware.push(operationHandlerFallbackResponseMiddleware);
     }
 
     _opts.handlerMiddleware.unshift(
       operationHandlerJsonResponseMiddleware,
       operationHandlerResponseObjectMiddleware
     );
+
+    if (_opts.ensureResponsesHandled !== false) {
+      _opts.handlerMiddleware.unshift(
+        operationHandlerFallbackResponseMiddleware
+      );
+    }
   }
 
   createRouterFromSpec(): Router {
@@ -229,7 +235,10 @@ class RouterFromSpecFactory {
         return;
       }
 
-      (router as any)[method](path, handler);
+      const expressPath = openAPIToExpressPath(path);
+
+      // Not working, routes arent registered.
+      (router as any)[method](expressPath, handler);
     }
   }
 }

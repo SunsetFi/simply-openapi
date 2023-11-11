@@ -3,7 +3,7 @@ import { PartialDeep } from "type-fest";
 
 import { defineMetadata, getMetadata, mergeMetadata } from "./reflect";
 import { OperationHandlerMiddleware } from "../routes";
-import { Middleware } from "../types";
+import { ControllerObject, Middleware } from "../types";
 
 const SOCControllerMetadataKey = "soc:controller";
 
@@ -16,7 +16,7 @@ export interface SOCCommonControllerMetadata {
   /**
    * Express middleware to run around the handler.
    */
-  expressMiddleware?: Middleware[];
+  preExpressMiddleware?: Middleware[];
 }
 
 export interface SOCBoundControllerMetadata
@@ -72,7 +72,18 @@ export function setSOCControllerMetadata(
 }
 
 export function getSOCControllerMetadata(
-  target: any
+  target: ControllerObject
 ): SOCControllerMetadata | null {
-  return getMetadata(SOCControllerMetadataKey, target) ?? null;
+  const prototype = (target as any).prototype;
+  if (prototype && prototype.constructor === target) {
+    // Assume its the class constructor itself.
+    // Note: It is not enough to check for an instance with target.constructor as some constructors themselves have constructors.
+    return getMetadata(SOCControllerMetadataKey, target) ?? null;
+  } else if (target.constructor) {
+    // Assume its an instance
+    return getMetadata(SOCControllerMetadataKey, target.constructor) ?? null;
+  } else {
+    // No idea what this is, just get it.
+    return getMetadata(SOCControllerMetadataKey, target) ?? null;
+  }
 }

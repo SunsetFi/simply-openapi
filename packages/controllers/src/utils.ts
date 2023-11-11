@@ -37,7 +37,7 @@ export function isJson(x: any): x is JsonValue {
 
 export function getInstanceMethods(instance: object) {
   const methods: Function[] = [];
-  scanObject(instance, (instance, key, value) => {
+  scanObjectProperties(instance, (instance, key, value) => {
     if (typeof value === "function") {
       methods.push(value);
     }
@@ -57,9 +57,36 @@ const forbiddenProperties: (string | symbol)[] = [
 
 /**
  * Scans through both prototypes (for functions for constructors) and the object prototype stack (for live instances)
- * @param obj Scans
  */
-export function scanObject(
+export function scanObjectChain(
+  obj: object,
+  scanner: (instance: object) => boolean | void
+) {
+  function scanFrom(
+    obj: object,
+    getPrototype: (obj: object) => object | null | undefined
+  ) {
+    let currentObj: object | null | undefined = obj;
+    do {
+      if (scanner(currentObj) === false) {
+        return false;
+      }
+    } while ((currentObj = getPrototype(currentObj)));
+    return true;
+  }
+
+  if (scanner(obj) === false) {
+    return;
+  }
+
+  if (!scanFrom(obj, Object.getPrototypeOf)) {
+    return;
+  }
+
+  scanFrom(obj, (obj: any) => obj.prototype);
+}
+
+export function scanObjectProperties(
   obj: object,
   scanner: (
     instance: object,
@@ -67,36 +94,20 @@ export function scanObject(
     value: any
   ) => boolean | void
 ) {
-  let stop = false;
-
-  function scanFrom(
-    obj: object,
-    getPrototype: (obj: object) => object | null | undefined
-  ) {
-    let currentObj: object | null | undefined = obj;
-    do {
-      for (const propertyName of [
-        ...Object.getOwnPropertyNames(currentObj),
-        ...Object.getOwnPropertySymbols(currentObj),
-      ]) {
-        if (forbiddenProperties.includes(propertyName)) {
-          continue;
-        }
-        const value = (currentObj as any)[propertyName];
-        if (scanner(currentObj, propertyName, value) === false) {
-          stop = true;
-          return;
-        }
+  scanObjectChain(obj, (obj) => {
+    for (const propertyName of [
+      ...Object.getOwnPropertyNames(obj),
+      ...Object.getOwnPropertySymbols(obj),
+    ]) {
+      if (forbiddenProperties.includes(propertyName)) {
+        continue;
       }
-    } while ((currentObj = getPrototype(currentObj)));
-  }
-
-  scanFrom(obj, Object.getPrototypeOf);
-  if (stop) {
-    return;
-  }
-
-  scanFrom(obj, (obj: any) => obj.prototype);
+      const value = (obj as any)[propertyName];
+      if (scanner(obj, propertyName, value) === false) {
+        return false;
+      }
+    }
+  });
 }
 
 export function resolveReference<T extends object>(

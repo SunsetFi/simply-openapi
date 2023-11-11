@@ -39,7 +39,7 @@ export async function operationHandlerJsonResponseMiddleware(
       `Operation ${nameOperationFromContext(
         context
       )} handler returned a result that is not JSON serializable.  Are you missing a handler middleware for the response type ${context.res.getHeader(
-        "content-type"
+        "accept"
       )}?`
     );
   }

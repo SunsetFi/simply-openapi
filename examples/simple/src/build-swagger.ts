@@ -7,7 +7,7 @@ import {
   stripSOCExtensions,
 } from "@simply-openapi/controllers";
 
-import { types } from "./controllers";
+import controllers, { types } from "./controllers";
 import { info } from "./openapi";
 
 // We can build the OpenAPI spec from the controller class constructors, saving us from having to instantiate them with their dependencies.
@@ -15,7 +15,7 @@ import { info } from "./openapi";
 // be the case in DI situations.
 // Note that by doing this, we would need to specify a controllerResolver to instantiate our types in createRouterFromSpec
 // if we wanted to create a router from these docs.
-let docs = createOpenAPIFromControllers(info, types);
+let docs = createOpenAPIFromControllers(info, controllers);
 
 // The SOC extensions for creating routers are not needed in the case of creating external docs, so we can strip them out to avoid
 // confusion.

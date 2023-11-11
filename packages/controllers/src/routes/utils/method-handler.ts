@@ -61,9 +61,14 @@ export interface MethodHandlerOpts {
   handlerMiddleware?: OperationHandlerMiddleware[];
 
   /**
-   * Middleware to apply to the express router.
+   * Middleware to apply to the express router before the request.
    */
-  expressMiddleware?: RequestHandler[];
+  preExpressMiddleware?: RequestHandler[];
+
+  /**
+   * Middleware to apply to the express router after the request.
+   */
+  postExpressMiddleware?: RequestHandler[];
 }
 
 type ArgumentCollector = (req: Request, res: Response) => any;
@@ -166,12 +171,16 @@ export class MethodHandler {
     );
 
     // We use a router to handle the complex process of performing the middleware composition for us.
-    if (this._opts.expressMiddleware) {
-      this._selfRoute.use(...this._opts.expressMiddleware);
+    if (this._opts.preExpressMiddleware) {
+      this._selfRoute.use(...this._opts.preExpressMiddleware);
     }
 
     const invokeHandlerBound = this._invokeHandler.bind(this);
-    this._selfRoute.all("/", invokeHandlerBound);
+    this._selfRoute.use(invokeHandlerBound);
+
+    if (this._opts.postExpressMiddleware) {
+      this._selfRoute.use(...this._opts.postExpressMiddleware);
+    }
   }
 
   handle(req: Request, res: Response, next: NextFunction) {
@@ -453,16 +462,21 @@ function pickContentType<T>(
   let wildcardsUsed = 0;
   for (const [type, value] of Object.entries(values)) {
     const typeParts = type.split("/");
-    if (typeParts[0] === "*" || typeParts[0] === contentTypeParts[0]) {
-      if (typeParts[1] === "*" || typeParts[1] === contentTypeParts[1]) {
-        let localWildcards =
-          typeParts[0] === "*" ? 1 : 0 + typeParts[1] === "*" ? 1 : 0;
-        if (localWildcards < wildcardsUsed) {
-          chosen = value;
-          if (localWildcards === 0) {
-            break;
-          }
-        }
+    if (typeParts[0] !== "*" && typeParts[0] !== contentTypeParts[0]) {
+      continue;
+    }
+
+    if (typeParts[1] !== "*" && typeParts[1] !== contentTypeParts[1]) {
+      continue;
+    }
+
+    let localWildcards =
+      (typeParts[0] === "*" ? 1 : 0) + (typeParts[1] === "*" ? 1 : 0);
+    if (!chosen || localWildcards < wildcardsUsed) {
+      wildcardsUsed = localWildcards;
+      chosen = value;
+      if (localWildcards === 0) {
+        break;
       }
     }
   }

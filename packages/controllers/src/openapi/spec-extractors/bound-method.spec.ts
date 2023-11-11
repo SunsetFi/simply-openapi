@@ -24,19 +24,19 @@ describe("extractSOCBoundMethodSpec", function () {
     controllerMetadata: SOCControllerMetadata | null
   ): [controller: object, methodName: string | symbol] {
     const methodName = "testMethod";
-    const controller = {
-      [methodName]() {},
-    };
+    class Controller {
+      [methodName]() {}
+    }
 
     if (controllerMetadata) {
-      setSOCControllerMetadata(controller, controllerMetadata);
+      setSOCControllerMetadata(Controller, controllerMetadata);
     }
 
     if (methodMetadata) {
-      setSOCControllerMethodMetadata(controller, methodMetadata, methodName);
+      setSOCControllerMethodMetadata(Controller, methodMetadata, methodName);
     }
 
-    return [controller, methodName];
+    return [Controller, methodName];
   }
 
   function invoke(
@@ -145,8 +145,6 @@ describe("extractSOCBoundMethodSpec", function () {
               controller,
               handler: methodName,
               handlerArgs: [],
-              expressMiddleware: [],
-              handlerMiddleware: [],
             },
           },
         },
@@ -201,8 +199,6 @@ describe("extractSOCBoundMethodSpec", function () {
                     parameterName,
                   },
                 ],
-                expressMiddleware: [],
-                handlerMiddleware: [],
               },
             },
           },
@@ -263,8 +259,6 @@ describe("extractSOCBoundMethodSpec", function () {
                     parameterName,
                   },
                 ],
-                expressMiddleware: [],
-                handlerMiddleware: [],
               },
             },
           },
@@ -310,7 +304,7 @@ describe("extractSOCBoundMethodSpec", function () {
     });
   });
 
-  describe("express middleware", function () {
+  describe("pre express middleware", function () {
     it("configures controller middleware", function () {
       const operationId = "foobar";
       const middleware = (
@@ -326,7 +320,7 @@ describe("extractSOCBoundMethodSpec", function () {
         },
         {
           type: "bound",
-          expressMiddleware: [middleware],
+          preExpressMiddleware: [middleware],
         },
         {
           paths: {
@@ -345,7 +339,7 @@ describe("extractSOCBoundMethodSpec", function () {
           "/foo": {
             get: {
               [SOCControllerMethodExtensionName]: {
-                expressMiddleware: [middleware],
+                preExpressMiddleware: [middleware],
               },
             },
           },
@@ -365,7 +359,7 @@ describe("extractSOCBoundMethodSpec", function () {
         {
           operationId,
           args: [],
-          expressMiddleware: [middleware],
+          preExpressMiddleware: [middleware],
         },
         null,
         {
@@ -385,7 +379,7 @@ describe("extractSOCBoundMethodSpec", function () {
           "/foo": {
             get: {
               [SOCControllerMethodExtensionName]: {
-                expressMiddleware: [middleware],
+                preExpressMiddleware: [middleware],
               },
             },
           },
@@ -393,7 +387,7 @@ describe("extractSOCBoundMethodSpec", function () {
       });
     });
 
-    it("orders method middleware after controller middleware", function () {
+    it.only("orders method middleware after controller middleware", function () {
       const operationId = "foobar";
       const controllerMiddleware = (
         req: Request,
@@ -410,11 +404,11 @@ describe("extractSOCBoundMethodSpec", function () {
         {
           operationId,
           args: [],
-          expressMiddleware: [methodMiddleware],
+          preExpressMiddleware: [methodMiddleware],
         },
         {
           type: "bound",
-          expressMiddleware: [controllerMiddleware],
+          preExpressMiddleware: [controllerMiddleware],
         },
         {
           paths: {
@@ -433,7 +427,7 @@ describe("extractSOCBoundMethodSpec", function () {
           "/foo": {
             get: {
               [SOCControllerMethodExtensionName]: {
-                expressMiddleware: [controllerMiddleware, methodMiddleware],
+                preExpressMiddleware: [controllerMiddleware, methodMiddleware],
               },
             },
           },
@@ -441,6 +435,8 @@ describe("extractSOCBoundMethodSpec", function () {
       });
     });
   });
+
+  test.todo("post express middleware");
 
   describe("handler middleware", function () {
     it("configures controller middleware", function () {

@@ -18,7 +18,9 @@ export function UseExpressMiddleware(
     function middlewareInjector<
       T extends SOCCommonControllerMetadata | SOCControllerMethodMetadata,
     >(originalMetadata: T): T {
-      const expressMiddleware = [...(originalMetadata.expressMiddleware ?? [])];
+      const expressMiddleware = [
+        ...(originalMetadata.preExpressMiddleware ?? []),
+      ];
       if (opts.order === "before") {
         expressMiddleware.unshift(middleware);
       } else {
@@ -26,7 +28,7 @@ export function UseExpressMiddleware(
       }
       return {
         ...originalMetadata,
-        expressMiddleware,
+        preExpressMiddleware: expressMiddleware,
       };
     }
 

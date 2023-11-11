@@ -144,9 +144,9 @@ export interface SOCControllerMethodExtensionData {
   handlerMiddleware?: OperationHandlerMiddleware[];
 
   /**
-   * Express middleware to run around the handler.
+   * Express middleware to run before the handler.
    */
-  expressMiddleware?: Middleware[];
+  preExpressMiddleware?: Middleware[];
 }
 
 export const socControllerMethodExtensionDataSchema: JSONSchema6 = {

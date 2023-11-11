@@ -18,7 +18,7 @@ export interface SOCControllerMethodCommonMetadata {
   /**
    * Express middleware to run around the handler.
    */
-  expressMiddleware?: Middleware[];
+  preExpressMiddleware?: Middleware[];
 }
 
 export interface SOCBoundControllerMethodMetadata

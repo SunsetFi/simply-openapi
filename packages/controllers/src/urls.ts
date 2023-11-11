@@ -7,3 +7,11 @@ export function joinUrlPaths(...paths: string[]): string {
       .join("/")
   );
 }
+
+export function expressToOpenAPIPath(path: string): string {
+  return path.replace(/:([^/]+)/g, "{$1}");
+}
+
+export function openAPIToExpressPath(path: string): string {
+  return path.replace(/{([^/]+)}/g, ":$1");
+}

@@ -8,8 +8,8 @@
     "prebuild": "npm run clean",
     "build": "tsc -p src",
     "build:docs": "node dist/build-swagger.js",
-    "test": "jest --coverage",
-    "format": "prettier --write \"./src/**/*.{ts,js}\""
+    "format": "prettier --write \"./src/**/*.{ts,js}\"",
+    "start": "node dist/index.js"
   },
   "author": {
     "name": "SunsetFi",

@@ -7,7 +7,7 @@ import {
   getSOCControllerMethodMetadata,
   isSOCCustomControllerMethodMetadata,
 } from "../../metadata";
-import { joinUrlPaths } from "../../urls";
+import { expressToOpenAPIPath, joinUrlPaths } from "../../urls";
 import { ControllerObject } from "../../types";
 
 import { OpenAPIObjectExtractor } from "../types";
@@ -38,13 +38,15 @@ export const extractSOCCustomMethodSpec: OpenAPIObjectExtractor = (
     );
   }
 
-  const path = joinUrlPaths(controllerMetadata?.path ?? "/", metadata.path);
+  const path = expressToOpenAPIPath(
+    joinUrlPaths(controllerMetadata?.path ?? "/", metadata.path)
+  );
 
   // controller middleware should run before operation middleware
 
-  const expressMiddleware = [
-    ...(controllerMetadata?.expressMiddleware ?? []),
-    ...(metadata.expressMiddleware ?? []),
+  const preExpressMiddleware = [
+    ...(controllerMetadata?.preExpressMiddleware ?? []),
+    ...(metadata.preExpressMiddleware ?? []),
   ];
 
   const handlerMiddleware = [
@@ -58,8 +60,8 @@ export const extractSOCCustomMethodSpec: OpenAPIObjectExtractor = (
     handlerArgs: metadata.args,
   };
 
-  if (expressMiddleware.length > 0) {
-    extension.expressMiddleware = expressMiddleware;
+  if (preExpressMiddleware.length > 0) {
+    extension.preExpressMiddleware = preExpressMiddleware;
   }
 
   if (handlerMiddleware.length > 0) {

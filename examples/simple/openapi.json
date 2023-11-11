@@ -15,11 +15,28 @@
             "description": "Filter by disposition",
             "schema": {
               "type": "string",
-              "minimum": 0,
               "enum": [
                 "happy",
                 "sad"
               ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "description": "Limit the number of results",
+            "schema": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "description": "Offset the results",
+            "schema": {
+              "type": "number",
+              "minimum": 0
             }
           }
         ],
@@ -149,7 +166,7 @@
         ]
       }
     },
-    "/widgets/:id": {
+    "/widgets/{id}": {
       "get": {
         "operationId": "WidgetsController.getWidgetById",
         "parameters": [

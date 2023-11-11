@@ -265,7 +265,7 @@ describe("MethodHandler", function () {
     });
   });
 
-  describe("expressMiddleware", function () {
+  describe("preExpressMiddleware", function () {
     it("applies the middleware", async function () {
       const middleware = jest.fn((req, res, next) => next());
 
@@ -274,14 +274,18 @@ describe("MethodHandler", function () {
         handler: () => null,
         handlerArgs: [],
         opts: {
-          expressMiddleware: [middleware],
+          preExpressMiddleware: [middleware],
         },
       });
 
       expect(next).not.toHaveBeenCalled();
       expect(middleware).toHaveBeenCalled();
     });
+
+    test.todo("calls the middleware before the handler");
   });
+
+  test.todo("postExpressMiddleware");
 
   describe("handlerMiddleware", function () {
     it("applies the middleware in order", async function () {
@@ -1060,6 +1064,11 @@ describe("MethodHandler", function () {
                 opts: {},
                 mockReq: { body: bodyValue },
               });
+
+            expect(test()).rejects.toThrowWithMessage(
+              Error,
+              /Could not resolve schema reference/
+            );
           });
 
           it("returns bad request when a body does not match the schema", async function () {

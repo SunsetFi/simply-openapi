@@ -16,7 +16,9 @@ export async function operationHandlerFallbackResponseMiddleware(
     throw new Error(
       `Operation ${nameOperationFromContext(
         context
-      )} handler did not send a response for handler result ${typeof result}.  Are you missing a handler middleware for the response type ${responseType}?`
+      )} handler did not send a response for the handler result.  Are you missing a handler middleware for ${
+        responseType == null ? "your response" : `response type ${responseType}`
+      }?`
     );
   }
 
@@ -24,7 +26,9 @@ export async function operationHandlerFallbackResponseMiddleware(
     throw new Error(
       `Operation ${nameOperationFromContext(
         context
-      )} returned a result that was not handled by any middleware, and was not sent back to the client.  Are you missing a handler middleware for response type ${responseType}?`
+      )} returned a result that was not handled by any middleware, and was not sent back to the client.  Are you missing a handler middleware for ${
+        responseType == null ? "your response" : `response type ${responseType}`
+      }?`
     );
   }
 }

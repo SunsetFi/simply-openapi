@@ -14,4 +14,7 @@ describe("createRouterFromSpec", () => {
   test.todo("implements the response object handler middleware");
   test.todo("implements the fallback handler");
   test.todo("connects the handler to the router at the appropriate path");
+
+  // Currently not implemented
+  test.todo("handles http-errors");
 });
