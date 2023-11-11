@@ -4,6 +4,8 @@ import { MockRequest } from "@jest-mock/express/dist/src/request";
 import { Request, Response } from "express";
 import { NotFound, BadRequest } from "http-errors";
 import { merge } from "lodash";
+import AJV from "ajv";
+import addFormats from "ajv-formats";
 import "jest-extended";
 
 import {
@@ -19,6 +21,9 @@ import {
 } from "../handler-middleware";
 
 import { MethodHandler } from "./method-handler";
+
+const ajv = new AJV({ coerceTypes: true, useDefaults: true });
+addFormats(ajv);
 
 describe("MethodHandler", function () {
   function getMockReq(opts: MockRequest) {
@@ -72,6 +77,7 @@ describe("MethodHandler", function () {
       {},
       "GET",
       op as OperationObject,
+      ajv,
       {
         ...opts,
         handlerMiddleware: [
@@ -123,6 +129,7 @@ describe("MethodHandler", function () {
             handlerArgs: [],
           } satisfies SOCControllerMethodExtensionData,
         } as OperationObject,
+        ajv,
         {
           resolveController: resolver,
           handlerMiddleware: [
@@ -176,6 +183,7 @@ describe("MethodHandler", function () {
             handlerArgs: [],
           } satisfies SOCControllerMethodExtensionData,
         } as OperationObject,
+        ajv,
         {
           handlerMiddleware: [
             operationHandlerFallbackResponseMiddleware,
@@ -223,6 +231,7 @@ describe("MethodHandler", function () {
             handlerArgs: [],
           } satisfies SOCControllerMethodExtensionData,
         } as OperationObject,
+        ajv,
         {
           resolveHandler: resolver,
           handlerMiddleware: [

@@ -26,7 +26,6 @@ import {
   SOCControllerMethodHandlerParameterArg,
   validateSOCControllerMethodExtensionData,
 } from "../../openapi";
-import ajv from "../../ajv";
 import { resolveReference, isNotNull } from "../../utils";
 
 import { OperationHandlerMiddleware } from "../handler-types";
@@ -34,11 +33,6 @@ import { OperationHandlerMiddleware } from "../handler-types";
 import { OperationHandlerMiddlewareManager } from "./OperationHandlerMiddlewareManager";
 
 export interface MethodHandlerOpts {
-  /**
-   * The AJV schema validator to use for this method.,
-   */
-  ajv?: AJV;
-
   /**
    * Resolve a controller specified in the x-simply-controller-method extension into a controller object.
    * @param controller The controller to resolve.
@@ -77,25 +71,27 @@ type ArgumentCollector = (req: Request, res: Response) => any;
 export class MethodHandler {
   private _selfRoute = Router({ mergeParams: true });
 
-  private _ajv: AJV;
-
   private _controller: object;
   private _handler: Function;
 
   private _extensionData: SOCControllerMethodExtensionData;
   private _argumentCollectors: ArgumentCollector[];
 
+  // Note: We have some redundancy here, in that we must get passed the spec to handle our own resolutions,
+  // but we are also passed an external ajv instance that ALSO must have the spec registered with it to handle $refs
+  // We currently have router-factory handle the spec registration in ajv, as we are sharing an instance.
+  // We could opt to create an ajv instance internally, but that would produce a lot of duplicated instances
+  // and it is probably more efficient to share just one.
   constructor(
     private _spec: OpenAPIObject,
     private _path: string,
     private _pathItem: PathItemObject,
     private _method: string,
     private _operation: OperationObject,
+    private _ajv: AJV,
     private _opts: MethodHandlerOpts
   ) {
     let { resolveController, resolveHandler } = _opts;
-
-    this._ajv = _opts.ajv ?? ajv;
 
     if (!resolveController) {
       resolveController = (controller) => {

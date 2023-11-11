@@ -6,7 +6,8 @@ import {
 } from "openapi3-ts/oas31";
 import { Entries } from "type-fest";
 import { pick } from "lodash";
-import AJV from "ajv";
+import AJV, { Options as AjvOptions } from "ajv";
+import addAjvFormats from "ajv-formats";
 
 import {
   SOCControllerMethodExtensionData,
@@ -14,7 +15,6 @@ import {
 } from "../openapi";
 import { ControllerInstance, RequestMethod } from "../types";
 import { requestMethods } from "../utils";
-import ajv from "../ajv";
 
 import { MethodHandler } from "./utils/method-handler";
 
@@ -40,9 +40,9 @@ export type OperationHandlerFactory = (
 
 export interface CreateRouterOptions {
   /**
-   * The AJV schema validator to use when validating data,
+   * Options to pass to the AJV instance used to validate requests.
    */
-  ajv?: AJV;
+  ajvOptions?: AjvOptions;
 
   /**
    * Resolver to convert a controller specified in the x-simply-controller-method extension into an instance of the controller object.
@@ -116,13 +116,18 @@ export function createRouterFromSpec(
 }
 
 class RouterFromSpecFactory {
+  private _ajv: AJV;
   constructor(
     private _openApi: OpenAPIObject,
     private _opts: CreateRouterOptions = {}
   ) {
-    if (!_opts.ajv) {
-      _opts.ajv = ajv;
-    }
+    this._ajv = new AJV(
+      _opts.ajvOptions ?? { useDefaults: true, coerceTypes: true }
+    );
+    addAjvFormats(this._ajv);
+
+    // Add the full openapi schema for $ref resolution.
+    this._ajv.addSchema(_openApi);
 
     if (!_opts.handlerFactories) {
       _opts.handlerFactories = [];
@@ -184,6 +189,7 @@ class RouterFromSpecFactory {
       ctx.pathItem,
       ctx.method,
       operation,
+      this._ajv,
       this._opts
     );
     return handler.handle.bind(handler);
