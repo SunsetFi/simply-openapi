@@ -1,9 +1,8 @@
 # Simply OpenAPI Controllers
-
-No heavy frameworks, no IOC, just a simple robust express controller library using modern ES6 decorators. Flexible enough to fit into any framework that accepts express middleware.
-
-Simply OpenAPI Controllers is an OpenAPI-First controller library. It produces fully robust method handlers on controllers by consuming an OpenAPI 3.1 specification and calling your handlers
+Simply OpenAPI Controllers is an ExpressJS compatible OpenAPI-First controller library. It produces fully robust method handlers on controllers by consuming an OpenAPI 3.1 specification and calling your handlers
 with all data pre-validated and coerced according to your specification.
+
+It exposes its handlers as a single express middleware / router, allowing integration with express itself or with any library or framework that wraps it.
 
 Don't have OpenAPI specs? No problem! SOC also provides decorators for your classes and methods that will create the openapi spec for you according to your handler usage and declaration.
 
