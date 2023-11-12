@@ -387,7 +387,7 @@ describe("extractSOCBoundMethodSpec", function () {
       });
     });
 
-    it.only("orders method middleware after controller middleware", function () {
+    it("orders method middleware after controller middleware", function () {
       const operationId = "foobar";
       const controllerMiddleware = (
         req: Request,

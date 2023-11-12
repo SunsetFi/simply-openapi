@@ -282,7 +282,23 @@ describe("MethodHandler", function () {
       expect(middleware).toHaveBeenCalled();
     });
 
-    test.todo("calls the middleware before the handler");
+    it("calls the middleware before the handler", async function () {
+      const middleware = jest.fn((req, res, next) => next());
+      const handler = jest.fn(() => null);
+
+      const [next] = await testHandler({
+        op: {},
+        handler,
+        handlerArgs: [],
+        opts: {
+          preExpressMiddleware: [middleware],
+        },
+      });
+
+      expect(next).not.toHaveBeenCalled();
+      expect(middleware).toHaveBeenCalled();
+      expect(middleware).toHaveBeenCalledBefore(handler);
+    });
   });
 
   test.todo("postExpressMiddleware");
