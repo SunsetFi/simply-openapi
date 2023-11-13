@@ -1,13 +1,14 @@
-- Decorator for header
-- Decorator for cookie
+- Decorator / validation for header
+- Decorator / validation for cookie
+- ErrorHandlerMiddleware() that injects an error handling middleware after the method handler.
+- Rewrite validation of all openapi specs so they happen regardless if the user uses a decorator to request the value.
 - Review all places in the spec where $ref may be used; implement and test it.
   - Missing path items!
   - See predefined locations for #/components
-- Instead of taking AJV, take a validator factory. Let users use something other than AJV.
 - make a pipeline for parameters. Validation, coersion, and whatever else users want
   - This should support making custom parameter types, to replace the function-based custom decorators of SEC 1
 - Auto publishing
-- Break into monorepo, add other companion libs for more features
-  - Package for class-validator / class-validators-json-schema (for openapi) / class-transformer
+- Additional packages:
+  - Package for DTOs: class-validator / class-validators-json-schema (for openapi) / class-transformer
   - Package for zipkin
   - Package for promethius
