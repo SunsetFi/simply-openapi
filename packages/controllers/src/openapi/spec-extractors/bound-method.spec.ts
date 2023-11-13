@@ -436,8 +436,6 @@ describe("extractSOCBoundMethodSpec", function () {
     });
   });
 
-  test.todo("post express middleware");
-
   describe("handler middleware", function () {
     it("configures controller middleware", function () {
       const operationId = "foobar";

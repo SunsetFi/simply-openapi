@@ -301,8 +301,6 @@ describe("MethodHandler", function () {
     });
   });
 
-  test.todo("postExpressMiddleware");
-
   describe("handlerMiddleware", function () {
     it("applies the middleware in order", async function () {
       const middleware1 = jest.fn((ctx, next) => next());
