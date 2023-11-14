@@ -32,11 +32,6 @@ export const bodyRequestDataExtractorFactory: RequestDataProcessorFactory = (
     );
   }
 
-  if (!requestBody.content) {
-    // This is invalid according to the openapi spec, but handle it.
-    return defaultRequestProcessor;
-  }
-
   const compileSchema = (
     key: string,
     schema: SchemaObject | ReferenceObject | undefined,
@@ -58,13 +53,14 @@ export const bodyRequestDataExtractorFactory: RequestDataProcessorFactory = (
   };
 
   const processors: Record<string, ValueProcessorFunction> = mapValues(
-    requestBody.content,
+    // Content is required in the spec, but allow none I suppose...
+    requestBody.content ?? {},
     ({ schema }, key) => compileSchema(key, schema),
   );
 
   return (req: Request) => {
     // unfortunately, express (maybe body-parser?) gives us an empty object if no body.
-    if (Object.keys(req.body).length === 0) {
+    if (!req.body || Object.keys(req.body).length === 0) {
       if (requestBody.required) {
         throw new BadRequest(`Request body is required.`);
       }
@@ -78,6 +74,15 @@ export const bodyRequestDataExtractorFactory: RequestDataProcessorFactory = (
 
     const processor = pickContentType(contentType, processors);
     if (!processor) {
+      if (Object.keys(requestBody.content ?? {}).length === 0) {
+        // no content types defined, so we can't do anything.
+        // Required was already taken care of, so just
+        // return whatever we have.
+        return {
+          body: req.body,
+        };
+      }
+
       if (contentType === "") {
         throw new BadRequest(`The Content-Type header is required.`);
       }

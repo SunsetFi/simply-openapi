@@ -1,7 +1,7 @@
-- Decorator / validation for header
-- Decorator / validation for cookie
-- ErrorHandlerMiddleware() that injects an error handling middleware after the method handler.
-- Rewrite validation of all openapi specs so they happen regardless if the user uses a decorator to request the value.
+- Decorator for header param
+- Decorator for cookie param
+- Validation for bodies is just returning "validation failed" as a message.
+  - Because more than one error? If so, return first error.
 - Review all places in the spec where $ref may be used; implement and test it.
   - Missing path items!
   - See predefined locations for #/components
