@@ -11,9 +11,9 @@ import { mergeSOCControllerMethodMetadata } from "../../metadata";
 export function Response(
   statusCode: number | "default",
   content: ContentObject,
-  response?: ResponseObject
+  response?: ResponseObject,
 ) {
-  return function (target: any, propertyKey: string | symbol | undefined) {
+  return function (target: any, propertyKey: string | symbol) {
     if (propertyKey === undefined) {
       throw new Error(`@Response() must be applied to a method.`);
     }
@@ -34,7 +34,7 @@ export function Response(
           },
         },
       },
-      propertyKey
+      propertyKey,
     );
   };
 }
@@ -46,7 +46,7 @@ export function Response(
  */
 export function EmptyResponse(
   statusCode: number | "default",
-  response?: ResponseObject
+  response?: ResponseObject,
 ) {
   return Response(statusCode, {}, response);
 }
@@ -60,7 +60,7 @@ export function EmptyResponse(
 export function JsonResponse(
   statusCode: number | "default",
   schema: SchemaObject,
-  response?: ResponseObject
+  response?: ResponseObject,
 ) {
   return Response(
     statusCode,
@@ -69,6 +69,6 @@ export function JsonResponse(
         schema,
       },
     },
-    response
+    response,
   );
 }

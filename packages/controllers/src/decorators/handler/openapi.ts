@@ -8,7 +8,7 @@ import { mergeSOCControllerMethodMetadata } from "../../metadata";
  * @param fragment A partial fragment of an OpenAPI operation object.
  */
 export function OpenAPIOperation(fragment: PartialDeep<OperationObject>) {
-  return function (target: any, methodName: string | symbol | undefined) {
+  return function (target: any, methodName: string | symbol) {
     if (!methodName) {
       throw new Error(`@OpenAPIOperation() must be applied to a method.`);
     }
@@ -16,7 +16,7 @@ export function OpenAPIOperation(fragment: PartialDeep<OperationObject>) {
     mergeSOCControllerMethodMetadata(
       target,
       { operationFragment: fragment },
-      methodName
+      methodName,
     );
   };
 }

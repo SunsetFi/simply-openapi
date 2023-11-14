@@ -10,7 +10,7 @@ import {
 
 export type MethodDecorator = (
   path: string,
-  operationFragment: PartialDeep<OperationObject>
+  operationFragment: PartialDeep<OperationObject>,
 ) => (target: any, methodName: string) => void;
 
 export type MethodSettings = Omit<
@@ -20,10 +20,10 @@ export type MethodSettings = Omit<
 
 function createMethodDecorator(method: RequestMethod): MethodDecorator {
   return (path: string, operationFragment: PartialDeep<MethodSettings>) => {
-    return function (target: any, methodName: string | symbol | undefined) {
+    return function (target: any, methodName: string | symbol) {
       if (methodName === undefined) {
         throw new Error(
-          `@${method.toUpperCase()}() must be applied to a method.`
+          `@${method.toUpperCase()}() must be applied to a method.`,
         );
       }
 
@@ -31,23 +31,23 @@ function createMethodDecorator(method: RequestMethod): MethodDecorator {
       if (existing && isSOCBoundControllerMethodMetadata(existing)) {
         throw new Error(
           `Method handler ${String(
-            methodName
-          )} cannot both be bound to an operation and have http methods specified.`
+            methodName,
+          )} cannot both be bound to an operation and have http methods specified.`,
         );
       }
 
       if (existing && existing.method) {
         throw new Error(
           `Method handler ${String(
-            methodName
-          )} cannot handle multiple http methods.`
+            methodName,
+          )} cannot handle multiple http methods.`,
         );
       }
 
       mergeSOCControllerMethodMetadata(
         target,
         { path, method, operationFragment: operationFragment ?? {} },
-        methodName
+        methodName,
       );
     };
   };
