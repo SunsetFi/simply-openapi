@@ -28,7 +28,7 @@ import {
 } from "../../openapi";
 import { resolveReference, isNotNull } from "../../utils";
 
-import { OperationHandlerMiddleware } from "../handler-types";
+import { OperationHandlerMiddleware } from "../handler-middleware";
 
 import { OperationHandlerMiddlewareManager } from "./OperationHandlerMiddlewareManager";
 
@@ -48,7 +48,7 @@ export interface MethodHandlerOpts {
    */
   resolveHandler?: (
     controller: object,
-    method: Function | string | symbol
+    method: Function | string | symbol,
   ) => Function;
 
   /**
@@ -94,7 +94,7 @@ export class MethodHandler {
     private _method: string,
     private _operation: OperationObject,
     private _ajv: AJV,
-    private _opts: MethodHandlerOpts
+    private _opts: MethodHandlerOpts,
   ) {
     let { resolveController, resolveHandler } = _opts;
 
@@ -105,8 +105,8 @@ export class MethodHandler {
             `Controller for operation ${
               _operation.operationId
             } handling \"${_method} ${_path}\" is not an object (got ${String(
-              this._extensionData.controller
-            )}).`
+              this._extensionData.controller,
+            )}).`,
           );
         }
 
@@ -128,8 +128,8 @@ export class MethodHandler {
             `Handler for operation \"${
               _operation.operationId
             }\" handling \"${_method} ${_path}\" is not a function (got ${String(
-              this._extensionData.handler
-            )}).`
+              this._extensionData.handler,
+            )}).`,
           );
         }
 
@@ -143,7 +143,7 @@ export class MethodHandler {
 
     if (!this._extensionData) {
       throw new Error(
-        `Operation ${_operation.operationId} is missing the ${SOCControllerMethodExtensionName} extension.`
+        `Operation ${_operation.operationId} is missing the ${SOCControllerMethodExtensionName} extension.`,
       );
     }
 
@@ -152,8 +152,8 @@ export class MethodHandler {
         `Operation ${
           _operation.operationId
         } has an invalid ${SOCControllerMethodExtensionName} extension: ${this._ajv.errorsText(
-          validateSOCControllerMethodExtensionData.errors
-        )}}`
+          validateSOCControllerMethodExtensionData.errors,
+        )}}`,
       );
     }
 
@@ -163,11 +163,11 @@ export class MethodHandler {
 
     this._handler = resolveHandler(
       this._controller,
-      this._extensionData.handler
+      this._extensionData.handler,
     );
 
     this._argumentCollectors = (this._extensionData.handlerArgs ?? []).map(
-      (arg) => this._buildArgumentCollector(arg, _operation)
+      (arg) => this._buildArgumentCollector(arg, _operation),
     );
 
     // We use a router to handle the complex process of performing the middleware composition for us.
@@ -190,26 +190,27 @@ export class MethodHandler {
   private async _invokeHandler(
     req: Request,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ) {
     try {
       const args = this._argumentCollectors.map((collector) =>
-        collector(req, res)
+        collector(req, res),
       );
 
       var middlewareManager = new OperationHandlerMiddlewareManager(
-        this._handler.bind(this._controller)
+        this._handler.bind(this._controller),
       );
       // TODO: Is this order right?  We want to run our local middleware closer to the handling than the external middleware.
       middlewareManager.use(
         ...(this._extensionData.handlerMiddleware ?? []),
-        ...(this._opts.handlerMiddleware ?? [])
+        ...(this._opts.handlerMiddleware ?? []),
       );
 
       // Call the handler function with the arguments
       // Our middleware will handle return values as needed.
       const result = await middlewareManager.run(
         {
+          spec: this._spec,
           controller: this._controller,
           handler: this._handler,
           handlerArgs: args.map((arg, i) => {
@@ -226,12 +227,12 @@ export class MethodHandler {
           req,
           res,
         },
-        args
+        args,
       );
 
       if (result !== undefined) {
         throw new Error(
-          `Handler returned a result of type ${typeof result} that was not consumed by a handler middleware.  Are you missing a handler middleware to handle the result type?`
+          `Handler returned a result of type ${typeof result} that was not consumed by a handler middleware.  Are you missing a handler middleware to handle the result type?`,
         );
       }
     } catch (err: any) {
@@ -242,7 +243,7 @@ export class MethodHandler {
 
   private _buildArgumentCollector(
     arg: SOCControllerMethodHandlerArg | undefined,
-    op: OperationObject
+    op: OperationObject,
   ): ArgumentCollector {
     if (arg === undefined) {
       return () => undefined;
@@ -265,7 +266,7 @@ export class MethodHandler {
 
   private _buildParameterCollector(
     arg: SOCControllerMethodHandlerParameterArg,
-    op: OperationObject
+    op: OperationObject,
   ): ArgumentCollector {
     // Find the parameter object in the OpenAPI operation
     const resolvedParams = (op.parameters ?? [])
@@ -273,12 +274,12 @@ export class MethodHandler {
       .filter(isNotNull);
 
     const param: ParameterObject | undefined = resolvedParams.find(
-      (param) => param.name === arg.parameterName
+      (param) => param.name === arg.parameterName,
     ) as ParameterObject;
 
     if (!param) {
       throw new Error(
-        `Parameter ${arg.parameterName} not found in operation parameters.  Either it was not defined or its $ref failed to resolve.`
+        `Parameter ${arg.parameterName} not found in operation parameters.  Either it was not defined or its $ref failed to resolve.`,
       );
     }
 
@@ -288,7 +289,7 @@ export class MethodHandler {
           throw new NotFound();
         } else if (param.required) {
           throw new BadRequest(
-            `Query parameter ${arg.parameterName} is required.`
+            `Query parameter ${arg.parameterName} is required.`,
           );
         }
       }
@@ -312,7 +313,7 @@ export class MethodHandler {
       schema = resolveReference(this._spec, schema)!;
       if (!schema) {
         throw new Error(
-          `Could not resolve schema reference ${ref["$ref"]} of parameter ${param.name}.`
+          `Could not resolve schema reference ${ref["$ref"]} of parameter ${param.name}.`,
         );
       }
     }
@@ -340,7 +341,7 @@ export class MethodHandler {
           throw new BadRequest(
             `Query parameter ${
               arg.parameterName
-            } is invalid: ${this._ajv.errorsText(validator.errors)}.`
+            } is invalid: ${this._ajv.errorsText(validator.errors)}.`,
           );
         }
       }
@@ -351,7 +352,7 @@ export class MethodHandler {
 
   private _buildBodyCollector(
     arg: SOCControllerMethodHandlerBodyArg,
-    op: OperationObject
+    op: OperationObject,
   ): ArgumentCollector {
     if (!op.requestBody) {
       // Return the raw body, as no transformations were applied
@@ -363,7 +364,7 @@ export class MethodHandler {
       throw new Error(
         `Could not resolve requestBody reference ${
           (op.requestBody as any)["$ref"]
-        }.`
+        }.`,
       );
     }
 
@@ -374,7 +375,7 @@ export class MethodHandler {
 
     const compileSchema = (
       mediaType: string,
-      schema: SchemaObject | ReferenceObject | undefined
+      schema: SchemaObject | ReferenceObject | undefined,
     ): ValidateFunction => {
       if (schema === undefined) {
         // We accept it, but didn't define a schema.  Let it through
@@ -386,7 +387,7 @@ export class MethodHandler {
         schema = resolveReference(this._spec, ref)!;
         if (!schema) {
           throw new Error(
-            `Could not resolve schema reference ${ref["$ref"]} for requestBody media type ${mediaType}.`
+            `Could not resolve schema reference ${ref["$ref"]} for requestBody media type ${mediaType}.`,
           );
         }
       }
@@ -399,7 +400,7 @@ export class MethodHandler {
 
     const validators: Record<string, ValidateFunction> = mapValues(
       requestBody.content,
-      ({ schema }, key) => compileSchema(key, schema)
+      ({ schema }, key) => compileSchema(key, schema),
     );
 
     return (req) => {
@@ -417,8 +418,8 @@ export class MethodHandler {
 
         throw new BadRequest(
           `Request body content type ${contentType} is not supported.  Supported content types: ${Object.keys(
-            validators
-          ).join(", ")}`
+            validators,
+          ).join(", ")}`,
         );
       }
 
@@ -429,7 +430,7 @@ export class MethodHandler {
 
       if (!validator(validateObj)) {
         throw new BadRequest(
-          `Request body is invalid: ${this._ajv.errorsText(validator.errors)}.`
+          `Request body is invalid: ${this._ajv.errorsText(validator.errors)}.`,
         );
       }
 
@@ -440,7 +441,7 @@ export class MethodHandler {
 
 function pickContentType<T>(
   contentType: string | null,
-  values: Record<string, T>
+  values: Record<string, T>,
 ): T | null {
   if (contentType === "") {
     contentType = null;

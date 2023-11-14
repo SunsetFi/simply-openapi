@@ -2,7 +2,7 @@ import {
   OperationHandlerMiddleware,
   OperationHandlerMiddlewareContext,
   OperationHandlerMiddlewareNextFunction,
-} from "../handler-types";
+} from "../handler-middleware/types";
 
 export class OperationHandlerMiddlewareManager {
   private middlewares: OperationHandlerMiddleware[] = [];
@@ -18,13 +18,13 @@ export class OperationHandlerMiddlewareManager {
 
   async run(
     context: OperationHandlerMiddlewareContext,
-    args: any[]
+    args: any[],
   ): Promise<any> {
     const stack = this.middlewares;
 
     const executeMiddleware = async (
       index: number,
-      args: any[]
+      args: any[],
     ): Promise<any> => {
       if (index >= stack.length) {
         return this.coreFunction(...args);

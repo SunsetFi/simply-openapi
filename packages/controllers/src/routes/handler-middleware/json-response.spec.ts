@@ -1,12 +1,14 @@
 import { getMockReq, getMockRes } from "@jest-mock/express";
-import { operationHandlerJsonResponseMiddleware } from "./JsonResponseMiddleware";
 import "jest-extended";
+
+import { operationHandlerJsonResponseMiddleware } from "./json-response";
 
 describe("operationHandlerJsonResponseMiddleware", function () {
   it("throws an error if the response is not JSON serializable", function () {
     const test = async () => {
       await operationHandlerJsonResponseMiddleware(
         {
+          spec: { openapi: "3.1.0", info: { title: "Test", version: "1.0.0" } },
           path: "/",
           controller: {},
           method: "GET",
@@ -19,7 +21,7 @@ describe("operationHandlerJsonResponseMiddleware", function () {
         },
         jest.fn(() => ({
           nonSerializableValue: () => void 0,
-        })) as any
+        })) as any,
       );
     };
 
@@ -30,6 +32,7 @@ describe("operationHandlerJsonResponseMiddleware", function () {
     const test = async () => {
       await operationHandlerJsonResponseMiddleware(
         {
+          spec: { openapi: "3.1.0", info: { title: "Test", version: "1.0.0" } },
           path: "/",
           controller: {},
           method: "GET",
@@ -42,13 +45,13 @@ describe("operationHandlerJsonResponseMiddleware", function () {
         },
         jest.fn(() => ({
           value: 42,
-        })) as any
+        })) as any,
       );
     };
 
     expect(test()).rejects.toThrowWithMessage(
       Error,
-      /already sent its headers/
+      /already sent its headers/,
     );
   });
 
@@ -56,6 +59,7 @@ describe("operationHandlerJsonResponseMiddleware", function () {
     const test = async () => {
       await operationHandlerJsonResponseMiddleware(
         {
+          spec: { openapi: "3.1.0", info: { title: "Test", version: "1.0.0" } },
           path: "/",
           controller: {},
           method: "GET",
@@ -66,7 +70,7 @@ describe("operationHandlerJsonResponseMiddleware", function () {
           req: getMockReq(),
           res: getMockRes({ headersSent: true }).res,
         },
-        jest.fn((x) => undefined) as any
+        jest.fn((x) => undefined) as any,
       );
     };
 
@@ -79,6 +83,7 @@ describe("operationHandlerJsonResponseMiddleware", function () {
     const test = async () => {
       await operationHandlerJsonResponseMiddleware(
         {
+          spec: { openapi: "3.1.0", info: { title: "Test", version: "1.0.0" } },
           path: "/",
           controller: {},
           method: "GET",
@@ -89,7 +94,7 @@ describe("operationHandlerJsonResponseMiddleware", function () {
           req: getMockReq(),
           res: res,
         },
-        jest.fn((x) => result) as any
+        jest.fn((x) => result) as any,
       );
     };
 

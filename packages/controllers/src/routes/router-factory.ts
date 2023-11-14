@@ -15,6 +15,7 @@ import {
 } from "../openapi";
 import { ControllerInstance, RequestMethod } from "../types";
 import { requestMethods } from "../utils";
+import { openAPIToExpressPath } from "../urls";
 
 import { MethodHandler } from "./utils/method-handler";
 
@@ -22,10 +23,9 @@ import {
   operationHandlerJsonResponseMiddleware,
   operationHandlerFallbackResponseMiddleware,
   operationHandlerResponseObjectMiddleware,
+  OperationHandlerMiddleware,
 } from "./handler-middleware";
 import { maybeParseJson } from "./express-middleware";
-import { OperationHandlerMiddleware } from "./handler-types";
-import { openAPIToExpressPath } from "../urls";
 
 export interface RouteCreationContext {
   openApi: OpenAPIObject;
@@ -36,7 +36,7 @@ export interface RouteCreationContext {
 
 export type OperationHandlerFactory = (
   operation: OperationObject,
-  ctx: RouteCreationContext
+  ctx: RouteCreationContext,
 ) => RequestHandler | null | undefined;
 
 export interface CreateRouterOptions {
@@ -54,7 +54,7 @@ export interface CreateRouterOptions {
    * @returns The resolved controller
    */
   resolveController?: (
-    controller: SOCControllerMethodExtensionData["controller"]
+    controller: SOCControllerMethodExtensionData["controller"],
   ) => ControllerInstance;
 
   /**
@@ -68,7 +68,7 @@ export interface CreateRouterOptions {
    */
   resolveHandler?: (
     controller: ControllerInstance,
-    method: Function | string | symbol
+    method: Function | string | symbol,
   ) => Function;
 
   /**
@@ -115,7 +115,7 @@ export interface CreateRouterOptions {
  */
 export function createRouterFromSpec(
   openApi: OpenAPIObject,
-  opts: CreateRouterOptions = {}
+  opts: CreateRouterOptions = {},
 ): Router {
   const factory = new RouterFromSpecFactory(openApi, opts);
   return factory.createRouterFromSpec();
@@ -125,10 +125,10 @@ class RouterFromSpecFactory {
   private _ajv: AJV;
   constructor(
     private _openApi: OpenAPIObject,
-    private _opts: CreateRouterOptions = {}
+    private _opts: CreateRouterOptions = {},
   ) {
     this._ajv = new AJV(
-      _opts.ajvOptions ?? { useDefaults: true, coerceTypes: true }
+      _opts.ajvOptions ?? { useDefaults: true, coerceTypes: true },
     );
     addAjvFormats(this._ajv);
 
@@ -154,12 +154,12 @@ class RouterFromSpecFactory {
 
     _opts.handlerMiddleware.unshift(
       operationHandlerJsonResponseMiddleware,
-      operationHandlerResponseObjectMiddleware
+      operationHandlerResponseObjectMiddleware,
     );
 
     if (_opts.ensureResponsesHandled !== false) {
       _opts.handlerMiddleware.unshift(
-        operationHandlerFallbackResponseMiddleware
+        operationHandlerFallbackResponseMiddleware,
       );
     }
   }
@@ -173,7 +173,7 @@ class RouterFromSpecFactory {
         path,
         pathItem,
         this._openApi,
-        this._opts
+        this._opts,
       );
     }
 
@@ -182,7 +182,7 @@ class RouterFromSpecFactory {
 
   private _socOperationHandlerFactory(
     operation: OperationObject,
-    ctx: RouteCreationContext
+    ctx: RouteCreationContext,
   ): RequestHandler | null {
     const metadata = operation[SOCControllerMethodExtensionName];
     if (!metadata) {
@@ -196,7 +196,7 @@ class RouterFromSpecFactory {
       ctx.method,
       operation,
       this._ajv,
-      this._opts
+      this._opts,
     );
     return handler.handle.bind(handler);
   }
@@ -206,7 +206,7 @@ class RouterFromSpecFactory {
     path: string,
     pathItem: PathItemObject,
     openApi: OpenAPIObject,
-    opts: CreateRouterOptions
+    opts: CreateRouterOptions,
   ) {
     for (const [method, operation] of methodsFromPathItem(pathItem)) {
       if (!requestMethods.includes(method as any)) {
@@ -244,7 +244,7 @@ class RouterFromSpecFactory {
 }
 
 function methodsFromPathItem(
-  pathItem: PathItemObject
+  pathItem: PathItemObject,
 ): Entries<Pick<PathItemObject, RequestMethod>> {
   return Object.entries(pick(pathItem, requestMethods)) as Entries<
     Pick<PathItemObject, RequestMethod>

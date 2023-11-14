@@ -1,12 +1,13 @@
+import { nameOperationFromContext } from "./utils";
+
 import {
   OperationHandlerMiddlewareContext,
   OperationHandlerMiddlewareNextFunction,
-} from "../handler-types";
-import { nameOperationFromContext } from "../utils/utils";
+} from "./types";
 
 export async function operationHandlerFallbackResponseMiddleware(
   context: OperationHandlerMiddlewareContext,
-  next: OperationHandlerMiddlewareNextFunction
+  next: OperationHandlerMiddlewareNextFunction,
 ) {
   const result = await next();
 
@@ -15,20 +16,20 @@ export async function operationHandlerFallbackResponseMiddleware(
   if (!context.res.headersSent) {
     throw new Error(
       `Operation ${nameOperationFromContext(
-        context
+        context,
       )} handler did not send a response for the handler result.  Are you missing a handler middleware for ${
         responseType == null ? "your response" : `response type ${responseType}`
-      }?`
+      }?`,
     );
   }
 
   if (result !== undefined) {
     throw new Error(
       `Operation ${nameOperationFromContext(
-        context
+        context,
       )} returned a result that was not handled by any middleware, and was not sent back to the client.  Are you missing a handler middleware for ${
         responseType == null ? "your response" : `response type ${responseType}`
-      }?`
+      }?`,
     );
   }
 }

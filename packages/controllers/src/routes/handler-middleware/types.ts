@@ -1,26 +1,38 @@
 import { Request, Response } from "express";
-import { OperationObject, PathItemObject } from "openapi3-ts/oas31";
+import {
+  OpenAPIObject,
+  OperationObject,
+  PathItemObject,
+} from "openapi3-ts/oas31";
 
-import { SOCControllerMethodHandlerArg } from "../openapi";
+import { HandledArgument } from "../types";
 
-export type HandledArgument = [any, SOCControllerMethodHandlerArg];
 export interface OperationHandlerMiddlewareContext {
+  /**
+   * The OpenAPI specification object.
+   */
+  spec: OpenAPIObject;
+
   /**
    * The full path of this operation.
    */
   path: string;
+
   /**
    * The HTTP method of this operation.
    */
   method: string;
+
   /**
    * The OpenAPI path item object.
    */
   pathItem: PathItemObject;
+
   /**
    * The OpenAPI operation object.
    */
   operation: OperationObject;
+
   /**
    * The controller class that contains the handler.
    * This should be the `this` object of the handler.
@@ -64,5 +76,5 @@ export type OperationHandlerMiddlewareNextFunction = (() => any) & {
 
 export type OperationHandlerMiddleware = (
   context: OperationHandlerMiddlewareContext,
-  next: OperationHandlerMiddlewareNextFunction
+  next: OperationHandlerMiddlewareNextFunction,
 ) => Promise<any> | any;

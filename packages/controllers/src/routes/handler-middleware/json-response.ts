@@ -2,15 +2,15 @@ import HttpStatusCodes from "http-status-codes";
 
 import { isJson } from "../../utils";
 
-import { nameOperationFromContext } from "../utils/utils";
+import { nameOperationFromContext } from "./utils";
 import {
   OperationHandlerMiddlewareContext,
   OperationHandlerMiddlewareNextFunction,
-} from "../handler-types";
+} from "./types";
 
 export async function operationHandlerJsonResponseMiddleware(
   context: OperationHandlerMiddlewareContext,
-  next: OperationHandlerMiddlewareNextFunction
+  next: OperationHandlerMiddlewareNextFunction,
 ) {
   const result = await next();
 
@@ -29,18 +29,18 @@ export async function operationHandlerJsonResponseMiddleware(
   if (context.res.headersSent) {
     throw new Error(
       `Operation ${nameOperationFromContext(
-        context
-      )} handler returned a result but the request has already sent its headers.`
+        context,
+      )} handler returned a result but the request has already sent its headers.`,
     );
   }
 
   if (!isJson(result)) {
     throw new Error(
       `Operation ${nameOperationFromContext(
-        context
+        context,
       )} handler returned a result that is not JSON serializable.  Are you missing a handler middleware for the response type ${context.res.getHeader(
-        "accept"
-      )}?`
+        "accept",
+      )}?`,
     );
   }
 

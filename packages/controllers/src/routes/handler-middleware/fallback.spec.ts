@@ -1,13 +1,14 @@
 import { getMockReq, getMockRes } from "@jest-mock/express";
 import "jest-extended";
 
-import { operationHandlerFallbackResponseMiddleware } from "./FallbackResponseMiddleware";
+import { operationHandlerFallbackResponseMiddleware } from "./fallback";
 
 describe("operationHandlerFallbackResponseMiddleware", function () {
   it("errors when no response has been sent", function () {
     const test = async () => {
       await operationHandlerFallbackResponseMiddleware(
         {
+          spec: { openapi: "3.1.0", info: { title: "Test", version: "1.0.0" } },
           path: "/",
           controller: {},
           method: "GET",
@@ -18,13 +19,13 @@ describe("operationHandlerFallbackResponseMiddleware", function () {
           req: getMockReq(),
           res: getMockRes().res,
         },
-        jest.fn(() => null) as any
+        jest.fn(() => null) as any,
       );
     };
 
     expect(test()).rejects.toThrowWithMessage(
       Error,
-      /handler did not send a response/
+      /handler did not send a response/,
     );
   });
 });

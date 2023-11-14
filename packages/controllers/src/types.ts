@@ -8,3 +8,5 @@ export type Middleware = RequestHandler | ErrorRequestHandler;
 
 export type ControllerObject = object | Constructor<any>;
 export type ControllerInstance = object;
+
+export type MaybePromise<T> = T | Promise<T>;
