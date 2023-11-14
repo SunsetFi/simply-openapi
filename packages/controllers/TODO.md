@@ -1,5 +1,3 @@
-- Decorator for header param
-- Decorator for cookie param
 - Validation for bodies is just returning "validation failed" as a message.
   - Because more than one error? If so, return first error.
 - Review all places in the spec where $ref may be used; implement and test it.
@@ -7,6 +5,7 @@
   - See predefined locations for #/components
 - make a pipeline for parameters. Validation, coersion, and whatever else users want
   - This should support making custom parameter types, to replace the function-based custom decorators of SEC 1
+- Tests for decorators
 - Auto publishing
 - Additional packages:
   - Package for DTOs: class-validator / class-validators-json-schema (for openapi) / class-transformer
