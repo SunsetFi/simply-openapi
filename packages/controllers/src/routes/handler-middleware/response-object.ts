@@ -1,5 +1,5 @@
 import { ResponseObject } from "../ResponseObject";
-import { nameOperationFromContext } from "./utils";
+import { nameOperationFromHandlerContext } from "./utils";
 
 import {
   OperationHandlerMiddlewareContext,
@@ -18,7 +18,7 @@ export async function operationHandlerResponseObjectMiddleware(
 
   if (context.res.headersSent) {
     throw new Error(
-      `Operation ${nameOperationFromContext(
+      `Operation ${nameOperationFromHandlerContext(
         context,
       )} handler returned a result but the request has already sent its headers.`,
     );

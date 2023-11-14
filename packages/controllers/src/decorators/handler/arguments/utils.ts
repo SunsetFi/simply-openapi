@@ -2,7 +2,6 @@ import { ParameterObject, BaseParameterObject } from "openapi3-ts/oas31";
 
 import {
   SOCCustomControllerMethodMetadata,
-  isSOCCustomControllerMethodMetadata,
   mergeSOCControllerMethodMetadata,
 } from "../../../metadata";
 import { SOCControllerMethodHandlerArg } from "../../../openapi";
@@ -10,12 +9,12 @@ import { SOCControllerMethodHandlerArg } from "../../../openapi";
 export function createParameterDecorator(
   name: string,
   paramIn: ParameterObject["in"],
-  paramObject: BaseParameterObject
+  paramObject: BaseParameterObject,
 ) {
   return (
     target: any,
     propertyKey: string | symbol | undefined,
-    parameterIndex: number
+    parameterIndex: number,
   ) => {
     if (propertyKey === undefined) {
       throw new Error(`@QueryParam() must be applied to a method.`);
@@ -41,7 +40,7 @@ export function createParameterDecorator(
           },
         };
       },
-      propertyKey
+      propertyKey,
     );
     setMethodParameterType(target, propertyKey, parameterIndex, {
       type: "openapi-parameter",
@@ -54,7 +53,7 @@ export function setMethodParameterType(
   target: any,
   propertyKey: string | symbol,
   parameterIndex: number,
-  arg: SOCControllerMethodHandlerArg
+  arg: SOCControllerMethodHandlerArg,
 ) {
   mergeSOCControllerMethodMetadata(
     target,
@@ -63,8 +62,8 @@ export function setMethodParameterType(
       if (args[parameterIndex]?.type) {
         throw new Error(
           `Method handler ${String(
-            propertyKey
-          )} cannot redefine the parameter type at index ${parameterIndex}.`
+            propertyKey,
+          )} cannot redefine the parameter type at index ${parameterIndex}.`,
         );
       }
 
@@ -74,6 +73,6 @@ export function setMethodParameterType(
         args,
       };
     },
-    propertyKey
+    propertyKey,
   );
 }

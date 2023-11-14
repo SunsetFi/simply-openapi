@@ -45,12 +45,6 @@ export interface OperationHandlerMiddlewareContext {
   handler: Function;
 
   /**
-   * An array of tupples containing the argument to pass to the handler in index 0, and a description
-   * of the argument in index 1.
-   */
-  handlerArgs: (HandledArgument | undefined)[];
-
-  /**
    * The express request.
    */
   req: Request;
@@ -63,16 +57,9 @@ export interface OperationHandlerMiddlewareContext {
 
 /**
  * Function to invoke the next middleware in the chain.
- * @returns The result of the handler function.
+ * @returns A promise awaiting the result of the handler function or next middleware step.
  */
-export type OperationHandlerMiddlewareNextFunction = (() => any) & {
-  /**
-   * Invokes the handler with the specified arguments.
-   * This replaces all arguments queued up for the handler.
-   * @returns The result of the handler function.
-   */
-  withArgs(...args: any[]): Promise<any>;
-};
+export type OperationHandlerMiddlewareNextFunction = () => Promise<any>;
 
 export type OperationHandlerMiddleware = (
   context: OperationHandlerMiddlewareContext,

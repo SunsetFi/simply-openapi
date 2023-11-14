@@ -6,7 +6,8 @@ import {
   getSOCControllerMethodMetadata,
   isSOCBoundControllerMethodMetadata,
 } from "../../metadata";
-import { nameController, requestMethods, resolveReference } from "../../utils";
+import { nameController, requestMethods } from "../../utils";
+import { resolveReference } from "../../schema-utils";
 import { ControllerObject } from "../../types";
 
 import { OpenAPIObjectExtractor } from "../types";
@@ -17,7 +18,7 @@ import {
 
 export const extractSOCBoundMethodSpec: OpenAPIObjectExtractor = (
   controller: ControllerObject,
-  methodName: string | symbol
+  methodName: string | symbol,
 ) => {
   const controllerMetadata = getSOCControllerMetadata(controller);
 
@@ -31,10 +32,10 @@ export const extractSOCBoundMethodSpec: OpenAPIObjectExtractor = (
     if (!opData) {
       throw new Error(
         `Controller ${nameController(controller)} method ${String(
-          methodName
+          methodName,
         )} is bound to operation ${
           metadata.operationId
-        } but that operation does not exist in the provided OpenAPI specification.`
+        } but that operation does not exist in the provided OpenAPI specification.`,
       );
     }
 
@@ -47,15 +48,15 @@ export const extractSOCBoundMethodSpec: OpenAPIObjectExtractor = (
 
       if (
         !(operation.parameters ?? []).some(
-          (x) => resolveReference(spec, x)?.name === arg.parameterName
+          (x) => resolveReference(spec, x)?.name === arg.parameterName,
         )
       ) {
         throw new Error(
           `Controller ${nameController(controller)} method ${String(
-            methodName
+            methodName,
           )} uses bound parameter ${arg.parameterName}, but operation ${
             metadata.operationId
-          } does not define such a parameter.  Either the parameter does not exist or its reference failed to resolve.`
+          } does not define such a parameter.  Either the parameter does not exist or its reference failed to resolve.`,
         );
       }
     }
@@ -78,14 +79,14 @@ export const extractSOCBoundMethodSpec: OpenAPIObjectExtractor = (
     return set(
       ["paths", path, method, SOCControllerMethodExtensionName],
       extension,
-      spec
+      spec,
     );
   };
 };
 
 function findOperationById(
   paths: PathsObject,
-  operationId: string
+  operationId: string,
 ): [path: string, method: string, operation: OperationObject] | null {
   for (const [path, pathItem] of Object.entries(paths)) {
     for (const [method, operation] of Object.entries(pathItem)) {

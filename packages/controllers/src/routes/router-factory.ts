@@ -26,6 +26,11 @@ import {
   OperationHandlerMiddleware,
 } from "./handler-middleware";
 import { maybeParseJson } from "./express-middleware";
+import {
+  RequestDataProcessorFactory,
+  bodyRequestDataExtractorFactory,
+  parametersRequestDataExtractorFactory,
+} from "./request-data";
 
 export interface RouteCreationContext {
   openApi: OpenAPIObject;
@@ -100,6 +105,12 @@ export interface CreateRouterOptions {
   postExpressMiddleware?: RequestHandler[];
 
   /**
+   * Request data processors are responsible for both validating the request conforms to the OpenAPI specification
+   * as well as extracting the data to be presented to the handler function.
+   */
+  requestDataProcessorFactories?: RequestDataProcessorFactory[];
+
+  /**
    * If true, ensure that all responses are handled by the handler.
    * If false, no such check will be performed, and handlers that return undefined may leave requests hanging open.
    * @default true
@@ -155,6 +166,15 @@ class RouterFromSpecFactory {
     _opts.handlerMiddleware.unshift(
       operationHandlerJsonResponseMiddleware,
       operationHandlerResponseObjectMiddleware,
+    );
+
+    if (!_opts.requestDataProcessorFactories) {
+      _opts.requestDataProcessorFactories = [];
+    }
+
+    _opts.requestDataProcessorFactories.unshift(
+      bodyRequestDataExtractorFactory,
+      parametersRequestDataExtractorFactory,
     );
 
     if (_opts.ensureResponsesHandled !== false) {

@@ -1,10 +1,6 @@
-import Ptr from "@json-schema-spec/json-pointer";
-import {
-  OpenAPIObject,
-  ReferenceObject,
-  PathItemObject,
-} from "openapi3-ts/oas31";
+import { PathItemObject } from "openapi3-ts/oas31";
 import { JsonValue } from "type-fest";
+
 import { ControllerObject } from "./types";
 
 export const requestMethods = [
@@ -83,11 +79,11 @@ export function getClassMethods(object: object) {
  */
 export function scanObjectChain(
   obj: object,
-  scanner: (instance: object) => boolean | void
+  scanner: (instance: object) => boolean | void,
 ) {
   function scanFrom(
     obj: object,
-    getPrototype: (obj: object) => object | null | undefined
+    getPrototype: (obj: object) => object | null | undefined,
   ) {
     let currentObj: object | null | undefined = obj;
     do {
@@ -114,8 +110,8 @@ export function scanObjectProperties(
   scanner: (
     instance: object,
     key: string | symbol,
-    value: any
-  ) => boolean | void
+    value: any,
+  ) => boolean | void,
 ) {
   scanObjectChain(obj, (obj) => {
     for (const propertyName of [
@@ -133,31 +129,10 @@ export function scanObjectProperties(
   });
 }
 
-export function resolveReference<T extends object>(
-  spec: OpenAPIObject,
-  value: T | ReferenceObject
-): T | null {
-  if ("$ref" in value) {
-    if (!value["$ref"].startsWith("#")) {
-      throw new Error(
-        `Cannot resolve external reference "${value["$ref"]}" in the OpenAPI schema.`
-      );
-    }
-    const ptr = Ptr.parse(value["$ref"].substring(1));
-    try {
-      return ptr.eval(spec);
-    } catch {
-      return null;
-    }
-  }
-
-  return value;
-}
-
 export function nameController(controller: ControllerObject) {
   return (controller as any).name ?? controller.constructor.name;
 }
 
-export function isNotNull<T>(x: T | null): x is T {
+export function isNotNullOrUndefined<T>(x: T | null | undefined): x is T {
   return x !== null;
 }

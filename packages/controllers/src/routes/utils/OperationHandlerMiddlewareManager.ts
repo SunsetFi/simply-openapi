@@ -34,20 +34,14 @@ export class OperationHandlerMiddlewareManager {
         return executeMiddleware(index + 1, args);
       };
 
-      next.withArgs = async (...newArgs: any[]) => {
-        return executeMiddleware(index + 1, newArgs);
-      };
+      // We originally wanted handlers to be able to swap out arguments passed to the handler,
+      // but that use case is now more robustly covered by request data processors.
+      // next.withArgs = async (...newArgs: any[]) => {
+      //   return executeMiddleware(index + 1, newArgs);
+      // };
 
       const currentMiddleware = stack[index];
-
-      try {
-        // If the current middleware returns a promise, await will wait for it to resolve
-        return await currentMiddleware(context, next);
-      } catch (error) {
-        // If the middleware throws an error (or returns a rejected promise), we catch it here
-        // Depending on your error handling strategy, you could handle or re-throw the error
-        throw error;
-      }
+      return currentMiddleware(context, next);
     };
 
     return executeMiddleware(0, args);

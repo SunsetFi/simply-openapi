@@ -4,7 +4,7 @@ import "jest-extended";
 import { operationHandlerFallbackResponseMiddleware } from "./fallback";
 
 describe("operationHandlerFallbackResponseMiddleware", function () {
-  it("errors when no response has been sent", function () {
+  it("errors when no response has been sent", async function () {
     const test = async () => {
       await operationHandlerFallbackResponseMiddleware(
         {
@@ -14,7 +14,6 @@ describe("operationHandlerFallbackResponseMiddleware", function () {
           method: "GET",
           pathItem: {} as any,
           handler: () => {},
-          handlerArgs: [],
           operation: {} as any,
           req: getMockReq(),
           res: getMockRes().res,
@@ -23,7 +22,7 @@ describe("operationHandlerFallbackResponseMiddleware", function () {
       );
     };
 
-    expect(test()).rejects.toThrowWithMessage(
+    await expect(test()).rejects.toThrowWithMessage(
       Error,
       /handler did not send a response/,
     );

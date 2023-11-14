@@ -4,7 +4,7 @@ import "jest-extended";
 import { operationHandlerJsonResponseMiddleware } from "./json-response";
 
 describe("operationHandlerJsonResponseMiddleware", function () {
-  it("throws an error if the response is not JSON serializable", function () {
+  it("throws an error if the response is not JSON serializable", async function () {
     const test = async () => {
       await operationHandlerJsonResponseMiddleware(
         {
@@ -14,7 +14,6 @@ describe("operationHandlerJsonResponseMiddleware", function () {
           method: "GET",
           pathItem: {} as any,
           handler: () => {},
-          handlerArgs: [],
           operation: {} as any,
           req: getMockReq(),
           res: getMockRes().res,
@@ -25,10 +24,13 @@ describe("operationHandlerJsonResponseMiddleware", function () {
       );
     };
 
-    expect(test()).rejects.toThrowWithMessage(Error, /not JSON serializable/);
+    await expect(test()).rejects.toThrowWithMessage(
+      Error,
+      /not JSON serializable/,
+    );
   });
 
-  it("throws an error if the response is already sent", function () {
+  it("throws an error if the response is already sent", async function () {
     const test = async () => {
       await operationHandlerJsonResponseMiddleware(
         {
@@ -38,7 +40,6 @@ describe("operationHandlerJsonResponseMiddleware", function () {
           method: "GET",
           pathItem: {} as any,
           handler: () => {},
-          handlerArgs: [],
           operation: {} as any,
           req: getMockReq(),
           res: getMockRes({ headersSent: true }).res,
@@ -49,7 +50,7 @@ describe("operationHandlerJsonResponseMiddleware", function () {
       );
     };
 
-    expect(test()).rejects.toThrowWithMessage(
+    await expect(test()).rejects.toThrowWithMessage(
       Error,
       /already sent its headers/,
     );
@@ -65,7 +66,6 @@ describe("operationHandlerJsonResponseMiddleware", function () {
           method: "GET",
           pathItem: {} as any,
           handler: () => {},
-          handlerArgs: [],
           operation: {} as any,
           req: getMockReq(),
           res: getMockRes({ headersSent: true }).res,
@@ -74,7 +74,7 @@ describe("operationHandlerJsonResponseMiddleware", function () {
       );
     };
 
-    expect(test()).resolves.toBeUndefined();
+    await expect(test()).resolves.toBeUndefined();
   });
 
   it("sends the json response if one is provided", async function () {
@@ -89,7 +89,6 @@ describe("operationHandlerJsonResponseMiddleware", function () {
           method: "GET",
           pathItem: {} as any,
           handler: () => {},
-          handlerArgs: [],
           operation: {} as any,
           req: getMockReq(),
           res: res,

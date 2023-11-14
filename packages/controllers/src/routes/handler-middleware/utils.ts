@@ -1,6 +1,6 @@
 import { OperationHandlerMiddlewareContext } from "./types";
 
-export function nameOperationFromContext(
+export function nameOperationFromHandlerContext(
   context: OperationHandlerMiddlewareContext,
 ) {
   return (

@@ -36,15 +36,15 @@ export const socControllerMethodHandlerParameterArgSchema: JSONSchema6 = {
  * Describes an argument that pulls data from the request body.
  */
 export interface SOCControllerMethodHandlerBodyArg {
-  type: "request-body";
+  type: "openapi-requestbody";
 }
 
-export const socControllerMethodHandlerBodyArg: JSONSchema6 = {
+export const socControllerMethodHandlerBodyArgSchema: JSONSchema6 = {
   type: "object",
   properties: {
     type: {
       type: "string",
-      enum: ["request-body"],
+      enum: ["openapi-requestbody"],
     },
   },
   required: ["type"],
@@ -57,7 +57,7 @@ export interface SOCControllerMethodHandlerRequestArg {
   type: "request-raw";
 }
 
-export const socControllerMethodHandlerRequestArg: JSONSchema6 = {
+export const socControllerMethodHandlerRequestArgSchema: JSONSchema6 = {
   type: "object",
   properties: {
     type: {
@@ -75,12 +75,29 @@ export interface SOCControllerMethodHandlerResponseArg {
   type: "response-raw";
 }
 
-export const socControllerMethodHandlerResponseArg: JSONSchema6 = {
+export const socControllerMethodHandlerResponseArgSchema: JSONSchema6 = {
   type: "object",
   properties: {
     type: {
       type: "string",
       enum: ["response-raw"],
+    },
+  },
+  required: ["type"],
+};
+
+export type SOCControllerMethodHandlerExtensionArgName = `x-${string}`;
+export interface SOCControllerMethodHandlerExtensionArg {
+  type: SOCControllerMethodHandlerExtensionArgName;
+  [key: string | symbol]: any;
+}
+
+export const socControllerMethodHandlerExtensionArgSchema: JSONSchema6 = {
+  type: "object",
+  properties: {
+    type: {
+      type: "string",
+      pattern: "^x-",
     },
   },
   required: ["type"],
@@ -93,14 +110,16 @@ export type SOCControllerMethodHandlerArg =
   | SOCControllerMethodHandlerParameterArg
   | SOCControllerMethodHandlerBodyArg
   | SOCControllerMethodHandlerRequestArg
-  | SOCControllerMethodHandlerResponseArg;
+  | SOCControllerMethodHandlerResponseArg
+  | SOCControllerMethodHandlerExtensionArg;
 
 export const socControllerMethodHandlerArgSchema: JSONSchema6 = {
   oneOf: [
     socControllerMethodHandlerParameterArgSchema,
-    socControllerMethodHandlerBodyArg,
-    socControllerMethodHandlerRequestArg,
-    socControllerMethodHandlerResponseArg,
+    socControllerMethodHandlerBodyArgSchema,
+    socControllerMethodHandlerRequestArgSchema,
+    socControllerMethodHandlerResponseArgSchema,
+    socControllerMethodHandlerExtensionArgSchema,
   ],
 };
 
@@ -171,5 +190,5 @@ export const socControllerMethodExtensionDataSchema: JSONSchema6 = {
 };
 
 export const validateSOCControllerMethodExtensionData = ajv.compile(
-  socControllerMethodExtensionDataSchema
+  socControllerMethodExtensionDataSchema,
 );

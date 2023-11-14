@@ -18,12 +18,12 @@ export function Body(
   mediaType: string,
   schema: SchemaObject,
   opts?: Omit<MediaTypeObject, "schema">,
-  request?: Partial<RequestBodyObject>
+  request?: Partial<RequestBodyObject>,
 ): ParameterDecorator {
   return (
     target: any,
     propertyKey: string | symbol | undefined,
-    parameterIndex: number
+    parameterIndex: number,
   ) => {
     if (propertyKey === undefined) {
       throw new Error("Body parameter must be on a method.");
@@ -55,10 +55,10 @@ export function Body(
           },
         },
       },
-      propertyKey
+      propertyKey,
     );
     setMethodParameterType(target, propertyKey, parameterIndex, {
-      type: "request-body",
+      type: "openapi-requestbody",
     });
   };
 }
@@ -72,7 +72,7 @@ export function Body(
 export function OptionalJsonBody(
   description: string,
   schema: SchemaObject,
-  opts?: Omit<MediaTypeObject, "schema">
+  opts?: Omit<MediaTypeObject, "schema">,
 ) {
   return Body("application/json", schema, opts, { description });
 }
@@ -86,7 +86,7 @@ export function OptionalJsonBody(
 export function RequiredJsonBody(
   description: string,
   schema: SchemaObject,
-  opts?: Omit<MediaTypeObject, "schema">
+  opts?: Omit<MediaTypeObject, "schema">,
 ) {
   return Body("application/json", schema, opts, {
     description,

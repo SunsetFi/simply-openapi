@@ -7,30 +7,28 @@ import {
 } from "express";
 import {
   OperationObject,
-  ParameterObject,
   PathItemObject,
-  SchemaObject,
-  ReferenceObject,
   OpenAPIObject,
-  isReferenceObject,
+  SchemaObject,
 } from "openapi3-ts/oas31";
-import { NotFound, BadRequest } from "http-errors";
-import { isObject, isFunction, mapValues, cloneDeep } from "lodash";
-import AJV, { ValidateFunction } from "ajv";
+import { isObject, isFunction, merge } from "lodash";
+import AJV, { ValidationError } from "ajv";
 
 import {
   SOCControllerMethodExtensionData,
   SOCControllerMethodExtensionName,
-  SOCControllerMethodHandlerArg,
-  SOCControllerMethodHandlerBodyArg,
-  SOCControllerMethodHandlerParameterArg,
   validateSOCControllerMethodExtensionData,
 } from "../../openapi";
-import { resolveReference, isNotNull } from "../../utils";
+import { isNotNullOrUndefined } from "../../utils";
+import { ExtractedRequestData } from "../../types";
 
 import { OperationHandlerMiddleware } from "../handler-middleware";
 
 import { OperationHandlerMiddlewareManager } from "./OperationHandlerMiddlewareManager";
+import {
+  RequestDataProcessor,
+  RequestDataProcessorFactory,
+} from "../request-data";
 
 export interface MethodHandlerOpts {
   /**
@@ -52,6 +50,12 @@ export interface MethodHandlerOpts {
   ) => Function;
 
   /**
+   * Request data processors are responsible for both validating the request conforms to the OpenAPI specification
+   * as well as extracting the data to be presented to the handler function.
+   */
+  requestDataProcessorFactories?: RequestDataProcessorFactory[];
+
+  /**
    * Middleware to apply to all handlers.
    * This middleware will apply in-order before any middleware registered on the operation.
    *
@@ -71,8 +75,6 @@ export interface MethodHandlerOpts {
   postExpressMiddleware?: RequestHandler[];
 }
 
-type ArgumentCollector = (req: Request, res: Response) => any;
-
 export class MethodHandler {
   private _selfRoute = Router({ mergeParams: true });
 
@@ -80,7 +82,8 @@ export class MethodHandler {
   private _handler: Function;
 
   private _extensionData: SOCControllerMethodExtensionData;
-  private _argumentCollectors: ArgumentCollector[];
+
+  private _processors: RequestDataProcessor[];
 
   // Note: We have some redundancy here, in that we must get passed the spec to handle our own resolutions,
   // but we are also passed an external ajv instance that ALSO must have the spec registered with it to handle $refs
@@ -137,6 +140,43 @@ export class MethodHandler {
       };
     }
 
+    const createValueProcessor = (schema: SchemaObject) => {
+      // Wrap the value so that coersion functions properly on non-reference values.
+      const wrappedSchema: SchemaObject = {
+        type: "object",
+        properties: {
+          value: schema,
+        },
+      };
+
+      const validate = this._ajv.compile(wrappedSchema);
+      return (value: any) => {
+        const wrapper = { value };
+        if (!validate(wrapper)) {
+          // Note: Our errors will have `value` as the property, which isnt nescesarily a bad thing,
+          // but, we probably do want to remove it.
+          throw new ValidationError(validate.errors!);
+        }
+
+        return wrapper.value;
+      };
+    };
+
+    this._processors = (_opts.requestDataProcessorFactories ?? [])
+      .map((factory) =>
+        factory({
+          spec: _spec,
+          path: _path,
+          method: _method,
+          pathItem: _pathItem,
+          operation: _operation,
+          controller: this._controller,
+          handler: this._handler,
+          createValueProcessor,
+        }),
+      )
+      .filter(isNotNullOrUndefined);
+
     this._extensionData = _operation[
       SOCControllerMethodExtensionName
     ] as SOCControllerMethodExtensionData;
@@ -166,10 +206,6 @@ export class MethodHandler {
       this._extensionData.handler,
     );
 
-    this._argumentCollectors = (this._extensionData.handlerArgs ?? []).map(
-      (arg) => this._buildArgumentCollector(arg, _operation),
-    );
-
     // We use a router to handle the complex process of performing the middleware composition for us.
     if (this._opts.preExpressMiddleware) {
       this._selfRoute.use(...this._opts.preExpressMiddleware);
@@ -193,9 +229,21 @@ export class MethodHandler {
     next: NextFunction,
   ) {
     try {
-      const args = this._argumentCollectors.map((collector) =>
-        collector(req, res),
-      );
+      const requestData: ExtractedRequestData = {
+        body: undefined,
+        parameters: {},
+      };
+
+      for (const processor of this._processors) {
+        let result = await processor(req);
+        if (typeof result === "function") {
+          result = await result(requestData);
+        } else {
+          merge(requestData, result);
+        }
+      }
+
+      const args = this._extractArgs(req, res, requestData);
 
       var middlewareManager = new OperationHandlerMiddlewareManager(
         this._handler.bind(this._controller),
@@ -213,13 +261,6 @@ export class MethodHandler {
           spec: this._spec,
           controller: this._controller,
           handler: this._handler,
-          handlerArgs: args.map((arg, i) => {
-            const handlerArg = this._extensionData.handlerArgs?.[i];
-            if (!handlerArg) {
-              return undefined;
-            }
-            return [arg, handlerArg];
-          }),
           path: this._path,
           pathItem: this._pathItem,
           method: this._method,
@@ -237,250 +278,33 @@ export class MethodHandler {
       }
     } catch (err: any) {
       next(err);
-      return;
     }
   }
 
-  private _buildArgumentCollector(
-    arg: SOCControllerMethodHandlerArg | undefined,
-    op: OperationObject,
-  ): ArgumentCollector {
-    if (arg === undefined) {
-      return () => undefined;
-    }
-
-    // TODO: Parameter interceptor.
-    switch (arg.type) {
-      case "request-raw":
-        return (req: Request, _res) => req;
-      case "response-raw":
-        return (_req, res: Response) => res;
-      case "openapi-parameter":
-        return this._buildParameterCollector(arg, op);
-      case "request-body":
-        return this._buildBodyCollector(arg, op);
-      default:
-        throw new Error(`Unknown handler argument type ${(arg as any).type}.`);
-    }
-  }
-
-  private _buildParameterCollector(
-    arg: SOCControllerMethodHandlerParameterArg,
-    op: OperationObject,
-  ): ArgumentCollector {
-    // Find the parameter object in the OpenAPI operation
-    const resolvedParams = (op.parameters ?? [])
-      .map((param) => resolveReference(this._spec, param))
-      .filter(isNotNull);
-
-    const param: ParameterObject | undefined = resolvedParams.find(
-      (param) => param.name === arg.parameterName,
-    ) as ParameterObject;
-
-    if (!param) {
-      throw new Error(
-        `Parameter ${arg.parameterName} not found in operation parameters.  Either it was not defined or its $ref failed to resolve.`,
-      );
-    }
-
-    const checkRequired = (value: any) => {
-      if (value === undefined) {
-        if (param.in === "path") {
-          throw new NotFound();
-        } else if (param.required) {
-          throw new BadRequest(
-            `Query parameter ${arg.parameterName} is required.`,
-          );
+  private _extractArgs(
+    req: Request,
+    res: Response,
+    requestData: ExtractedRequestData,
+  ): any[] {
+    return (this._extensionData.handlerArgs ?? [])
+      .filter(isNotNullOrUndefined)
+      .map((arg) => {
+        switch (arg?.type) {
+          case "openapi-parameter":
+            // It should be safe to return undefined here, as the processor should have thrown for required parameters.
+            return requestData.parameters[arg.parameterName];
+          case "openapi-requestbody":
+            // It should be safe to return undefined here, as the processor should have thrown for required headers.
+            return requestData.body;
+          case "request-raw":
+            return req;
+          case "response-raw":
+            return res;
+          default:
+            throw new Error(
+              `Unknown handler argument type ${arg?.type} for operation ${this._operation.operationId}.`,
+            );
         }
-      }
-    };
-
-    let schema = param.schema;
-
-    if (!schema) {
-      return (req: Request, _res) => {
-        const value =
-          param.in === "path"
-            ? req.params[arg.parameterName]
-            : req.query[arg.parameterName];
-        checkRequired(value);
-        return value;
-      };
-    }
-
-    if (isReferenceObject(schema)) {
-      const ref = schema;
-      schema = resolveReference(this._spec, schema)!;
-      if (!schema) {
-        throw new Error(
-          `Could not resolve schema reference ${ref["$ref"]} of parameter ${param.name}.`,
-        );
-      }
-    }
-
-    const validationSchema = {
-      type: "object",
-      properties: { value: schema },
-    };
-    const validator = this._ajv.compile(validationSchema);
-
-    return (req: Request, _res) => {
-      const value =
-        param.in === "path"
-          ? req.params[arg.parameterName]
-          : req.query[arg.parameterName];
-
-      checkRequired(value);
-
-      const data = { value };
-
-      if (!validator(data)) {
-        if (param.in === "path") {
-          throw new NotFound();
-        } else {
-          throw new BadRequest(
-            `Query parameter ${
-              arg.parameterName
-            } is invalid: ${this._ajv.errorsText(validator.errors)}.`,
-          );
-        }
-      }
-
-      return data.value;
-    };
-  }
-
-  private _buildBodyCollector(
-    arg: SOCControllerMethodHandlerBodyArg,
-    op: OperationObject,
-  ): ArgumentCollector {
-    if (!op.requestBody) {
-      // Return the raw body, as no transformations were applied
-      return (req) => req.body;
-    }
-
-    const requestBody = resolveReference(this._spec, op.requestBody);
-    if (!requestBody) {
-      throw new Error(
-        `Could not resolve requestBody reference ${
-          (op.requestBody as any)["$ref"]
-        }.`,
-      );
-    }
-
-    if (!("content" in requestBody)) {
-      // No specification of content, just return as-is
-      return (req) => req.body;
-    }
-
-    const compileSchema = (
-      mediaType: string,
-      schema: SchemaObject | ReferenceObject | undefined,
-    ): ValidateFunction => {
-      if (schema === undefined) {
-        // We accept it, but didn't define a schema.  Let it through
-        return (() => true) as any;
-      }
-
-      if (isReferenceObject(schema)) {
-        const ref = schema;
-        schema = resolveReference(this._spec, ref)!;
-        if (!schema) {
-          throw new Error(
-            `Could not resolve schema reference ${ref["$ref"]} for requestBody media type ${mediaType}.`,
-          );
-        }
-      }
-
-      return this._ajv.compile({
-        type: "object",
-        properties: { value: schema },
       });
-    };
-
-    const validators: Record<string, ValidateFunction> = mapValues(
-      requestBody.content,
-      ({ schema }, key) => compileSchema(key, schema),
-    );
-
-    return (req) => {
-      if (requestBody.required && !req.body) {
-        throw new BadRequest(`Request body is required.`);
-      }
-
-      const contentType = req.headers["content-type"] ?? "";
-
-      const validator = pickContentType(contentType, validators);
-      if (!validator) {
-        if (contentType === "") {
-          throw new BadRequest(`The Content-Type header is required.`);
-        }
-
-        throw new BadRequest(
-          `Request body content type ${contentType} is not supported.  Supported content types: ${Object.keys(
-            validators,
-          ).join(", ")}`,
-        );
-      }
-
-      // We will mutate the body through coersion, so clone it to avoid interfering
-      // with the outside world.
-      // Body might be a string or other primitive, so we need to wrap it for cocersion.
-      const validateObj = { value: cloneDeep(req.body) };
-
-      if (!validator(validateObj)) {
-        throw new BadRequest(
-          `Request body is invalid: ${this._ajv.errorsText(validator.errors)}.`,
-        );
-      }
-
-      return validateObj.value;
-    };
   }
-}
-
-function pickContentType<T>(
-  contentType: string | null,
-  values: Record<string, T>,
-): T | null {
-  if (contentType === "") {
-    contentType = null;
-  }
-
-  if (contentType) {
-    const semicolon = contentType.indexOf(";");
-    if (semicolon !== -1) {
-      contentType = contentType.substring(0, semicolon);
-    }
-  }
-
-  if (!contentType) {
-    return values["*/*"] ?? null;
-  }
-
-  const contentTypeParts = contentType.split("/");
-  let chosen: T | null = null;
-  let wildcardsUsed = 0;
-  for (const [type, value] of Object.entries(values)) {
-    const typeParts = type.split("/");
-    if (typeParts[0] !== "*" && typeParts[0] !== contentTypeParts[0]) {
-      continue;
-    }
-
-    if (typeParts[1] !== "*" && typeParts[1] !== contentTypeParts[1]) {
-      continue;
-    }
-
-    let localWildcards =
-      (typeParts[0] === "*" ? 1 : 0) + (typeParts[1] === "*" ? 1 : 0);
-    if (!chosen || localWildcards < wildcardsUsed) {
-      wildcardsUsed = localWildcards;
-      chosen = value;
-      if (localWildcards === 0) {
-        break;
-      }
-    }
-  }
-
-  return chosen;
 }
