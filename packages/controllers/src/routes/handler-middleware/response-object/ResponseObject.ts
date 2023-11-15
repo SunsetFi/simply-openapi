@@ -1,6 +1,5 @@
 import { Response } from "express";
 import HttpStatusCodes from "http-status-codes";
-import { JsonValue } from "type-fest";
 
 // TODO: Its been a while, see if this is still valid for express.
 // Probably want to drop this and use Omit and Partial<> on the real objectr.
@@ -96,7 +95,7 @@ export class ResponseObject {
   static cookie(
     key: string,
     value: string,
-    settings?: CookieSettings
+    settings?: CookieSettings,
   ): ResponseObject {
     return new ResponseObject().cookie(key, value, settings);
   }

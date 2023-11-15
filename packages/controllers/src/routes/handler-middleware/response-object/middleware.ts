@@ -1,10 +1,10 @@
-import { ResponseObject } from "../ResponseObject";
-import { nameOperationFromHandlerContext } from "./utils";
+import { ResponseObject } from "./ResponseObject";
+import { nameOperationFromHandlerContext } from "../utils";
 
 import {
   OperationHandlerMiddlewareContext,
   OperationHandlerMiddlewareNextFunction,
-} from "./types";
+} from "../types";
 
 export async function operationHandlerResponseObjectMiddleware(
   context: OperationHandlerMiddlewareContext,
