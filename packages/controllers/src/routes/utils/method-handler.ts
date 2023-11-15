@@ -85,11 +85,8 @@ export class MethodHandler {
 
   private _processors: RequestDataProcessor[];
 
-  // Note: We have some redundancy here, in that we must get passed the spec to handle our own resolutions,
-  // but we are also passed an external ajv instance that ALSO must have the spec registered with it to handle $refs
-  // We currently have router-factory handle the spec registration in ajv, as we are sharing an instance.
-  // We could opt to create an ajv instance internally, but that would produce a lot of duplicated instances
-  // and it is probably more efficient to share just one.
+  // FIXME: Constructor does a lot of adjustments that should be done externally.
+  // We should just take in the finished middleware/handlers/resolvers and such.
   constructor(
     private _spec: OpenAPIObject,
     private _path: string,

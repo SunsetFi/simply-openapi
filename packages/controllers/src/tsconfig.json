@@ -8,6 +8,7 @@
     "experimentalDecorators": true,
     "stripInternal": true,
     "strict": true,
+    "removeComments": true,
     "forceConsistentCasingInFileNames": true,
     "outDir": "../dist",
     "declaration": true,

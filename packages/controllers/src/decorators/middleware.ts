@@ -12,8 +12,8 @@ export interface UseExpressMiddlewareOpts {
 }
 export function UseExpressMiddleware(
   middleware: Middleware,
-  opts: UseExpressMiddlewareOpts = { order: "after" }
-): MethodDecorator | ClassDecorator {
+  opts: UseExpressMiddlewareOpts = { order: "after" },
+) {
   return (target: any, propertyKey?: string | symbol | undefined) => {
     function middlewareInjector<
       T extends SOCCommonControllerMetadata | SOCControllerMethodMetadata,
@@ -33,15 +33,9 @@ export function UseExpressMiddleware(
     }
 
     if (propertyKey) {
-      mergeSOCControllerMethodMetadata(
-        target,
-        (metadata) => middlewareInjector(metadata),
-        propertyKey
-      );
+      mergeSOCControllerMethodMetadata(target, middlewareInjector, propertyKey);
     } else {
-      mergeSOCControllerMetadata(target, (metadata) =>
-        middlewareInjector(metadata)
-      );
+      mergeSOCControllerMetadata(target, middlewareInjector);
     }
   };
 }
@@ -51,8 +45,8 @@ export interface UseHandlerMiddlewareOpts {
 }
 export function UseHandlerMiddleware(
   middleware: OperationHandlerMiddleware,
-  opts: UseExpressMiddlewareOpts = { order: "after" }
-): MethodDecorator | ClassDecorator {
+  opts: UseExpressMiddlewareOpts = { order: "after" },
+) {
   return (target: any, propertyKey?: string | symbol | undefined) => {
     function middlewareInjector<
       T extends SOCCommonControllerMetadata | SOCControllerMethodMetadata,
@@ -70,15 +64,9 @@ export function UseHandlerMiddleware(
     }
 
     if (propertyKey) {
-      mergeSOCControllerMethodMetadata(
-        target,
-        (metadata) => middlewareInjector(metadata),
-        propertyKey
-      );
+      mergeSOCControllerMethodMetadata(target, middlewareInjector, propertyKey);
     } else {
-      mergeSOCControllerMetadata(target, (metadata) =>
-        middlewareInjector(metadata)
-      );
+      mergeSOCControllerMetadata(target, middlewareInjector);
     }
   };
 }

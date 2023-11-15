@@ -1,6 +1,6 @@
 {
   "name": "@simply-openapi/controllers",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Controller library generating validated express handlers from OpenAPI spec and business logic.",
   "main": "dist/index.js",
   "types": "dts/index.d.ts",
