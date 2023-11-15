@@ -245,10 +245,9 @@ export class MethodHandler {
       var middlewareManager = new OperationHandlerMiddlewareManager(
         this._handler.bind(this._controller),
       );
-      // TODO: Is this order right?  We want to run our local middleware closer to the handling than the external middleware.
       middlewareManager.use(
-        ...(this._extensionData.handlerMiddleware ?? []),
         ...(this._opts.handlerMiddleware ?? []),
+        ...(this._extensionData.handlerMiddleware ?? []),
       );
 
       // Call the handler function with the arguments
