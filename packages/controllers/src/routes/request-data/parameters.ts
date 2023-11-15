@@ -107,7 +107,9 @@ export const parametersRequestDataExtractorFactory: RequestDataProcessorFactory 
           }
 
           throw new BadRequest(
-            `Parameter ${param.name} is invalid: ${e.message}`,
+            `${capitalize(param.in)} parameter "${param.name}" is invalid: ${
+              e.message
+            }`,
           );
         }
 
