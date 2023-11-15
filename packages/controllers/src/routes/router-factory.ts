@@ -7,7 +7,6 @@ import {
 import { Entries } from "type-fest";
 import { pick } from "lodash";
 import AJV, { Options as AjvOptions } from "ajv";
-import addAjvFormats from "ajv-formats";
 
 import {
   SOCControllerMethodExtensionData,
@@ -140,7 +139,6 @@ class RouterFromSpecFactory {
     private _opts: CreateRouterOptions = {},
   ) {
     this._ajv = createOpenAPIAjv(_opts.ajvOptions);
-    addAjvFormats(this._ajv);
 
     // Add the full openapi schema for $ref resolution.
     this._ajv.addSchema(_openApi);
