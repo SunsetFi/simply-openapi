@@ -18,6 +18,7 @@ export function createOpenAPIAjv(opts?: AjvOptions): AJV {
   addFormats(ajv);
 
   // Allow SchemaObject examples that do not participate in validation.
+  // Note: Oddly enough, ajv allows examples plural but not example.
   ajv.addKeyword({
     keyword: "example",
     code(ctx) {
