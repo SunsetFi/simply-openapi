@@ -12,7 +12,10 @@ import { nameOperationFromRequestProcessorContext } from "./utils";
 export const parametersRequestDataExtractorFactory: RequestDataProcessorFactory =
   (ctx) => {
     // Find the parameter object in the OpenAPI operation
-    const resolvedParams = (ctx.operation.parameters ?? []).map((param) => {
+    const resolvedParams = [
+      ...(ctx.operation.parameters ?? []),
+      ...(ctx.pathItem.parameters ?? []),
+    ].map((param) => {
       const resolved = resolveReference(ctx.spec, param);
       if (!resolved) {
         throw new Error(
