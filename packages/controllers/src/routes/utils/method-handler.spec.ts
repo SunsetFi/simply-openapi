@@ -324,6 +324,27 @@ describe("MethodHandler", function () {
       expect(next).not.toHaveBeenCalled();
       expect(middleware1).toHaveBeenCalledBefore(middleware2);
     });
+
+    it("applies opts and extension middleware in order", async function () {
+      const middleware1 = jest.fn((ctx, next) => next());
+      const middleware2 = jest.fn((ctx, next) => next());
+
+      const [next] = await testHandler({
+        op: {
+          [SOCControllerMethodExtensionName]: {
+            handlerMiddleware: [middleware2],
+          },
+        },
+        handler: () => null,
+        handlerArgs: [],
+        opts: {
+          handlerMiddleware: [middleware1],
+        },
+      });
+
+      expect(next).not.toHaveBeenCalled();
+      expect(middleware1).toHaveBeenCalledBefore(middleware2);
+    });
   });
 
   test.todo("Test request data processor functionality");
