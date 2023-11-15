@@ -4,8 +4,6 @@ import { MockRequest } from "@jest-mock/express/dist/src/request";
 import { Request, Response } from "express";
 import { NotFound, BadRequest } from "http-errors";
 import { merge } from "lodash";
-import AJV from "ajv";
-import addFormats from "ajv-formats";
 import "jest-extended";
 
 import {
@@ -13,6 +11,7 @@ import {
   SOCControllerMethodExtensionName,
   SOCControllerMethodHandlerArg,
 } from "../../openapi/extensions/SOCControllerMethod";
+import { createOpenAPIAjv } from "../../ajv";
 
 import {
   operationHandlerFallbackResponseMiddleware,
@@ -25,8 +24,7 @@ import {
 
 import { MethodHandler, MethodHandlerOpts } from "./method-handler";
 
-const ajv = new AJV({ coerceTypes: true, useDefaults: true });
-addFormats(ajv);
+const ajv = createOpenAPIAjv();
 
 describe("MethodHandler", function () {
   function getMockReq(opts: MockRequest) {

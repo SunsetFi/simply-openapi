@@ -14,7 +14,8 @@
     "prebuild": "npm run clean",
     "build": "tsc -p src",
     "test": "jest --coverage",
-    "format": "prettier --write \"./src/**/*.{ts,js}\""
+    "format": "prettier --write \"./src/**/*.{ts,js}\"",
+    "prepublish": "npm run build"
   },
   "keywords": [
     "express",

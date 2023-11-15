@@ -16,6 +16,7 @@ import {
 import { ControllerInstance, RequestMethod } from "../types";
 import { requestMethods } from "../utils";
 import { openAPIToExpressPath } from "../urls";
+import { createOpenAPIAjv } from "../ajv";
 
 import { MethodHandler } from "./utils/method-handler";
 
@@ -138,9 +139,7 @@ class RouterFromSpecFactory {
     private _openApi: OpenAPIObject,
     private _opts: CreateRouterOptions = {},
   ) {
-    this._ajv = new AJV(
-      _opts.ajvOptions ?? { useDefaults: true, coerceTypes: true },
-    );
+    this._ajv = createOpenAPIAjv(_opts.ajvOptions);
     addAjvFormats(this._ajv);
 
     // Add the full openapi schema for $ref resolution.
