@@ -235,9 +235,9 @@ export class MethodHandler {
       };
 
       for (const processor of this._processors) {
-        let result = await processor(req);
+        let result = processor(req);
         if (typeof result === "function") {
-          result = await result(requestData);
+          result = result(requestData);
         } else {
           merge(requestData, result);
         }

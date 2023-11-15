@@ -3,12 +3,12 @@ import { getMockReq } from "@jest-mock/express";
 import { merge } from "lodash";
 import { PartialDeep } from "type-fest";
 import { BadRequest } from "http-errors";
+import { ValidationError } from "ajv";
+import { SchemaObject } from "openapi3-ts/oas31";
 import "jest-extended";
 
 import { RequestDataProcessorFactoryContext } from "./types";
 import { bodyRequestDataExtractorFactory } from "./body";
-import { ValidationError } from "ajv";
-import { SchemaObject } from "openapi3-ts/oas31";
 
 describe("bodyRequestDataExtractorFactory", function () {
   const valueProcessor = jest.fn((value) => value);
@@ -70,7 +70,9 @@ describe("bodyRequestDataExtractorFactory", function () {
       foo: "bar",
     };
 
-    const result = invoke(
+    const schema = { "x-is-schema": true };
+
+    invoke(
       {
         operation: {
           requestBody: {
@@ -82,7 +84,9 @@ describe("bodyRequestDataExtractorFactory", function () {
             requestBodies: {
               testBody: {
                 required: true,
-                content: {},
+                content: {
+                  "*/*": { schema },
+                },
               },
             },
           },
@@ -91,7 +95,7 @@ describe("bodyRequestDataExtractorFactory", function () {
       { body },
     );
 
-    expect(result).toEqual({ body });
+    expect(createValueProcessor).toHaveBeenCalledWith(schema);
   });
 
   it("throws if the request body is an unknown reference", function () {
@@ -306,23 +310,7 @@ describe("bodyRequestDataExtractorFactory", function () {
             requestBody: {
               content: {
                 "*/*": {
-                  schema: {
-                    $ref: "#/components/schemas/Test",
-                  },
-                },
-              },
-            },
-          },
-          spec: {
-            components: {
-              schemas: {
-                Test: {
-                  type: "object",
-                  properties: {
-                    foo: {
-                      type: "integer",
-                    },
-                  },
+                  schema: {},
                 },
               },
             },

@@ -6,7 +6,7 @@ import {
 } from "openapi3-ts/oas31";
 import { Request } from "express";
 
-import { ExtractedRequestData, MaybePromise } from "../../types";
+import { ExtractedRequestData } from "../../types";
 
 export type ValueProcessorFunction = (value: any) => any;
 /**
@@ -77,5 +77,5 @@ export type RequestDataProcessorFactory = (
 export type RequestDataProcessor = (
   req: Request,
 ) =>
-  | MaybePromise<Partial<ExtractedRequestData>>
-  | ((previous: ExtractedRequestData) => MaybePromise<ExtractedRequestData>);
+  | Partial<ExtractedRequestData>
+  | ((previous: ExtractedRequestData) => ExtractedRequestData);

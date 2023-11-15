@@ -17,5 +17,3 @@ export type ExtractedRequestExtensionName = `x-${string}`;
 export type ExtractedRequestData = CommonExtractedRequestData & {
   [extensionName: ExtractedRequestExtensionName]: any;
 };
-
-export type MaybePromise<T> = T | Promise<T>;
