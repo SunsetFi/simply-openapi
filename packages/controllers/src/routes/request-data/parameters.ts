@@ -48,10 +48,8 @@ export const parametersRequestDataExtractorFactory: RequestDataProcessorFactory 
     const processors = resolvedParams.reduce(
       (acc, param) => {
         const processor = compileSchema(param);
-        return {
-          ...acc,
-          [param.name]: processor,
-        };
+        acc[param.name] = processor;
+        return acc;
       },
       {} as Record<string, ValueProcessorFunction>,
     );
