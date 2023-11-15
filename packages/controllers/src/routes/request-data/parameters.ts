@@ -1,6 +1,7 @@
 import { Request } from "express";
 import { ParameterObject } from "openapi3-ts/oas31";
 import { NotFound, BadRequest } from "http-errors";
+import { capitalize } from "lodash";
 
 import { resolveReference } from "../../schema-utils";
 
@@ -78,8 +79,9 @@ export const parametersRequestDataExtractorFactory: RequestDataProcessorFactory 
         if (param.in === "path") {
           throw new NotFound();
         } else {
-          // TODO: Better error messages, say the name of the subject and if its a query/cookie/header
-          throw new BadRequest(`Parameter ${param.name} is required.`);
+          throw new BadRequest(
+            `${capitalize(param.in)} parameter "${param.name}" is required.`,
+          );
         }
       };
 
