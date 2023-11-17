@@ -116,6 +116,12 @@ export interface CreateRouterOptions {
    * @default true
    */
   ensureResponsesHandled?: boolean;
+
+  /**
+   * Whether or not to validate that the results of the handler function
+   * match the OpenAPI documentation for the operation.
+   */
+  validateMethodResults?: boolean;
 }
 
 /**

@@ -70,8 +70,8 @@ export function Body(
  * @param opts Additional openapi options.
  */
 export function OptionalJsonBody(
-  description: string,
   schema: SchemaObject,
+  description?: string,
   opts?: Omit<MediaTypeObject, "schema">,
 ) {
   return Body("application/json", schema, opts, { description });
@@ -84,8 +84,8 @@ export function OptionalJsonBody(
  * @param opts
  */
 export function RequiredJsonBody(
-  description: string,
   schema: SchemaObject,
+  description?: string,
   opts?: Omit<MediaTypeObject, "schema">,
 ) {
   return Body("application/json", schema, opts, {
