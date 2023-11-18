@@ -65,31 +65,34 @@ export function Body(
 
 /**
  * Defines a parameter that accepts an optional json object in the body.
- * @param spec The spec of the body.
  * @param schema The schema of the json object.
- * @param opts Additional openapi options.
+ * @param request Additional information on the request.
+ * @param opts Additional information on the content type.
  */
 export function OptionalJsonBody(
   schema: SchemaObject,
-  description?: string,
+  request?: Omit<RequestBodyObject, "content">,
   opts?: Omit<MediaTypeObject, "schema">,
 ) {
-  return Body("application/json", schema, opts, { description });
+  return Body("application/json", schema, opts, {
+    required: false,
+    ...request,
+  });
 }
 
 /**
  * Defines a parameter that requires a body following the given schema.
- * @param description
- * @param schema
- * @param opts
+ * @param schema The schema of the json object.
+ * @param request Additional information on the request.
+ * @param opts Additional information on the content type.
  */
 export function RequiredJsonBody(
   schema: SchemaObject,
-  description?: string,
+  request?: Omit<RequestBodyObject, "content">,
   opts?: Omit<MediaTypeObject, "schema">,
 ) {
   return Body("application/json", schema, opts, {
-    description,
     required: true,
+    ...request,
   });
 }
