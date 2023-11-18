@@ -8,15 +8,15 @@ This is the core concept of @simply-openapi/controllers.
 
 ## The Benefits of Code-Generated OpenAPI spec
 
-At first glance, it might seem that this does not matter when you want a code-first approach; where endpoints are written first and the OpenAPI spec is derived from them.  However, even in this case, having the spec have a 1-1 relation with all contracts and validation of your handlers provides a robust way of tracking and managing your APIs.
+At first glance, it might seem that this does not matter when you want a code-first approach; where endpoints are written first and the OpenAPI spec is derived from them. However, even in this case, having the spec have a 1-1 relation with all contracts and validation of your handlers provides a robust way of tracking and managing your APIs.
 
-By having a 1-1 relation with the controllers, OpenAPI now becomes your litmus test for the controllers themselves.  Want to ensure an API contract does not change?  Put a snapshot test on it.  Want to test that a query parameter is validated as only accepting numbers?  Unit test the resulting spec.  The specification becomes highly accurate metadata to your controllers, greatly simplifying the process of ensuring your APIs behave in the way you expect them to, and catching any inadvertent changes that might occur over the course of the software development lifecycle.
+By having a 1-1 relation with the controllers, OpenAPI now becomes your litmus test for the controllers themselves. Want to ensure an API contract does not change? Put a snapshot test on it. Want to test that a query parameter is validated as only accepting numbers? Unit test the resulting spec. The specification becomes highly accurate metadata to your controllers, greatly simplifying the process of ensuring your APIs behave in the way you expect them to, and catching any inadvertent changes that might occur over the course of the software development lifecycle.
 
 ## The Benefits of OpenAPI-First controller design
 
-Generating the spec from controller is great for rapid application development, but in some cases you may want fine tuned control over your API contracts.  Developing your API specs individually and separately from the code can provide a much greater focus to the needs and requirements of the application.  Or maybe you have an API contract already provided by a third party that you need to match, where deviations from the spec can lead to compatibility problems down the line.
+Generating the spec from controller is great for rapid application development, but in some cases you may want fine tuned control over your API contracts. Developing your API specs individually and separately from the code can provide a much greater focus to the needs and requirements of the application. Or maybe you have an API contract already provided by a third party that you need to match, where deviations from the spec can lead to compatibility problems down the line.
 
-In such cases, it is better to directly defer to the spec from the code for all things.  Handler methods can ask for operations by their ID, and take in parameters by parameter name.  All of the validation boilerplate is still handled, and this time it is exactly to the requirements laid out by the original author of the spec.
+In such cases, it is better to directly defer to the spec from the code for all things. Handler methods can ask for operations by their ID, and take in parameters by parameter name. All of the validation boilerplate is still handled, and this time it is exactly to the requirements laid out by the original author of the spec.
 
 ## What does OpenAPI define anyway?
 
@@ -128,15 +128,15 @@ To dig deeper, this particular spec gives us quite a lot of information on exact
 
 For /pets/:petId
 
-* The value of the petId parameter must be a number, and should fail to validate for anything else.
-* If the response code is 200, it should return a valid Pet object according to the defined schema, and only the application/json content type is supported.
-* For any other response code, it should return an Error object according to the defined schema, and only the application/json content type is supported.
+- The value of the petId parameter must be a number, and should fail to validate for anything else.
+- If the response code is 200, it should return a valid Pet object according to the defined schema, and only the application/json content type is supported.
+- For any other response code, it should return an Error object according to the defined schema, and only the application/json content type is supported.
 
 All of this would normally have to be implemented manually by the developers writing the server. However, since we have the OpenAPI spec, we have a definitive 'source of truth' for as to how the handler should be validated, both for incoming and outgoing data.
 
-@simply-openapi/controllers provides this validation, and abstracts away the details of the request into their component parameters, body, and response.  Any request not conforming to the spec will automatically be rejected with appropriate error codes, leaving your handlers to only deal with the domain logic you are representing with your endpoint:
+@simply-openapi/controllers provides this validation, and abstracts away the details of the request into their component parameters, body, and response. Any request not conforming to the spec will automatically be rejected with appropriate error codes, leaving your handlers to only deal with the domain logic you are representing with your endpoint:
 
-* Path parameters, query parameters, and request bodies will be validated against their schema. If the schema doesn't match, the handling method will not be called and the appropriate HTTP error will be returned.
-* Parameters and bodes will be coerced to the schema. If the schema type of a path parameter indicates an integer, then it will only accept only valid integers.  String data that represents a valid integer will be converted to a numerical data type before being forwarded to the relevant handler method.
-* Default values supplied by the spec will be populated, so optional body objects that supply defaults will have those defaults when it reaches the handler method.
-* Response contracts are still contracts! Optional support is provided for validating all outgoing data to ensure your service is responding with what it is documented as responding. This can be enforced in development, and log warnings in production.
+- Path parameters, query parameters, and request bodies will be validated against their schema. If the schema doesn't match, the handling method will not be called and the appropriate HTTP error will be returned.
+- Parameters and bodes will be coerced to the schema. If the schema type of a path parameter indicates an integer, then it will only accept only valid integers. String data that represents a valid integer will be converted to a numerical data type before being forwarded to the relevant handler method.
+- Default values supplied by the spec will be populated, so optional body objects that supply defaults will have those defaults when it reaches the handler method.
+- Response contracts are still contracts! Optional support is provided for validating all outgoing data to ensure your service is responding with what it is documented as responding. This can be enforced in development, and log warnings in production.

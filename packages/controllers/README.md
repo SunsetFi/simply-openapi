@@ -11,10 +11,8 @@ It is highly extensible, supporting both the typical express middleware, plus it
 
 At its heart, this library provides two complementary systems:
 
-* The ability to take decorated classes and methods, and produce robust complete OpenAPI specifications from them
-* The ability to take OpenAPI specifications and wire them up to handlers, with all the boilerplate validation taken care of automatically.
-
-
+- The ability to take decorated classes and methods, and produce robust complete OpenAPI specifications from them
+- The ability to take OpenAPI specifications and wire them up to handlers, with all the boilerplate validation taken care of automatically.
 
 ## Pluggable everywhere
 
@@ -30,8 +28,8 @@ SOC even uses this middleware system for its own core features, meaning any midd
 
 There are 2 ways to use SOC:
 
-* [Produce both routers and OpenAPI schema from controllers and handler methods using decorators](./#producing-routers-and-openapi-specs-from-controller-and-handler-decorators) Use this method if you do not wish to write your own OpenAPI specification and want to focus on writing handlers.
-* [Produce routers from predefined OpenAPI schema and annotated controllers](./#producing-routers-from-existing-openapi-specs) Use this method if you want to have strongly declared API contracts that are auditable from outside the code.
+- [Produce both routers and OpenAPI schema from controllers and handler methods using decorators](./#producing-routers-and-openapi-specs-from-controller-and-handler-decorators) Use this method if you do not wish to write your own OpenAPI specification and want to focus on writing handlers.
+- [Produce routers from predefined OpenAPI schema and annotated controllers](./#producing-routers-from-existing-openapi-specs) Use this method if you want to have strongly declared API contracts that are auditable from outside the code.
 
 ### Producing Routers and OpenAPI specs from controller and handler decorators
 
@@ -44,7 +42,7 @@ class MyController {
   @JsonResonse(200, "The sum of the two numbers", { type: "number" })
   addNumbers(
     @QueryParam("a", "number", { description: "The first number" }) a: number,
-    @QueryParam("b", "number", { description: "The second number" }) b: number
+    @QueryParam("b", "number", { description: "The second number" }) b: number,
   ) {
     return a + b;
   }
@@ -185,15 +183,15 @@ const router = createRouterFromSpec(openApiSpec, {
 
 For best results, you should consider providing your own middleware for various purposes:
 
-* Handling errors, including http-error-like errors. Ideally, this should be done at the express application level.
-* authentication and security (either globally, across the spec with the expressMiddleware option, or per-controler or per-method with the @UseExpressMiddleware() decorator)
+- Handling errors, including http-error-like errors. Ideally, this should be done at the express application level.
+- authentication and security (either globally, across the spec with the expressMiddleware option, or per-controler or per-method with the @UseExpressMiddleware() decorator)
 
 You have a few choices of where to add your middleware:
 
-* Globablly at your express app, or any router that preceeds the SOC router.
-* In the SOC router, using the `preExpressMiddleware` or the `postExpressMiddleware` option of `createRouterFromSpec`
-* Targeting whole controllers, using the @UseExpressMiddleware() decorator
-* Targeting individual handler methods, using the @UseExpressMiddleware() decorator.
+- Globablly at your express app, or any router that preceeds the SOC router.
+- In the SOC router, using the `preExpressMiddleware` or the `postExpressMiddleware` option of `createRouterFromSpec`
+- Targeting whole controllers, using the @UseExpressMiddleware() decorator
+- Targeting individual handler methods, using the @UseExpressMiddleware() decorator.
 
 ## Returning status codes, headers, cookies, and non-json bodies.
 
@@ -214,7 +212,7 @@ class MyController {
   })
   putWidget(
     @RequireJsonBody("The widget to create or update", widgetSchema)
-    body: Widget
+    body: Widget,
   ) {
     const existingWidget = repository.findItemById(body.id);
     if (existingWidget) {
