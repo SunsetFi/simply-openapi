@@ -52,7 +52,7 @@ export interface CookieSettings {
   sameSite?: boolean | "lax" | "strict" | "none";
 }
 
-export class ResponseObject {
+export class HandlerResult {
   // These are not marked private so as to be easier to unit test in typescript.
   _bodyRaw: any;
   _bodyJson: any;
@@ -63,30 +63,30 @@ export class ResponseObject {
   /**
    * Sets the body for this response.
    */
-  static body(value: any): ResponseObject {
-    return new ResponseObject().body(value);
+  static body(value: any): HandlerResult {
+    return new HandlerResult().body(value);
   }
 
   /**
    * Sets the body as a json value for this response.
    * This also sets the Content-Type header to application/json.
    */
-  static json(value: any): ResponseObject {
-    return new ResponseObject().json(value);
+  static json(value: any): HandlerResult {
+    return new HandlerResult().json(value);
   }
 
   /**
    * Sets the status code for this response.
    */
-  static status(value: number): ResponseObject {
-    return new ResponseObject().status(value);
+  static status(value: number): HandlerResult {
+    return new HandlerResult().status(value);
   }
 
   /**
    * Sets a header for this response.
    */
-  static header(key: string, value: string): ResponseObject {
-    return new ResponseObject().header(key, value);
+  static header(key: string, value: string): HandlerResult {
+    return new HandlerResult().header(key, value);
   }
 
   /**
@@ -96,8 +96,8 @@ export class ResponseObject {
     key: string,
     value: string,
     settings?: CookieSettings,
-  ): ResponseObject {
-    return new ResponseObject().cookie(key, value, settings);
+  ): HandlerResult {
+    return new HandlerResult().cookie(key, value, settings);
   }
 
   /**

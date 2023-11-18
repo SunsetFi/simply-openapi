@@ -1,4 +1,4 @@
-import { ResponseObject } from "./ResponseObject";
+import { HandlerResult } from "./HandlerResult";
 import { nameOperationFromHandlerContext } from "../utils";
 
 import {
@@ -12,7 +12,7 @@ export async function operationHandlerResponseObjectMiddleware(
 ) {
   const result = await next();
 
-  if (!(result instanceof ResponseObject)) {
+  if (!(result instanceof HandlerResult)) {
     return result;
   }
 

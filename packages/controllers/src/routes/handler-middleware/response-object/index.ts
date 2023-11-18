@@ -1,2 +1,2 @@
 export * from "./middleware";
-export * from "./ResponseObject";
+export * from "./HandlerResult";
