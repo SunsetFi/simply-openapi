@@ -2,6 +2,8 @@
 
 By far the most common use case when creating backends in the wild is that the code and functionality come first, and documentation comes after. @simply-openapi/controllers is designed with this approach as a first class concept, supporting the generation of accurate and exacting OpenAPI specifications from the controllers themselves. This produces the document that can then be fed back into the library, producing the express router that will handle all of the validation and invocation of the controller methods.
 
+This tutorial will cover creating controllers and producing the OpenAPI spec from them.  For learning how to turn the resulting spec into an express router, see [Creating an Express Route](creating-an-express-route-from-your-controllers.md).
+
 ## Writing a Controller
 
 Controllers take the form of class objects, which uniquely are able to be decorated to add additional metadata.
@@ -40,7 +42,7 @@ class WidgetController {
 }
 ```
 
-This simple method will listen on `/widgets` for get requests, and asynchronously fetch widgets from the `getWidgets` function. As these will be plain json objects, they can be returned directly from the handler and @simply-openapi/controllers will interpret that as a request to send a 200 OK back with the application/json content type, with the body being the json serialized form of the result.
+This simple method will listen on `/widgets` for get requests, and asynchronously fetch widgets from the `getWidgets` function. As these will be plain JSON objects, they can be returned directly from the handler and @simply-openapi/controllers will interpret that as a request to send a 200 OK back with the `application/json` content type, with the body being the JSON serialized form of the result.
 
 Note that you can send any status code, and customize the results handling to fit any use case you may have. See further on in this tutorial for information about custom responses and bodies, or consider [Writing custom handler middleware](writing-handler-middleware.md) to interpret results as you wish.
 
@@ -70,7 +72,7 @@ Now that we have a method in our controller, let's take a look at what OpenAPI s
 
 As you see, we have not declared any validation or return types, but already the framework of our method has been documented.
 
-Take note of the `x-simply-controller-method` extension data stored on the operation object. This contains metadata about your controller and method that @simply-openapi/controllers can later use to build functioning express routers from this spec. Knowing of its presence can be useful as it provides a good view into how the library is handling your method, but it is otherwise undesirable to publish specs containing it. A method is provided to strip these extensions from the final result for public consumption, which will be covered later.
+Take note of the `x-simply-controller-method` extension data stored on the operation object. This contains metadata about your controller and method that @simply-openapi/controllers can later use to build functioning express routers from this spec. Knowing of its presence can be useful as it provides a good view into how the library is handling your method, but it is otherwise undesirable to publish specs containing it. For more information about publishing the generated spec, see [Publishing your OpenAPI specification](../../../readme/controllers/publishing-your-openapi-specification.md).
 
 This extension will be omitted from future examples for brevity.
 
@@ -124,7 +126,7 @@ class WidgetController {
 }
 ```
 
-Note that since we are dealing with the common case of json values, we are using the `@JsonResponse` decorator. If you have more exacting requirements for your response documentation or want to use other content types, the `@Response` decorator provides the best API for custom sculpting what responses an operation may provide.
+Note that since we are dealing with the common case of JSON values, we are using the `@JsonResponse` decorator. If you have more exacting requirements for your response documentation or want to use other content types, the `@Response` decorator provides the best API for custom sculpting what responses an operation may provide.
 
 With this change, let's see what our PathItem looks like now?
 
@@ -174,13 +176,15 @@ With this change, let's see what our PathItem looks like now?
 
 #### A note on the enforceability of response contracts
 
-While we should strive to make our OpenAPI contracts as accurate as possible, it may not always be advisable to enforce such a contract at runtime. Failing a handler for returning an object that does not match the contract may muddy the waters if the endpoint has otherwise performed stateful changes, such as for a POST request.
+While we should strive to make our OpenAPI contracts as accurate as possible, it may not always be advisable to enforce response body contracts at runtime. Failing a handler for returning an object that does not match the contract may muddy the waters if the endpoint has otherwise performed stateful changes, such as for a POST request.
 
-Because of this, responses are not validated by default like all other OpenAPI spec declarations. This can be enabled optionally, such as in a development environment or when performing e2e testing. &#x20;
+Because of this, responses are not validated by default like all other OpenAPI spec declarations. This can be enabled optionally, such as in a development environment or when performing e2e testing.  For more information, see [Creating an Express Route from your OpenAPI specification](creating-an-express-route-from-your-controllers.md).
 
 #### A note on the re-usability of typings
 
-Eventually, your backend will be accessed by a client. To make things easier, you may wish to keep your typings and schemas in a separate package, so that frontends can import the typings and use them on the client side. This will save both sides having to implement the typings and ensure the typings stay in sync.
+Eventually, your back-end will be accessed by a client. To make things easier, you may wish to keep your typings and schemas in a separate package, so that front-ends can import the typings and use them on the client side. This will save both sides having to implement the typings and ensure the typings stay in sync.
+
+For more information, see [Consuming your API from clients](../../../readme/controllers/consuming-your-api-from-clients.md).
 
 ### Getting input
 
@@ -228,8 +232,8 @@ class WidgetController {
 
 This query parameter decorator has two functions:
 
-- It documents the query parameter in the OpenAPI spec, which will later be used to validate incoming requests.
-- It connects the handler's `nameContains` argument to that query parameter, letting you receive the parameter value when properly validated requests hit your endpoint.
+* It documents the query parameter in the OpenAPI spec, which will later be used to validate incoming requests.
+* It connects the handler's `nameContains` argument to that query parameter, letting you receive the parameter value when properly validated requests hit your endpoint.
 
 Peeking into the schema, we can now see our parameter defined
 
@@ -350,21 +354,21 @@ For even better results, consider turning WidgetId into an [Opaque Type](https:/
 
 Headers and cookies are no different than any of the parameters we have discussed so far, and are used exactly the same way. Their decorators use the same API as the two we have seen. The available decorators are:
 
-- `@Cookie(name, schema, spec?)`
-- `@RequiredCookie(name, schema, spec?)`
-- `@Header(name, schema, spec?)`
-- `@RequiredHeader(name, schema, spec?)`
+* `@Cookie(name, schema, spec?)`
+* `@RequiredCookie(name, schema, spec?)`
+* `@Header(name, schema, spec?)`
+* `@RequiredHeader(name, schema, spec?)`
 
 As before, these are parameter decorators, and should be put on function arguments. The cookie or header will be validated against the rules you specify and, if they pass validation, your handler will be invoked with the cookie or header content inside the argument.
 
 #### Body arguments
 
-Bodies are unique among input as they can take different forms and content types, even on the same handler. &#x20;
+Bodies are unique among input as they can take different forms and content types, even on the same handler.
 
 However, for the majority use case, @simply-api/controllers provides two decorators for working specifically with JSON bodies. As the presence or absence of a body tends to be more important and specific than the optionality of query parameters, the decorators are prefixed with this fact:
 
-- `@OptionalJsonBody`
-- `@RequiredJsonBody`
+* `@OptionalJsonBody`
+* `@RequiredJsonBody`
 
 You can use either of these decorators to describe and receive the body sent to your endpoint. As always, a schema is required, and the body will be validated against the schema, with invalid bodies resulting in a 400 error.
 
@@ -418,10 +422,10 @@ So far, all examples have returned promises to plain json objects. This is the m
 
 Sometimes it is appropriate to send back different status codes and headers. For example, we might have a `newWidget` handler that should:
 
-- Return a 201 CREATED status code
-- Set the Location header to the location of the new widget
+* Return a 201 CREATED status code
+* Set the Location header to the location of the new widget
 
-This can be done through the `ResponseObject` special return type. Lets modify our previous example to account for this.
+This can be done through the `HandlerResult` special return type. Lets modify our previous example to account for this.
 
 ```typescript
 import {
@@ -432,7 +436,7 @@ import {
   QueryParam,
   PathParam,
   RequiredBody,
-  ResponseObject
+  HandlerResult
 } from "@simply-openapi/controllers";
 import { NotFound } from "http-errors";
 
@@ -460,7 +464,7 @@ class WidgetController {
     body: CreatableWidget
   ) {
     const widget = await addWidget(body);
-    return ResponseObject
+    return HandlerResult
       .status(201)
       .header("Location", `${baseUrl}/widgets/${widget.id}`)
       .json(widget)
@@ -468,28 +472,28 @@ class WidgetController {
 }
 ```
 
-ResponseObject is a dedicated class allowing you to describe some of the more web-centric behavior of a response without having to take a reference to the express response and run things manually.
+HandlerResult is a dedicated class allowing you to describe some of the more web-centric behavior of a response without having to take a reference to the express response and run things manually.
 
-The ResponseObject provides these functions. Note that all functions exist as static functions on the class, and as instance functions, to allow for a fluent ui without the use of the 'new' keyword.
+The HandlerResult provides these functions. Note that all functions exist as static functions on the class, and as instance functions, to allow for a fluent ui without the use of the 'new' keyword.
 
-- body(value)
-  - Sent to the result with req.body()
-  - Stored in `_bodyRaw`
-- json(value)
-  - Sent to the result with req.json()
-  - The "Content-Type" header will be set to "application/json"
-  - Stored in `_bodyJson`&#x20;
-- status(code)
-  - Sent to the result with req.status()
-  - Stored in `_status`&#x20;
-- header(key, value)
-  - Set with res.setHeader()
-  - Stored mapped by key in the `_headers` object.
-- cookie(key, value, settings?)
-  - Set with res.cookie()
-  - Stored mapped by key in the `_cookies` object.
+* body(value)
+  * Sent to the result with req.body()
+  * Stored in `_bodyRaw`
+* json(value)
+  * Sent to the result with req.json()
+  * The "Content-Type" header will be set to "application/json"
+  * Stored in `_bodyJson`
+* status(code)
+  * Sent to the result with req.status()
+  * Stored in `_status`
+* header(key, value)
+  * Set with res.setHeader()
+  * Stored mapped by key in the `_headers` object.
+* cookie(key, value, settings?)
+  * Set with res.cookie()
+  * Stored mapped by key in the `_cookies` object.
 
-The main benefit of doing it this way is that it is much more testable than needing to mock a traditional express response. ResponseObject is declarative, and holds the passed information until processed by a handler middleware included by default. This allows for greatly simplified unit tests
+The main benefit of doing it this way is that it is much more testable than needing to mock a traditional express response. HandlerResult is declarative, and holds the passed information until processed by a handler middleware. This allows for greatly simplified unit tests
 
 ```typescript
 it("returns the status and location", async function () {
@@ -516,7 +520,7 @@ it("returns the status and location", async function () {
 @simply-openapi/controllers allows you to write your own handler middleware, providing you the opportunity to handle controller method results however you please.
 
 {% content-ref url="writing-handler-middleware.md" %}
-[Writing Handler Middleware](writing-handler-middleware.md)
+[writing-handler-middleware.md](writing-handler-middleware.md)
 {% endcontent-ref %}
 
 ### Escaping into Express
@@ -555,12 +559,11 @@ class WidgetController {
     @Res() res: Response
   ) {
       // Your logic here.
-
       return undefined;
   }
 }
 ```
 
-Note that if you do handle the response in your method, you should ensure your method returns no result, or returns undefined explicitly. Handler middleware interprets an undefined response as an indication that the request was already handled and no further processing is neded.
+Note that if you do handle the response in your method, you should ensure your method returns no result, or returns undefined explicitly. Handler middleware interprets an undefined response as an indication that the request was already handled and no further processing is needed.
 
-Note that to prevent you from accidentally leaving a request hanging, the library by default will throw an error if it completes the middleware stack for a handler and the response has not yet sent its headers. This is an optional feature that can be turned off at the router creation step.
+To prevent you from accidentally leaving a request hanging, the library will throw an error by default if it completes the middleware stack for a handler and the response has not yet sent its headers. This is an optional feature that can be turned off at the router creation step.
