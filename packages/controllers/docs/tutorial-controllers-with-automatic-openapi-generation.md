@@ -575,7 +575,3 @@ Now that you have a controller, the next step is to build the OpenAPI specificat
 {% content-ref url="../../../readme/controllers/creating-openapi-specs-from-controllers.md" %}
 [creating-openapi-specs-from-controllers.md](../../../readme/controllers/creating-openapi-specs-from-controllers.md)
 {% endcontent-ref %}
-
-{% content-ref url="creating-an-express-route-from-your-controllers.md" %}
-[creating-an-express-route-from-your-controllers.md](creating-an-express-route-from-your-controllers.md)
-{% endcontent-ref %}

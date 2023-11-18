@@ -15,4 +15,4 @@ To this end, the tools in this library are designed around two use cases:
 
 ## Example implementations
 
-* [Simple Example](examples/simple/) A basic example of using Simply OpenAPI Controllers
+* [Simple Example](https://github.com/SunsetFi/simply-openapi/tree/main/examples/simple) - A basic example of using Simply OpenAPI Controllers

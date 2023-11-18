@@ -6,12 +6,6 @@
 
 If you do not have an existing OpenAPI spec, you can produce a new spec in its entirety by using `createOpenAPIFromControllers`
 
-There are two ways of invoking this, depending on your use case.
-
-### Creating new OpenAPI specs
-
-Specifications can be created from live instances of your classes.  This saves work down the line as the resulting spec will be able to create routers with no extra effort.  To create the spec, specify your OpenAPI info object and an array of controller instances to create the spec from
-
 ```typescript
 import { createOpenAPIFromControllers } from "@simply-openapi/controllers";
 
@@ -65,11 +59,11 @@ const spec = createOpenAPIFromControllers(existingSpec, controllers);
 
 With this method, you can supply additional spec that might be consumed or referenced by the controllers.  This is also the only way to use bound controllers and bound methods.
 
-### Creating spec from constructors
+## Creating spec from constructors
 
-It is not always easy to get instances of your classes, especially if you want to build your spec as a build time step or in a DI pipeline.  In such cases, it would typically be necessary to mock out or stub services that these controllers depend on.  This can get particularly gnarly in a DI environment or when controllers have constructor arguments that must be set to be instantiated.
+It is not always easy to get instances of your classes, especially if you want to build your spec as a build time step or in a CI pipeline.  In such cases, it would typically be necessary to mock out or stub services that these controllers depend on.  This can get particularly gnarly in a DI environment or when controllers have constructor arguments that must be set to be instantiated.
 
-To support easier generation of spec in these conditions, both functions above support being passed the constructors of your controllers rather than live instances.
+To support easier generation of specs in these conditions, both functions support being passed the constructors of your controllers rather than instances.
 
 ```typescript
 import { createOpenAPIFromControllers } from "@simply-openapi/controllers";
@@ -83,10 +77,38 @@ const controllerTypes = [
 const spec = createOpenAPIFromControllers({
   title: "My widget server",
   version: "1.0.0"
-}, controllerTypes];
+}, controllerTypes);
 ```
 
-Note however that if you produce spec in this way, the metadata in the spec will point to the constructors and not to the instances.  Because of this, extra effort will be needed on the route generation phase to configure the generator with information on how to produce instances of your classes.
+Note however that if you produce specs in this way, the metadata in the spec will point to the constructors and not to the instances.  Because of this, extra effort will be needed on the route generation phase to configure the generator with information on how to produce instances of your classes.
+
+## Caveat: Empty controllers
+
+To assist in detecting bugs, both functions will emit an error if they get passed an object that does not have any web request methods declared.  This is to catch issues where the wrong class or instance is passed in.
+
+This behavior can be disabled by using the `ignoreEmptyControllers` option.  The class will instead be ignored, and no information will be generated for it in the spec.
+
+```typescript
+import { createOpenAPIFromControllers } from "@simply-openapi/controllers";
+
+import WidgetController from "./controllers/WidgetController";
+
+class EmptyController {}
+
+const controllers = [
+  new WidgetController(),
+  new EmptyController()
+];
+
+const spec = createOpenAPIFromControllers(
+  {
+    title: "My widget server",
+    version: "1.0.0"
+  },
+  controllers
+  { ignoreEmptyControllers: true }
+);
+```
 
 ## Next steps
 
