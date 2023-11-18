@@ -7,7 +7,7 @@ import {
   PathParam,
   RequiredJsonBody,
   Post,
-  ResponseObject,
+  HandlerResult,
 } from "@simply-openapi/controllers";
 import HttpStatusCodes from "http-status-codes";
 import { NotFound } from "http-errors";
@@ -101,7 +101,7 @@ export class WidgetsController {
     widget: CreatableWidget
   ) {
     const created = await addWidget(widget);
-    return ResponseObject.status(HttpStatusCodes.CREATED)
+    return HandlerResult.status(HttpStatusCodes.CREATED)
       .header("Location", `http://myserver.com/widgets/${created.id}`)
       .json(created);
   }
