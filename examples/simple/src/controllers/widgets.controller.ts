@@ -95,7 +95,9 @@ export class WidgetsController {
     description: "Invalid widget",
   })
   async createWidget(
-    @RequiredJsonBody("The content of the widget", creatableWidgetSchema)
+    @RequiredJsonBody(creatableWidgetSchema, {
+      description: "The content of the widget",
+    })
     widget: CreatableWidget
   ) {
     const created = await addWidget(widget);
