@@ -85,8 +85,8 @@
       "post": {
         "operationId": "WidgetsController.createWidget",
         "requestBody": {
-          "description": "The content of the widget",
           "required": true,
+          "description": "The content of the widget",
           "content": {
             "application/json": {
               "schema": {
