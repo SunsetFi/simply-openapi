@@ -23,6 +23,7 @@ import {
 
 import {
   createOpenAPIFromControllers,
+  stripSOCExtensions
 } from "@simply-openapi/controllers";
 
 import { controllers } from "./controllers";
@@ -31,7 +32,12 @@ const app = express();
 
 const docs = createOpenAPIFromControllers(..., controllers);
 
-app.use("/openapi", swaggerServe, swaggerSetup(docs));
+...
+
+// This step is optional.
+const strippedDocs = stripSOCExtensions(docs);
+
+app.use("/openapi", swaggerServe, swaggerSetup(strippedDocs));
 
 app.listen(8080);
 
