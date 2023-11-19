@@ -10,7 +10,7 @@ import { ExtractedRequestData } from "../../types";
 import { RequestDataProcessorFactory, ValueProcessorFunction } from "./types";
 import { nameOperationFromRequestProcessorContext } from "./utils";
 
-export const parametersRequestDataExtractorFactory: RequestDataProcessorFactory =
+export const parametersRequestDataProcessorFactory: RequestDataProcessorFactory =
   (ctx) => {
     // Find the parameter object in the OpenAPI operation
     const resolvedParams = [

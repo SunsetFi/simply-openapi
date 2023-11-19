@@ -17,7 +17,7 @@ import { requestMethods } from "../utils";
 import { openAPIToExpressPath } from "../urls";
 import { createOpenAPIAjv } from "../ajv";
 
-import { MethodHandler } from "./utils/method-handler";
+import { createMethodHandlerFromSpec } from "./utils/handler-from-spec";
 
 import {
   operationHandlerJsonResponseMiddleware,
@@ -28,15 +28,15 @@ import {
 import { maybeParseJson } from "./express-middleware";
 import {
   RequestDataProcessorFactory,
-  bodyRequestDataExtractorFactory,
-  parametersRequestDataExtractorFactory,
+  bodyRequestDataProcessorFactory,
+  parametersRequestDataProcessorFactory,
 } from "./request-data";
 
 export interface RouteCreationContext {
   openApi: OpenAPIObject;
   path: string;
   pathItem: PathItemObject;
-  method: string;
+  method: RequestMethod;
 }
 
 export type OperationHandlerFactory = (
@@ -116,12 +116,6 @@ export interface CreateRouterOptions {
    * @default true
    */
   ensureResponsesHandled?: boolean;
-
-  /**
-   * Whether or not to validate that the results of the handler function
-   * match the OpenAPI documentation for the operation.
-   */
-  validateMethodResults?: boolean;
 }
 
 /**
@@ -162,6 +156,10 @@ class RouterFromSpecFactory {
 
     _opts.preExpressMiddleware.push(maybeParseJson);
 
+    if (!_opts.postExpressMiddleware) {
+      _opts.postExpressMiddleware = [];
+    }
+
     if (!_opts.handlerMiddleware) {
       _opts.handlerMiddleware = [];
     }
@@ -176,8 +174,8 @@ class RouterFromSpecFactory {
     }
 
     _opts.requestDataProcessorFactories.unshift(
-      bodyRequestDataExtractorFactory,
-      parametersRequestDataExtractorFactory,
+      bodyRequestDataProcessorFactory,
+      parametersRequestDataProcessorFactory,
     );
 
     if (_opts.ensureResponsesHandled !== false) {
@@ -212,12 +210,10 @@ class RouterFromSpecFactory {
       return null;
     }
 
-    var handler = new MethodHandler(
+    var handler = createMethodHandlerFromSpec(
       this._openApi,
       ctx.path,
-      ctx.pathItem,
       ctx.method,
-      operation,
       this._ajv,
       this._opts,
     );
@@ -260,7 +256,6 @@ class RouterFromSpecFactory {
 
       const expressPath = openAPIToExpressPath(path);
 
-      // Not working, routes arent registered.
       (router as any)[method](expressPath, handler);
     }
   }

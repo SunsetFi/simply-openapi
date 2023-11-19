@@ -8,9 +8,9 @@ import { SchemaObject } from "openapi3-ts/oas31";
 import "jest-extended";
 
 import { RequestDataProcessorFactoryContext } from "./types";
-import { bodyRequestDataExtractorFactory } from "./body";
+import { bodyRequestDataProcessorFactory } from "./body";
 
-describe("bodyRequestDataExtractorFactory", function () {
+describe("bodyRequestDataProcessorFactory", function () {
   const valueProcessor = jest.fn((value) => value);
   const createValueProcessor = jest.fn((schema: any) => valueProcessor);
   beforeEach(() => {
@@ -25,7 +25,7 @@ describe("bodyRequestDataExtractorFactory", function () {
     ctx: PartialDeep<RequestDataProcessorFactoryContext>,
     req: MockRequest,
   ) {
-    const processor = bodyRequestDataExtractorFactory(
+    const processor = bodyRequestDataProcessorFactory(
       merge(
         {
           spec: {

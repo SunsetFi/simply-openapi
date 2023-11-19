@@ -16,7 +16,7 @@ const defaultRequestProcessor: RequestDataProcessor = (req) => ({
   body: req.body,
 });
 
-export const bodyRequestDataExtractorFactory: RequestDataProcessorFactory = (
+export const bodyRequestDataProcessorFactory: RequestDataProcessorFactory = (
   ctx,
 ) => {
   if (!ctx.operation.requestBody) {

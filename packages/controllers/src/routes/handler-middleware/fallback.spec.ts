@@ -18,13 +18,37 @@ describe("operationHandlerFallbackResponseMiddleware", function () {
           req: getMockReq(),
           res: getMockRes().res,
         },
-        jest.fn(() => null) as any,
+        jest.fn(() => undefined) as any,
       );
     };
 
     await expect(test()).rejects.toThrowWithMessage(
       Error,
-      /handler did not send a response/,
+      /did not send a response for the handler result/,
+    );
+  });
+
+  it("errors when a result is not handled", async function () {
+    const test = async () => {
+      await operationHandlerFallbackResponseMiddleware(
+        {
+          spec: { openapi: "3.1.0", info: { title: "Test", version: "1.0.0" } },
+          path: "/",
+          controller: {},
+          method: "GET",
+          pathItem: {} as any,
+          handler: () => {},
+          operation: {} as any,
+          req: getMockReq(),
+          res: getMockRes().res,
+        },
+        jest.fn(() => ({ test: true })) as any,
+      );
+    };
+
+    await expect(test()).rejects.toThrowWithMessage(
+      Error,
+      /returned a result that was not handled by any middleware/,
     );
   });
 });
