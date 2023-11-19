@@ -28,7 +28,7 @@ If you have been following the tutorials, this is the minimum required to produc
 
 ### Orphaned requests
 
-In @simply-openapi/controllers, `undefined` is used as a handler and handler middleware result to indicate that the response has been handled and no further processing is needed.  If your handler returns undefined (or a promise to undefined), no processing will be performed and the request will be left dangling.
+In @simply-openapi/controllers, `undefined` is used as a handler and handler middleware result to indicate that the response has been handled and no further processing is needed.  If your handler returns undefined (or a promise to undefined), no processing will be performed and the request will be left unanswered.
 
 In order to prevent this from happening, @simply-openapi/controllers has one last emergency fallback handler middleware which will throw an internal server error if it is reached and the result still has not been sent.  If you wish to disable this behavior, you can pass `ensureResponsesHandled: false` as an option to `createRouterFromSpec`, and this middleware will be disabled.
 
@@ -198,7 +198,7 @@ This can also be useful to implement cross-cutting concerns, for example returni
 
 If needed, you can reinterpret the way handlers are obtained from the controllers.  You may use this as another way to implement cross-cutting concerns on your controllers.
 
-By default, @simply-openapi/controllers will resolve metadata about methods as either a function, or a string naming a function on the controller.  It's default implementation of the specification resolver will opt for string names, but it is best to handle both cases in your handler resolver.
+By default, @simply-openapi/controllers will resolve metadata about methods as either a function, or a string naming a function on the controller.  The default implementation of `createOpenAPIFromControllers` will opt for string names, but it is best to handle both cases in your handler resolver.
 
 ```typescript
 import { 
