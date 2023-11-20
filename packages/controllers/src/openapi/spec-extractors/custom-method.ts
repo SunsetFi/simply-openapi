@@ -7,7 +7,7 @@ import {
   getSOCControllerMethodMetadata,
   isSOCCustomControllerMethodMetadata,
 } from "../../metadata";
-import { expressToOpenAPIPath, joinUrlPaths } from "../../urls";
+import { joinUrlPaths } from "../../urls";
 import { ControllerObject } from "../../types";
 
 import { OpenAPIObjectExtractor } from "../types";
@@ -19,7 +19,7 @@ import { nameController } from "../../utils";
 
 export const extractSOCCustomMethodSpec: OpenAPIObjectExtractor = (
   controller: ControllerObject,
-  methodName: string | symbol
+  methodName: string | symbol,
 ) => {
   const controllerMetadata = getSOCControllerMetadata(controller);
 
@@ -31,16 +31,14 @@ export const extractSOCCustomMethodSpec: OpenAPIObjectExtractor = (
   if (controllerMetadata && controllerMetadata.type === "bound") {
     throw new Error(
       `Cannot extract OpenAPI spec for method ${String(
-        methodName
+        methodName,
       )} of controller ${nameController(
-        controller
-      )} because it is a bound controller and the method is not a bound operation method.`
+        controller,
+      )} because it is a bound controller and the method is not a bound operation method.`,
     );
   }
 
-  const path = expressToOpenAPIPath(
-    joinUrlPaths(controllerMetadata?.path ?? "/", metadata.path)
-  );
+  const path = joinUrlPaths(controllerMetadata?.path ?? "/", metadata.path);
 
   // controller middleware should run before operation middleware
 
@@ -74,7 +72,7 @@ export const extractSOCCustomMethodSpec: OpenAPIObjectExtractor = (
       ...merge(
         {},
         get(spec, ["paths", path, metadata.method], {}),
-        metadata.operationFragment as OperationObject
+        metadata.operationFragment as OperationObject,
       ),
       tags: [
         ...get(spec, ["paths", path, metadata.method, "tags"], []),

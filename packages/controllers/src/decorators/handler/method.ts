@@ -7,6 +7,7 @@ import {
   isSOCBoundControllerMethodMetadata,
   mergeSOCControllerMethodMetadata,
 } from "../../metadata";
+import { expressToOpenAPIPath } from "../../urls";
 
 export type MethodDecorator = (
   path: string,
@@ -20,6 +21,7 @@ export type MethodSettings = Omit<
 
 function createMethodDecorator(method: RequestMethod): MethodDecorator {
   return (path: string, operationFragment: PartialDeep<MethodSettings>) => {
+    path = expressToOpenAPIPath(path);
     return function (target: any, methodName: string | symbol) {
       if (methodName === undefined) {
         throw new Error(
