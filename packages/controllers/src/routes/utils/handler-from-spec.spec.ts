@@ -28,7 +28,7 @@ describe("createMethodHandlerFromSpec", function () {
     test.todo("creates data processors");
 
     describe("controller resolution", function () {
-      it.only("uses the controller resolver specified in resolveController", async function () {
+      it("uses the controller resolver specified in resolveController", async function () {
         const inputController = "input";
         const handler = jest.fn(() => undefined);
         const outputController = {

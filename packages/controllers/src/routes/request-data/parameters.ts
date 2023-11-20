@@ -95,6 +95,7 @@ export const parametersRequestDataProcessorFactory: RequestDataProcessorFactory 
         const rawValue = getValue(param);
         if (rawValue === undefined) {
           checkRequired(param);
+          result.parameters![param.name] = undefined;
           continue;
         }
 

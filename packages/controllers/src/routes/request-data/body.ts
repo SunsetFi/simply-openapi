@@ -11,6 +11,7 @@ import {
   ValueProcessorFunction,
 } from "./types";
 import { nameOperationFromRequestProcessorContext } from "./utils";
+import { ValidationError } from "ajv";
 
 const defaultRequestProcessor: RequestDataProcessor = (req) => ({
   body: req.body,
