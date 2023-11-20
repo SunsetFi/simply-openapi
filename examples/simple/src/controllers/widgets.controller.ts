@@ -59,7 +59,9 @@ export class WidgetsController {
     return getWidgets({ disposition, limit, offset });
   }
 
-  @Get("/:id", {
+  // Note: We are using OpenAPI style curly braces for path parameters here.
+  // However, the express style `:id` is also supported.
+  @Get("/{id}", {
     description: "Get a widget by ID",
   })
   @JsonResponse(HttpStatusCodes.OK, widgetSchema, {
