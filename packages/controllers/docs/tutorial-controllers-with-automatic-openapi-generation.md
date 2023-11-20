@@ -365,7 +365,7 @@ As before, these are parameter decorators, and should be put on function argumen
 
 Bodies are unique among input as they can take different forms and content types, even on the same handler.
 
-However, for the majority use case, @simply-api/controllers provides two decorators for working specifically with JSON bodies. As the presence or absence of a body tends to be more important and specific than the optionality of query parameters, the decorators are prefixed with this fact:
+However, for the majority use case, @simply-openapi/controllers provides two decorators for working specifically with JSON bodies. As the presence or absence of a body tends to be more important and specific than the optionality of query parameters, the decorators are prefixed with this fact:
 
 * `@OptionalJsonBody`
 * `@RequiredJsonBody`
@@ -416,7 +416,7 @@ With this, we now have a validated body.
 
 ## Returning Results
 
-So far, all examples have returned promises to plain json objects. This is the most common pattern, and will result in the result being JSON-serialized into the body with a "Content-Type" header set to "application/json". However, this is not the only way to do things.
+So far, all examples have returned promises to plain JSON objects. This is the most common pattern, and will result in a 200 status code being sent with the body containing the JSON-serialized object and the "Content-Type" header set to "application/json". However, this is not the only way to do things.
 
 ### Specifying the status code, headers, and cookies
 
@@ -474,7 +474,7 @@ class WidgetController {
 
 HandlerResult is a dedicated class allowing you to describe some of the more web-centric behavior of a response without having to take a reference to the express response and run things manually.
 
-The HandlerResult provides these functions. Note that all functions exist as static functions on the class, and as instance functions, to allow for a fluent ui without the use of the 'new' keyword.
+The HandlerResult provides these functions. Note that all functions exist as static functions on the class, and as instance functions, to allow for a fluent UI without the use of the 'new' keyword.
 
 * body(value)
   * Sent to the result with req.body()
@@ -500,7 +500,7 @@ it("returns the status and location", async function () {
   const sut = new WidgetController();
 
   const name = "My Widget";
-  const result = sut.addWidget({ name });
+  const result = await sut.addWidget({ name });
 
   expect(result).toMatchObject({
     _status: 201,
@@ -567,3 +567,11 @@ class WidgetController {
 Note that if you do handle the response in your method, you should ensure your method returns no result, or returns undefined explicitly. Handler middleware interprets an undefined response as an indication that the request was already handled and no further processing is needed.
 
 To prevent you from accidentally leaving a request hanging, the library will throw an error by default if it completes the middleware stack for a handler and the response has not yet sent its headers. This is an optional feature that can be turned off at the router creation step.
+
+## Creating the OpenAPI specification from your controllers
+
+Now that you have a controller, the next step is to build the OpenAPI specification.  From this, we can further create an express router to invoke our controllers.
+
+{% content-ref url="../../../readme/controllers/creating-openapi-specs-from-controllers.md" %}
+[creating-openapi-specs-from-controllers.md](../../../readme/controllers/creating-openapi-specs-from-controllers.md)
+{% endcontent-ref %}
