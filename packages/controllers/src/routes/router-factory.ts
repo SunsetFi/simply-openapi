@@ -31,6 +31,7 @@ import {
   bodyRequestDataProcessorFactory,
   parametersRequestDataProcessorFactory,
 } from "./request-data";
+import { OperationContext } from "./types";
 
 export interface RouteCreationContext {
   openApi: OpenAPIObject;
@@ -56,10 +57,12 @@ export interface CreateRouterOptions {
    *
    * If not specified, the controller will be validated as a javascript object and used as-is.
    * @param controller The controller to resolve.
+   * @param ctx The operation context.
    * @returns The resolved controller
    */
   resolveController?: (
     controller: SOCControllerMethodExtensionData["controller"],
+    ctx: OperationContext,
   ) => ControllerInstance;
 
   /**
@@ -69,11 +72,13 @@ export interface CreateRouterOptions {
    * If not specified, the default resolver will use functions as-is, and will seek to resolve a string to a function by method name on the controller instance.
    * @param controller The controller containing the method to resolve.
    * @param method The method to resolve.
+   * @param ctx The operation context.
    * @returns The resolved method
    */
   resolveHandler?: (
     controller: ControllerInstance,
     method: Function | string | symbol,
+    ctx: OperationContext,
   ) => Function;
 
   /**

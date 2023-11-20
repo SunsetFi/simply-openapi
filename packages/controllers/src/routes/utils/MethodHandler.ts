@@ -16,25 +16,31 @@ import {
   RequestDataProcessor,
   RequestDataProcessorFactory,
 } from "../request-data";
-import { MethodHandlerContext } from "../types";
+import { MethodHandlerContext, OperationContext } from "../types";
 
 export interface CreateMethodHandlerOpts {
   /**
    * Resolve a controller specified in the x-simply-controller-method extension into a controller object.
    * @param controller The controller to resolve.
+   * @param ctx The operation context.
    * @returns The resolved controller
    */
-  resolveController?: (controller: object | string | symbol) => object;
+  resolveController?: (
+    controller: object | string | symbol,
+    ctx: OperationContext,
+  ) => object;
 
   /**
    * Resolve a method specified in the x-simply-controller-method extension into a method.
    * @param controller The controller containing the method to resolve.
    * @param method The method to resolve.
+   * @param ctx The operation context.
    * @returns The resolved method
    */
   resolveHandler?: (
     controller: object,
     method: Function | string | symbol,
+    ctx: OperationContext,
   ) => Function;
 
   /**

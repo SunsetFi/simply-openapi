@@ -7,7 +7,7 @@ import { SOCControllerMethodHandlerArg } from "../openapi";
 
 export type HandledArgument = [any, SOCControllerMethodHandlerArg];
 
-export interface MethodHandlerContext {
+export interface OperationContext {
   /**
    * The OpenAPI specification object.
    */
@@ -32,7 +32,9 @@ export interface MethodHandlerContext {
    * The OpenAPI operation object.
    */
   operation: OperationObject;
+}
 
+export interface MethodHandlerContext extends OperationContext {
   /**
    * The controller class that contains the handler.
    * This should be the `this` object of the handler.

@@ -1,15 +1,58 @@
 import AJV, { ValidationError } from "ajv";
 import { isObject, isFunction } from "lodash";
 import { OpenAPIObject, SchemaObject } from "openapi3-ts/oas31";
+
 import {
   SOCControllerMethodExtensionData,
   SOCControllerMethodExtensionName,
   validateSOCControllerMethodExtensionData,
 } from "../../openapi";
-import { RequestMethod } from "../../types";
+import { ControllerInstance, RequestMethod } from "../../types";
 import { isNotNullOrUndefined } from "../../utils";
-import { MethodHandlerContext } from "../types";
+
+import { MethodHandlerContext, OperationContext } from "../types";
+
 import { CreateMethodHandlerOpts, MethodHandler } from "./MethodHandler";
+
+function defaultResolveController(
+  controller: string | symbol | object,
+  ctx: OperationContext,
+) {
+  if (!isObject(controller)) {
+    throw new Error(
+      `Controller for operation ${ctx.operation.operationId} handling \"${
+        ctx.method
+      } ${ctx.path}\" is not an object (got ${String(controller)}).`,
+    );
+  }
+
+  return controller;
+}
+
+function defaultResolveHandler(
+  controller: ControllerInstance,
+  method: string | symbol | Function,
+  ctx: OperationContext,
+) {
+  if (
+    (typeof method === "string" || typeof method === "symbol") &&
+    typeof (controller as any)[method] === "function"
+  ) {
+    method = (controller as any)[method];
+  }
+
+  if (!isFunction(method)) {
+    throw new Error(
+      `Handler for operation \"${
+        ctx.operation.operationId
+      }\" handling \"${String(method)} ${
+        ctx.path
+      }\" is not a function (got ${String(method)}).`,
+    );
+  }
+
+  return method;
+}
 
 export function createMethodHandlerFromSpec(
   spec: OpenAPIObject,
@@ -51,48 +94,23 @@ export function createMethodHandlerFromSpec(
   let { resolveController, resolveHandler } = opts;
 
   if (!resolveController) {
-    resolveController = (controller) => {
-      if (!isObject(controller)) {
-        throw new Error(
-          `Controller for operation ${
-            operation.operationId
-          } handling \"${method} ${path}\" is not an object (got ${String(
-            extensionData.controller,
-          )}).`,
-        );
-      }
-
-      return controller;
-    };
+    resolveController = defaultResolveController;
   }
 
   if (!resolveHandler) {
-    resolveHandler = (controller, method) => {
-      if (
-        (typeof method === "string" || typeof method === "symbol") &&
-        typeof (controller as any)[method] === "function"
-      ) {
-        method = (controller as any)[method];
-      }
-
-      if (!isFunction(method)) {
-        throw new Error(
-          `Handler for operation \"${
-            operation.operationId
-          }\" handling \"${String(
-            method,
-          )} ${path}\" is not a function (got ${String(
-            extensionData.handler,
-          )}).`,
-        );
-      }
-
-      return method;
-    };
+    resolveHandler = defaultResolveHandler;
   }
 
-  const controller = resolveController(extensionData.controller);
-  const handler = resolveHandler(controller, extensionData.handler);
+  const ctx: OperationContext = {
+    spec,
+    path,
+    method,
+    pathItem,
+    operation,
+  };
+
+  const controller = resolveController(extensionData.controller, ctx);
+  const handler = resolveHandler(controller, extensionData.handler, ctx);
 
   const createValueProcessor = (schema: SchemaObject) => {
     // Wrap the value so that coersion functions properly on non-reference values.

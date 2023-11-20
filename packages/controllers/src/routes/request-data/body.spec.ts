@@ -295,6 +295,7 @@ describe("bodyRequestDataProcessorFactory", function () {
           data: "a",
           keyword: "type",
           message: "should be integer",
+          instancePath: "",
           params: {
             type: "integer",
           },
@@ -319,7 +320,10 @@ describe("bodyRequestDataProcessorFactory", function () {
         { body },
       );
 
-    expect(test).toThrowWithMessage(BadRequest, /Invalid request body/);
+    expect(test).toThrowWithMessage(
+      BadRequest,
+      /Invalid request body: value should be integer/,
+    );
   });
 
   it("resolves schema references", function () {

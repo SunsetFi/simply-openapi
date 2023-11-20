@@ -57,7 +57,16 @@ describe("createMethodHandlerFromSpec", function () {
           resolveController: resolver,
         });
 
-        expect(resolver).toHaveBeenCalledWith(inputController);
+        expect(resolver).toHaveBeenCalledWith(
+          inputController,
+          expect.objectContaining({
+            spec,
+            path: "path",
+            method: "get",
+            pathItem: spec.paths!.path,
+            operation: spec.paths!.path.get,
+          }),
+        );
 
         expect(MethodHandler).toHaveBeenCalledWith(
           outputController,
@@ -137,7 +146,17 @@ describe("createMethodHandlerFromSpec", function () {
           resolveHandler: resolver,
         });
 
-        expect(resolver).toHaveBeenCalledWith(inputController, methodName);
+        expect(resolver).toHaveBeenCalledWith(
+          inputController,
+          methodName,
+          expect.objectContaining({
+            spec,
+            path: "path",
+            method: "get",
+            pathItem: spec.paths!.path,
+            operation: spec.paths!.path.get,
+          }),
+        );
 
         expect(MethodHandler).toHaveBeenCalledWith(
           inputController,

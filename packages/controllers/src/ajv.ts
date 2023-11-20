@@ -1,4 +1,9 @@
-import AJV, { _, Options as AjvOptions } from "ajv";
+import AJV, {
+  _,
+  Options as AjvOptions,
+  ErrorObject,
+  ValidationError,
+} from "ajv";
 import addFormats from "ajv-formats";
 
 const ajv = new AJV({ coerceTypes: true, useDefaults: true });
@@ -27,4 +32,21 @@ export function createOpenAPIAjv(opts?: AjvOptions): AJV {
   });
 
   return ajv;
+}
+
+export function errorToMessage(error: ValidationError): string {
+  return ajv.errorsText(error.errors.map(partialErrorToError), {
+    dataVar: "value",
+  });
+}
+
+function partialErrorToError(error: Partial<ErrorObject>): ErrorObject {
+  return {
+    keyword: "",
+    instancePath: "",
+    schemaPath: "#/",
+    params: {},
+    message: "validation failed",
+    ...error,
+  };
 }

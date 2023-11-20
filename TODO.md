@@ -1,5 +1,3 @@
-- Validation for bodies is just returning "validation failed" as a message.
-  - Because more than one error? If so, return first error.
 - Review all places in the spec where $ref may be used; implement and test it.
   - Missing path items!
   - See predefined locations for #/components

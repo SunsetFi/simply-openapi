@@ -9,6 +9,8 @@ import { ExtractedRequestData } from "../../types";
 
 import { RequestDataProcessorFactory, ValueProcessorFunction } from "./types";
 import { nameOperationFromRequestProcessorContext } from "./utils";
+import { ValidationError } from "ajv";
+import { errorToMessage } from "../../ajv";
 
 export const parametersRequestDataProcessorFactory: RequestDataProcessorFactory =
   (ctx) => {
@@ -103,15 +105,17 @@ export const parametersRequestDataProcessorFactory: RequestDataProcessorFactory 
         try {
           value = processor(rawValue);
         } catch (e: any) {
-          if (param.in === "path") {
-            throw new NotFound();
-          }
+          if (e instanceof ValidationError) {
+            if (param.in === "path") {
+              throw new NotFound();
+            }
 
-          throw new BadRequest(
-            `${capitalize(param.in)} parameter "${param.name}" is invalid: ${
-              e.message
-            }`,
-          );
+            throw new BadRequest(
+              `${capitalize(param.in)} parameter "${
+                param.name
+              }" is invalid: ${errorToMessage(e)}`,
+            );
+          }
         }
 
         result.parameters![param.name] = value;

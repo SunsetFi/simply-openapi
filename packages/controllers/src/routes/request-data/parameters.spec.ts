@@ -321,7 +321,7 @@ describe("parametersRequestDataProcessorFactory", function () {
 
       expect(() => processor(req)).toThrowWithMessage(
         BadRequest,
-        /Query parameter "foo" is invalid/,
+        /Query parameter "foo" is invalid: value should be integer/,
       );
     });
   });
@@ -431,7 +431,7 @@ describe("parametersRequestDataProcessorFactory", function () {
 
       expect(() => processor(req)).toThrowWithMessage(
         BadRequest,
-        /Header parameter "foo" is invalid/,
+        /Header parameter "foo" is invalid: value should be integer/,
       );
     });
   });
@@ -541,7 +541,7 @@ describe("parametersRequestDataProcessorFactory", function () {
 
       expect(() => processor(req)).toThrowWithMessage(
         BadRequest,
-        /Cookie parameter "foo" is invalid/,
+        /Cookie parameter "foo" is invalid: value should be integer/,
       );
     });
   });

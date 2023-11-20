@@ -12,6 +12,7 @@ import {
 } from "./types";
 import { nameOperationFromRequestProcessorContext } from "./utils";
 import { ValidationError } from "ajv";
+import { errorToMessage } from "../../ajv";
 
 const defaultRequestProcessor: RequestDataProcessor = (req) => ({
   body: req.body,
@@ -100,7 +101,10 @@ export const bodyRequestDataProcessorFactory: RequestDataProcessorFactory = (
         body: processor(req.body),
       };
     } catch (err: any) {
-      throw new BadRequest(`Invalid request body: ${err.message}`);
+      if (err instanceof ValidationError) {
+        throw new BadRequest(`Invalid request body: ${errorToMessage(err)}`);
+      }
+      throw err;
     }
   };
 };
