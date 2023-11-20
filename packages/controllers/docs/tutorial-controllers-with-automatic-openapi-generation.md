@@ -284,7 +284,7 @@ import {
 class WidgetController {
   ...
 
-  @Get("/:widget_id", { description: "Gets a widget by id" })
+  @Get("/{widget_id}", { description: "Gets a widget by id" })
   @JsonResponse(
     200,
     widgetSchema,
@@ -308,7 +308,7 @@ class WidgetController {
 }
 ```
 
-As you can see, we are using the `:widget_id` stand-in for our path parameter. This style of specifying parameters is native to express, and is the chosen form for path parameters in this library. OpenAPI uses an alternate form, surrounding the parameter in curly braces, such as `{widget_id}`. Currently, only the express form is supported in the decorator paths. However, the library will properly convert to the OpenAPI form when generating the specification.
+As you can see, we are using the `{widget_id}` stand-in for our path parameter. This style of specifying parameters is native to OpenAPI, and may differ from the :widget\_id style from express that you have seen before.  However, both styles are supported.  Whatever style you choose, the express router will receive the express style parameters, and the OpenAPI docs will document in the OpenAPI parameter style.
 
 Additionally, you may notice that instead of passing an OpenAPI schema object, we are passing the string `"integer"`. This is a shorthand for when you only want to validate the data type and have no other additional validations. This shorthand converts to:
 
