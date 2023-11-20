@@ -2,11 +2,10 @@
   - Missing path items!
   - See predefined locations for #/components
 - Accept both express style :path_param and OpenAPI style {pathParam} in path decorators
-- make a pipeline for parameters. Validation, coersion, and whatever else users want
-  - This should support making custom parameter types, to replace the function-based custom decorators of SEC 1
+- Support custom parameter types similar to SEC1
 - Tests for decorators
-- Auto publishing
 - Additional packages:
+  - Package for OpenAPI Schema Object utils: pickProperty, omitProperty, arrayOf, maybe, optionalProperty, jsonSchemaToSchemaObject
   - Package for DTOs: class-validator / class-validators-json-schema (for openapi) / class-transformer
   - Package for zipkin
   - Package for promethius
