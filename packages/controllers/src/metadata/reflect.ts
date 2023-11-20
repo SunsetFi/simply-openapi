@@ -1,3 +1,5 @@
+import { isConstructor } from "../utils";
+
 function hasReflectMetadata() {
   return typeof Reflect.getMetadata === "function";
 }
@@ -5,12 +7,9 @@ function hasReflectMetadata() {
 export function getConstructorMetadata<T>(
   key: string | symbol,
   object: Object,
-  targetKey?: string | symbol
+  targetKey?: string | symbol,
 ): T | undefined {
-  const prototype = (object as any).prototype;
-  if (prototype && prototype.constructor === object) {
-    // Assume its the class constructor itself.
-    // Note: It is not enough to check for an instance with target.constructor as some constructors themselves have constructors.
+  if (isConstructor(object)) {
     return getMetadata(key, object, targetKey);
   } else if (object.constructor) {
     // Assume its an instance
@@ -24,11 +23,11 @@ export function getConstructorMetadata<T>(
 export function getMetadata<T>(
   key: string | symbol,
   object: Object,
-  targetKey?: string | symbol
+  targetKey?: string | symbol,
 ): T | undefined {
   if (!hasReflectMetadata()) {
     throw new Error(
-      "Reflect.getMetadata is not available. Please install the reflect-metadata package."
+      "Reflect.getMetadata is not available. Please install the reflect-metadata package.",
     );
   }
 
@@ -51,13 +50,10 @@ export function defineConstructorMetadata<T>(
   key: string | symbol,
   value: any,
   object: Object,
-  targetKey?: string | symbol
+  targetKey?: string | symbol,
 ) {
-  const prototype = (object as any).prototype;
-  if (prototype && prototype.constructor === object) {
-    // Assume its the class constructor itself.
-    // Note: It is not enough to check for an instance with target.constructor as some constructors themselves have constructors.
-    defineMetadata(key, value, object, targetKey);
+  if (isConstructor(object)) {
+    return defineMetadata(key, value, object, targetKey);
   } else if (object.constructor) {
     // Assume its an instance or prototype
     defineMetadata(key, value, object.constructor, targetKey);
@@ -71,11 +67,11 @@ export function defineMetadata(
   key: string | symbol,
   value: any,
   target: Object,
-  targetKey?: string | symbol
+  targetKey?: string | symbol,
 ) {
   if (!hasReflectMetadata()) {
     throw new Error(
-      "Reflect.defineMetadata is not available. Please install the reflect-metadata package."
+      "Reflect.defineMetadata is not available. Please install the reflect-metadata package.",
     );
   }
 

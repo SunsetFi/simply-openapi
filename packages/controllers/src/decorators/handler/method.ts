@@ -11,7 +11,7 @@ import { expressToOpenAPIPath } from "../../urls";
 
 export type MethodDecorator = (
   path: string,
-  operationFragment: PartialDeep<OperationObject>,
+  operationFragment?: PartialDeep<OperationObject>,
 ) => (target: any, methodName: string) => void;
 
 export type MethodSettings = Omit<
@@ -20,7 +20,10 @@ export type MethodSettings = Omit<
 >;
 
 function createMethodDecorator(method: RequestMethod): MethodDecorator {
-  return (path: string, operationFragment: PartialDeep<MethodSettings>) => {
+  return (
+    path: string,
+    operationFragment: PartialDeep<MethodSettings> = {},
+  ) => {
     path = expressToOpenAPIPath(path);
     return function (target: any, methodName: string | symbol) {
       if (methodName === undefined) {

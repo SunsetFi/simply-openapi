@@ -8,11 +8,12 @@ import {
   validateSOCControllerMethodExtensionData,
 } from "../../openapi";
 import { ControllerInstance, RequestMethod } from "../../types";
-import { isNotNullOrUndefined } from "../../utils";
+import { isConstructor, isNotNullOrUndefined } from "../../utils";
 
 import { MethodHandlerContext, OperationContext } from "../types";
 
 import { CreateMethodHandlerOpts, MethodHandler } from "./MethodHandler";
+import { sliceAjvError } from "../../ajv";
 
 function defaultResolveController(
   controller: string | symbol | object,
@@ -34,20 +35,22 @@ function defaultResolveHandler(
   method: string | symbol | Function,
   ctx: OperationContext,
 ) {
-  if (
-    (typeof method === "string" || typeof method === "symbol") &&
-    typeof (controller as any)[method] === "function"
-  ) {
+  if (typeof method === "string" || typeof method === "symbol") {
     method = (controller as any)[method];
   }
 
   if (!isFunction(method)) {
+    if (isConstructor(controller)) {
+      throw new Error(
+        `Handler for operation \"${
+          ctx.operation.operationId
+        }\" handling \"${String(ctx.method)} ${
+          ctx.path
+        }\" could not be resolved.  The controller seems to be a constructor.  Either pass initialized controllers to createOpenAPIFromControllers, or use a custom resolveController or resolveMethod option to resolve the metadata to their controller and handler instances.`,
+      );
+    }
     throw new Error(
-      `Handler for operation \"${
-        ctx.operation.operationId
-      }\" handling \"${String(method)} ${
-        ctx.path
-      }\" is not a function (got ${String(method)}).`,
+      `Handler for operation \"${ctx.operation.operationId}\" handling \"${ctx.method} ${ctx.path}\" could not be resolved to a function.  Check that the function exists or supply a custom resolveMethod option to resolve it to its intended handler.`,
     );
   }
 
@@ -125,9 +128,9 @@ export function createMethodHandlerFromSpec(
     return (value: any) => {
       const wrapper = { value };
       if (!validate(wrapper)) {
-        // Note: Our errors will have `value` as the property, which isnt nescesarily a bad thing,
-        // but, we probably do want to remove it.
-        throw new ValidationError(validate.errors!);
+        throw new ValidationError(
+          validate.errors!.map((error) => sliceAjvError(error, "value")),
+        );
       }
 
       return wrapper.value;

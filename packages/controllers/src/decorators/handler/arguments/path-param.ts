@@ -16,11 +16,14 @@ import { createParameterDecorator } from "./utils";
 export function PathParam(
   name: string,
   schema: SchemaObject | ReferenceObject | SchemaObjectType | null,
-  spec?: BaseParameterObject
+  spec?: BaseParameterObject,
 ): ParameterDecorator {
   let finalParam: BaseParameterObject = {
+    // The spec says path params are always required, but I suppose we can let the user override this if they really want to.
+    required: true,
     ...spec,
   };
+
   if (typeof schema === "string") {
     finalParam.schema = { type: schema };
   } else if (schema !== null) {

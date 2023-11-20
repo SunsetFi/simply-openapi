@@ -44,6 +44,10 @@ export async function operationHandlerJsonResponseMiddleware(
     );
   }
 
-  context.res.status(HttpStatusCodes.OK).json(result);
+  // This could be chained, but unit tests appear to not always make the mocks return itself.
+  context.res.status(HttpStatusCodes.OK);
+  context.res.setHeader("Content-Type", "application/json");
+  context.res.json(result);
+
   return undefined;
 }

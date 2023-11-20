@@ -34,6 +34,29 @@ export function createOpenAPIAjv(opts?: AjvOptions): AJV {
   return ajv;
 }
 
+export function sliceAjvError(errorObject: ErrorObject, propertyName: string) {
+  // Clone the original error object to avoid mutating it
+  let newError = { ...errorObject };
+
+  // Check if the property name exists in the instancePath
+  const propertyPath = "/" + propertyName;
+  if (newError.instancePath.endsWith(propertyPath)) {
+    // Modify the instancePath to point to the nested property
+    newError.instancePath = newError.instancePath.replace(propertyPath, "");
+
+    // If the data is an object and has the property, set it as the root value
+    if (
+      typeof newError.data === "object" &&
+      newError.data !== null &&
+      propertyName in newError.data
+    ) {
+      newError.data = (newError.data as any)[propertyName];
+    }
+  }
+
+  return newError;
+}
+
 export function errorToMessage(error: ValidationError): string {
   return ajv.errorsText(error.errors.map(partialErrorToError), {
     dataVar: "value",
