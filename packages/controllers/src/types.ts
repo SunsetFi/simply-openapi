@@ -17,3 +17,8 @@ export type ExtractedRequestExtensionName = `x-${string}`;
 export type ExtractedRequestData = CommonExtractedRequestData & {
   [extensionName: ExtractedRequestExtensionName]: any;
 };
+export function isExtractedRequestExtensionName(
+  name: string,
+): name is ExtractedRequestExtensionName {
+  return name.startsWith("x-");
+}

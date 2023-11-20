@@ -7,54 +7,64 @@ import {
   SOCControllerMethodExtensionName,
   validateSOCControllerMethodExtensionData,
 } from "../../openapi";
-import { ControllerInstance, RequestMethod } from "../../types";
+import { ControllerInstance, Middleware, RequestMethod } from "../../types";
 import { isConstructor, isNotNullOrUndefined } from "../../utils";
-
-import { MethodHandlerContext, OperationContext } from "../types";
-
-import { CreateMethodHandlerOpts, MethodHandler } from "./MethodHandler";
 import { sliceAjvError } from "../../ajv";
 
-function defaultResolveController(
-  controller: string | symbol | object,
-  ctx: OperationContext,
-) {
-  if (!isObject(controller)) {
-    throw new Error(
-      `Controller for operation ${ctx.operation.operationId} handling \"${
-        ctx.method
-      } ${ctx.path}\" is not an object (got ${String(controller)}).`,
-    );
-  }
+import { MethodHandlerContext, OperationContext } from "../types";
+import { RequestDataProcessorFactory } from "../request-data";
+import { OperationHandlerMiddleware } from "../handler-middleware";
 
-  return controller;
-}
+import { MethodHandler } from "./MethodHandler";
+export interface CreateMethodHandlerOpts {
+  /**
+   * Resolve a controller specified in the x-simply-controller-method extension into a controller object.
+   * @param controller The controller to resolve.
+   * @param ctx The operation context.
+   * @returns The resolved controller
+   */
+  resolveController?: (
+    controller: object | string | symbol,
+    ctx: OperationContext,
+  ) => object;
 
-function defaultResolveHandler(
-  controller: ControllerInstance,
-  method: string | symbol | Function,
-  ctx: OperationContext,
-) {
-  if (typeof method === "string" || typeof method === "symbol") {
-    method = (controller as any)[method];
-  }
+  /**
+   * Resolve a method specified in the x-simply-controller-method extension into a method.
+   * @param controller The controller containing the method to resolve.
+   * @param method The method to resolve.
+   * @param ctx The operation context.
+   * @returns The resolved method
+   */
+  resolveHandler?: (
+    controller: object,
+    method: Function | string | symbol,
+    ctx: OperationContext,
+  ) => Function;
 
-  if (!isFunction(method)) {
-    if (isConstructor(controller)) {
-      throw new Error(
-        `Handler for operation \"${
-          ctx.operation.operationId
-        }\" handling \"${String(ctx.method)} ${
-          ctx.path
-        }\" could not be resolved.  The controller seems to be a constructor.  Either pass initialized controllers to createOpenAPIFromControllers, or use a custom resolveController or resolveMethod option to resolve the metadata to their controller and handler instances.`,
-      );
-    }
-    throw new Error(
-      `Handler for operation \"${ctx.operation.operationId}\" handling \"${ctx.method} ${ctx.path}\" could not be resolved to a function.  Check that the function exists or supply a custom resolveMethod option to resolve it to its intended handler.`,
-    );
-  }
+  /**
+   * Request data processors are responsible for both validating the request conforms to the OpenAPI specification
+   * as well as extracting the data to be presented to the handler function.
+   */
+  requestDataProcessorFactories?: RequestDataProcessorFactory[];
 
-  return method;
+  /**
+   * Middleware to apply to all handlers.
+   * This middleware will apply in-order before any middleware registered on the operation.
+   *
+   * In addition to the middleware specified here, the last middleware will always be one that
+   * processes json responses.
+   */
+  handlerMiddleware?: OperationHandlerMiddleware[];
+
+  /**
+   * Middleware to apply to the express router before the request.
+   */
+  preExpressMiddleware?: Middleware[];
+
+  /**
+   * Middleware to apply to the express router after the request.
+   */
+  postExpressMiddleware?: Middleware[];
 }
 
 export function createMethodHandlerFromSpec(
@@ -195,4 +205,46 @@ export function createMethodHandlerFromSpec(
     postExpressMiddleware,
     context,
   );
+}
+
+function defaultResolveController(
+  controller: string | symbol | object,
+  ctx: OperationContext,
+) {
+  if (!isObject(controller)) {
+    throw new Error(
+      `Controller for operation ${ctx.operation.operationId} handling \"${
+        ctx.method
+      } ${ctx.path}\" is not an object (got ${String(controller)}).`,
+    );
+  }
+
+  return controller;
+}
+
+function defaultResolveHandler(
+  controller: ControllerInstance,
+  method: string | symbol | Function,
+  ctx: OperationContext,
+) {
+  if (typeof method === "string" || typeof method === "symbol") {
+    method = (controller as any)[method];
+  }
+
+  if (!isFunction(method)) {
+    if (isConstructor(controller)) {
+      throw new Error(
+        `Handler for operation \"${
+          ctx.operation.operationId
+        }\" handling \"${String(ctx.method)} ${
+          ctx.path
+        }\" could not be resolved.  The controller seems to be a constructor.  Either pass initialized controllers to createOpenAPIFromControllers, or use a custom resolveController or resolveMethod option to resolve the metadata to their controller and handler instances.`,
+      );
+    }
+    throw new Error(
+      `Handler for operation \"${ctx.operation.operationId}\" handling \"${ctx.method} ${ctx.path}\" could not be resolved to a function.  Check that the function exists or supply a custom resolveMethod option to resolve it to its intended handler.`,
+    );
+  }
+
+  return method;
 }

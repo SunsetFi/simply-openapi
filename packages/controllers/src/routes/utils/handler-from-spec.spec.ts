@@ -1,5 +1,4 @@
 import { OpenAPIObject } from "openapi3-ts/oas31";
-import { getMockReq, getMockRes } from "@jest-mock/express";
 import "jest-extended";
 
 import {

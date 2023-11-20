@@ -7,67 +7,16 @@ import {
   ControllerInstance,
   ExtractedRequestData,
   Middleware,
+  isExtractedRequestExtensionName,
 } from "../../types";
 
-import { OperationHandlerMiddleware } from "../handler-middleware";
-
-import { OperationHandlerMiddlewareManager } from "./OperationHandlerMiddlewareManager";
 import {
-  RequestDataProcessor,
-  RequestDataProcessorFactory,
-} from "../request-data";
-import { MethodHandlerContext, OperationContext } from "../types";
-
-export interface CreateMethodHandlerOpts {
-  /**
-   * Resolve a controller specified in the x-simply-controller-method extension into a controller object.
-   * @param controller The controller to resolve.
-   * @param ctx The operation context.
-   * @returns The resolved controller
-   */
-  resolveController?: (
-    controller: object | string | symbol,
-    ctx: OperationContext,
-  ) => object;
-
-  /**
-   * Resolve a method specified in the x-simply-controller-method extension into a method.
-   * @param controller The controller containing the method to resolve.
-   * @param method The method to resolve.
-   * @param ctx The operation context.
-   * @returns The resolved method
-   */
-  resolveHandler?: (
-    controller: object,
-    method: Function | string | symbol,
-    ctx: OperationContext,
-  ) => Function;
-
-  /**
-   * Request data processors are responsible for both validating the request conforms to the OpenAPI specification
-   * as well as extracting the data to be presented to the handler function.
-   */
-  requestDataProcessorFactories?: RequestDataProcessorFactory[];
-
-  /**
-   * Middleware to apply to all handlers.
-   * This middleware will apply in-order before any middleware registered on the operation.
-   *
-   * In addition to the middleware specified here, the last middleware will always be one that
-   * processes json responses.
-   */
-  handlerMiddleware?: OperationHandlerMiddleware[];
-
-  /**
-   * Middleware to apply to the express router before the request.
-   */
-  preExpressMiddleware?: Middleware[];
-
-  /**
-   * Middleware to apply to the express router after the request.
-   */
-  postExpressMiddleware?: Middleware[];
-}
+  OperationHandlerMiddleware,
+  OperationHandlerMiddlewareContext,
+  OperationHandlerMiddlewareNextFunction,
+} from "../handler-middleware";
+import { RequestDataProcessor } from "../request-data";
+import { MethodHandlerContext } from "../types";
 
 export class MethodHandler {
   private _selfRoute = Router({ mergeParams: true });
@@ -121,14 +70,7 @@ export class MethodHandler {
 
       const args = this._extractArgs(req, res, requestData);
 
-      var middlewareManager = new OperationHandlerMiddlewareManager(
-        this._handler.bind(this._controller),
-      );
-      middlewareManager.use(...this._handlerMiddleware);
-
-      // Call the handler function with the arguments
-      // Our middleware will handle return values as needed.
-      const result = await middlewareManager.run(
+      const result = await this._runHandler(
         {
           ...this._context,
           req,
@@ -147,13 +89,52 @@ export class MethodHandler {
     }
   }
 
+  private async _runHandler(
+    context: OperationHandlerMiddlewareContext,
+    args: any[],
+  ): Promise<any> {
+    const stack = this._handlerMiddleware;
+
+    const executeMiddleware = async (
+      index: number,
+      args: any[],
+    ): Promise<any> => {
+      if (index >= stack.length) {
+        return this._handler.apply(this._controller, args);
+      }
+
+      const next: OperationHandlerMiddlewareNextFunction = async () => {
+        return executeMiddleware(index + 1, args);
+      };
+
+      // We originally wanted handlers to be able to swap out arguments passed to the handler,
+      // but that use case is now more robustly covered by request data processors.
+      // next.withArgs = async (...newArgs: any[]) => {
+      //   return executeMiddleware(index + 1, newArgs);
+      // };
+
+      const currentMiddleware = stack[index];
+      return currentMiddleware(context, next);
+    };
+
+    return executeMiddleware(0, args);
+  }
+
   private _extractArgs(
     req: Request,
     res: Response,
     requestData: ExtractedRequestData,
   ): any[] {
     return (this._handlerArgs ?? []).filter(isNotNullOrUndefined).map((arg) => {
-      switch (arg?.type) {
+      if (!arg) {
+        return undefined;
+      }
+
+      if (isExtractedRequestExtensionName(arg.type)) {
+        return requestData[arg.type];
+      }
+
+      switch (arg.type) {
         case "openapi-parameter":
           // It should be safe to return undefined here, as the processor should have thrown for required parameters.
           return requestData.parameters[arg.parameterName];
@@ -166,7 +147,7 @@ export class MethodHandler {
           return res;
         default:
           throw new Error(
-            `Unknown handler argument type ${arg?.type} for operation ${this._context.operation.operationId}.`,
+            `Unknown handler argument type ${arg.type} for operation ${this._context.operation.operationId}.`,
           );
       }
     });
