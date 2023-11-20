@@ -1,7 +1,6 @@
 - Review all places in the spec where $ref may be used; implement and test it.
   - Missing path items!
   - See predefined locations for #/components
-- Accept both express style :path_param and OpenAPI style {pathParam} in path decorators
 - Support custom parameter types similar to SEC1
 - Tests for decorators
 - Additional packages:
