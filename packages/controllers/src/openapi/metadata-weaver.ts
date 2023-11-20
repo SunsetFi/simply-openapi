@@ -1,7 +1,7 @@
 import { InfoObject, OpenAPIObject } from "openapi3-ts/oas31";
 import { cloneDeep, merge } from "lodash";
 
-import { getClassMethods, nameController } from "../utils";
+import { getClassMethods, mergeCombineArrays, nameController } from "../utils";
 import { ControllerObject } from "../types";
 
 import { OpenAPIObjectExtractor } from "./types";
@@ -9,6 +9,10 @@ import {
   extractSOCBoundMethodSpec,
   extractSOCCustomMethodSpec,
 } from "./spec-extractors";
+import {
+  getSOCControllerMetadata,
+  isSOCCustomControllerMetadata,
+} from "../metadata";
 
 export interface CreateOpenAPIPathsFromControllerOptions {
   /**
@@ -37,7 +41,7 @@ export interface CreateOpenAPIPathsFromControllerOptions {
 export function createOpenAPIFromControllers(
   info: InfoObject,
   controllers: ControllerObject[],
-  opts: CreateOpenAPIPathsFromControllerOptions = {}
+  opts: CreateOpenAPIPathsFromControllerOptions = {},
 ): OpenAPIObject {
   if (!opts.operationSpecExtractors) {
     opts.operationSpecExtractors = [];
@@ -57,7 +61,7 @@ export function createOpenAPIFromControllers(
       controller,
       spec,
       opts.operationSpecExtractors ?? [],
-      opts.ignoreEmptyControllers ?? false
+      opts.ignoreEmptyControllers ?? false,
     );
   }
 
@@ -74,7 +78,7 @@ export function createOpenAPIFromControllers(
 export function addendOpenAPIFromControllers(
   spec: OpenAPIObject,
   controllers: ControllerObject[],
-  opts: CreateOpenAPIPathsFromControllerOptions = {}
+  opts: CreateOpenAPIPathsFromControllerOptions = {},
 ) {
   if (!opts.operationSpecExtractors) {
     opts.operationSpecExtractors = [];
@@ -91,7 +95,7 @@ export function addendOpenAPIFromControllers(
       controller,
       spec,
       opts.operationSpecExtractors ?? [],
-      opts.ignoreEmptyControllers ?? false
+      opts.ignoreEmptyControllers ?? false,
     );
   }
 
@@ -102,14 +106,22 @@ function addOpenAPIPathsFromController(
   controller: ControllerObject,
   spec: OpenAPIObject,
   extractors: OpenAPIObjectExtractor[],
-  ignoreEmptyControllers: boolean
+  ignoreEmptyControllers: boolean,
 ): OpenAPIObject {
-  let boundAtLeastOneMethod = false;
+  let controllerIsEmpty = true;
+  const controllerMetadata = getSOCControllerMetadata(controller);
+  if (controllerMetadata) {
+    controllerIsEmpty = false;
+    if (isSOCCustomControllerMetadata(controllerMetadata)) {
+      spec = mergeCombineArrays(spec, controllerMetadata.openapiFragment);
+    }
+  }
+
   for (const method of getClassMethods(controller)) {
     spec = extractors.reduce((spec, extractor) => {
       const result = extractor(controller, method.name);
       if (result) {
-        boundAtLeastOneMethod = true;
+        controllerIsEmpty = false;
         if (typeof result === "function") {
           return result(spec);
         }
@@ -120,11 +132,11 @@ function addOpenAPIPathsFromController(
     }, spec);
   }
 
-  if (!ignoreEmptyControllers && !boundAtLeastOneMethod) {
+  if (!ignoreEmptyControllers && controllerIsEmpty) {
     throw new Error(
       `Controller ${nameController(
-        controller
-      )} has no SOC-decorated methods.  Please ensure this is a valid controller, or set the ignoreEmptyControllers option to true.`
+        controller,
+      )} has no SOC-decorated methods.  Please ensure this is a valid controller, or set the ignoreEmptyControllers option to true.`,
     );
   }
 

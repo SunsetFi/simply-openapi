@@ -1,4 +1,4 @@
-import AJV, { ValidationError } from "ajv";
+import AJV, { ValidateFunction, ValidationError } from "ajv";
 import { isObject, isFunction } from "lodash";
 import { OpenAPIObject, SchemaObject } from "openapi3-ts/oas31";
 
@@ -122,9 +122,20 @@ export function createMethodHandlerFromSpec(
       properties: {
         value: schema,
       },
+      required: ["value"],
     };
 
-    const validate = ajv.compile(wrappedSchema);
+    let validate: ValidateFunction;
+    try {
+      validate = ajv.compile(wrappedSchema);
+    } catch (e: any) {
+      console.error(
+        "\n\n\nCOMPILE ERROR",
+        e.message,
+        JSON.stringify(wrappedSchema, null, 2),
+      );
+      throw e;
+    }
     return (value: any) => {
       const wrapper = { value };
       if (!validate(wrapper)) {

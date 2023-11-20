@@ -43,7 +43,8 @@ export function BoundController(opts?: ControllerOptions) {
 }
 
 export function OpenAPI(fragment: Partial<OpenAPIObject>) {
-  return function (target: any) {
+  return function (target: any, propertyKey?: string | symbol) {
+    // propertyKey intentionally left unused.  This decorator always adds fragments to the controller.
     mergeSOCControllerMetadata(target, { openapiFragment: fragment });
   };
 }

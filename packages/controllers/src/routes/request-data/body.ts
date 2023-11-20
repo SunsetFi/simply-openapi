@@ -51,7 +51,12 @@ export const bodyRequestDataProcessorFactory: RequestDataProcessorFactory = (
       );
     }
 
-    return ctx.createValueProcessor(resolved);
+    try {
+      return ctx.createValueProcessor(resolved);
+    } catch (e: any) {
+      e.message = `Failed to compile schema for body ${key}: ${e.message}`;
+      throw e;
+    }
   };
 
   const processors: Record<string, ValueProcessorFunction> = mapValues(

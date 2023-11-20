@@ -9,5 +9,6 @@ const config: Config.InitialOptions = {
     "^.+\\.tsx?$": ["ts-jest", { tsconfig: "<rootDir>/src/tsconfig.json" }],
   },
   setupFilesAfterEnv: ["reflect-metadata", "jest-extended/all"],
+  coveragePathIgnorePatterns: ["^src/tests/"],
 };
 export default config;

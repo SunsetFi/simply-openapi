@@ -55,7 +55,7 @@ export const extractSOCCustomMethodSpec: OpenAPIObjectExtractor = (
   const extension: SOCControllerMethodExtensionData = {
     controller,
     handler: methodName,
-    handlerArgs: metadata.args,
+    handlerArgs: metadata.args ?? [],
   };
 
   if (preExpressMiddleware.length > 0) {
@@ -69,6 +69,7 @@ export const extractSOCCustomMethodSpec: OpenAPIObjectExtractor = (
   return (spec: OpenAPIObject) => {
     const op: OperationObject = {
       operationId: `${nameController(controller)}.${String(methodName)}`,
+      responses: {},
       ...merge(
         {},
         get(spec, ["paths", path, metadata.method], {}),

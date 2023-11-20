@@ -28,7 +28,7 @@ export interface SOCBoundControllerMethodMetadata
   args: (SOCControllerMethodHandlerArg | undefined)[];
 }
 export function isSOCBoundControllerMethodMetadata(
-  metadata: SOCControllerMethodMetadata
+  metadata: SOCControllerMethodMetadata,
 ): metadata is SOCBoundControllerMethodMetadata {
   return "operationId" in metadata;
 }
@@ -41,11 +41,13 @@ export interface SOCCustomControllerMethodMetadata
   operationFragment: PartialDeep<OperationObject>;
 }
 export function isSOCCustomControllerMethodMetadata(
-  metadata: SOCControllerMethodMetadata
+  metadata: SOCControllerMethodMetadata,
 ): metadata is SOCCustomControllerMethodMetadata {
   return "method" in metadata;
 }
 
+// FIXME: Make everything partial, as not all decorators may be present, and wont be during buildout.
+// Validate for this in spec builder.
 export type SOCControllerMethodMetadata =
   | SOCBoundControllerMethodMetadata
   | SOCCustomControllerMethodMetadata;
@@ -53,13 +55,13 @@ export type SOCControllerMethodMetadata =
 export function setSOCControllerMethodMetadata(
   target: any,
   metadata: SOCControllerMethodMetadata,
-  methodName: string | symbol
+  methodName: string | symbol,
 ) {
   defineConstructorMetadata(
     SOCControllerMethodMetadataKey,
     metadata,
     target,
-    methodName
+    methodName,
   );
 }
 
@@ -68,39 +70,39 @@ export function mergeSOCControllerMethodMetadata(
   metadata:
     | PartialDeep<SOCControllerMethodMetadata>
     | ((
-        previous: PartialDeep<SOCControllerMethodMetadata>
+        previous: PartialDeep<SOCControllerMethodMetadata>,
       ) => PartialDeep<SOCControllerMethodMetadata>),
-  methodName: string | symbol
+  methodName: string | symbol,
 ) {
   if (typeof metadata === "function") {
-    const previous = getSOCControllerMethodMetadata(target, methodName);
+    const previous = getSOCControllerMethodMetadata(target, methodName) ?? {};
     metadata = metadata(previous ?? {});
     defineConstructorMetadata(
       SOCControllerMethodMetadataKey,
       metadata,
       target,
-      methodName
+      methodName,
     );
   } else {
-    const previous = getSOCControllerMethodMetadata(target, methodName);
+    const previous = getSOCControllerMethodMetadata(target, methodName) ?? {};
     defineConstructorMetadata(
       SOCControllerMethodMetadataKey,
       merge(previous, metadata),
       target,
-      methodName
+      methodName,
     );
   }
 }
 
 export function getSOCControllerMethodMetadata(
   target: any,
-  methodName: string | symbol
+  methodName: string | symbol,
 ): SOCControllerMethodMetadata | null {
   return (
     getConstructorMetadata(
       SOCControllerMethodMetadataKey,
       target,
-      methodName
+      methodName,
     ) ?? null
   );
 }

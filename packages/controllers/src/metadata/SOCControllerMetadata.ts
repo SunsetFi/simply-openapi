@@ -46,6 +46,14 @@ export interface SOCCustomControllerMetadata
   openapiFragment?: PartialDeep<OpenAPIObject>;
 }
 
+export function isSOCCustomControllerMetadata(
+  metadata: SOCControllerMetadata,
+): metadata is SOCCustomControllerMetadata {
+  return metadata.type === "custom";
+}
+
+// FIXME: Make everything partial, as not all decorators may be present, and wont be during buildout.
+// Validate for this in spec builder.
 export type SOCControllerMetadata =
   | SOCBoundControllerMetadata
   | SOCCustomControllerMetadata;
@@ -55,31 +63,31 @@ export function mergeSOCControllerMetadata(
   metadata:
     | PartialDeep<SOCControllerMetadata>
     | ((
-        previous: PartialDeep<SOCControllerMetadata>
-      ) => PartialDeep<SOCControllerMetadata>)
+        previous: PartialDeep<SOCControllerMetadata>,
+      ) => PartialDeep<SOCControllerMetadata>),
 ) {
   if (typeof metadata === "function") {
     metadata = metadata(getSOCControllerMetadata(target) ?? {});
     defineConstructorMetadata(SOCControllerMetadataKey, metadata, target);
   } else {
-    const previous = getSOCControllerMetadata(target);
+    const previous = getSOCControllerMetadata(target) ?? {};
     defineConstructorMetadata(
       SOCControllerMetadataKey,
       merge(previous, metadata),
-      target
+      target,
     );
   }
 }
 
 export function setSOCControllerMetadata(
   target: any,
-  metadata: SOCControllerMetadata
+  metadata: SOCControllerMetadata,
 ) {
   defineConstructorMetadata(SOCControllerMetadataKey, metadata, target);
 }
 
 export function getSOCControllerMetadata(
-  target: ControllerObject
+  target: ControllerObject,
 ): SOCControllerMetadata | null {
   return getConstructorMetadata(SOCControllerMetadataKey, target) ?? null;
 }

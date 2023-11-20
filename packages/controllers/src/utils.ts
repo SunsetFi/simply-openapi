@@ -1,5 +1,6 @@
 import { PathItemObject } from "openapi3-ts/oas31";
 import { JsonValue } from "type-fest";
+import { mergeWith } from "lodash";
 
 import { ControllerObject } from "./types";
 
@@ -140,4 +141,12 @@ export function isNotNullOrUndefined<T>(x: T | null | undefined): x is T {
 export function isConstructor(object: object): boolean {
   const prototype = (object as any).prototype;
   return prototype && prototype.constructor === object;
+}
+
+export function mergeCombineArrays(object: any, source: any) {
+  return mergeWith(object, source, (objValue, srcValue): any => {
+    if (Array.isArray(objValue)) {
+      return objValue.concat(srcValue);
+    }
+  });
 }
