@@ -21,7 +21,7 @@ import { extractSOCCustomMethodSpec } from "./custom-method";
 describe("extractSOCCustomMethodSpec", function () {
   function createTestInstance(
     methodMetadata: SOCControllerMethodMetadata | null,
-    controllerMetadata: SOCControllerMetadata | null
+    controllerMetadata: SOCControllerMetadata | null,
   ): [controller: object, methodName: string | symbol] {
     const methodName = "testMethod";
     class Controller {
@@ -42,7 +42,7 @@ describe("extractSOCCustomMethodSpec", function () {
   function invoke(
     metadata: SOCControllerMethodMetadata | null,
     controllerMetadata: SOCControllerMetadata | null = null,
-    input: Partial<OpenAPIObject> | null = null
+    input: Partial<OpenAPIObject> | null = null,
   ): [
     result: Partial<OpenAPIObject> | undefined,
     controller: object,
@@ -56,12 +56,12 @@ describe("extractSOCCustomMethodSpec", function () {
           version: "1.0.0",
         },
       },
-      input ?? {}
+      input ?? {},
     );
 
     const [controller, methodName] = createTestInstance(
       metadata,
-      controllerMetadata
+      controllerMetadata,
     );
 
     let result = extractSOCCustomMethodSpec(controller, methodName);
@@ -100,7 +100,7 @@ describe("extractSOCCustomMethodSpec", function () {
         },
         {
           type: "bound",
-        }
+        },
       );
 
     expect(test).toThrowWithMessage(Error, /is a bound controller/);
@@ -158,26 +158,6 @@ describe("extractSOCCustomMethodSpec", function () {
     });
   });
 
-  it("converts path params", function () {
-    const path = "/test/:id/foo";
-    const method = "get";
-
-    const operationFragment: Partial<OperationObject> = {};
-
-    const [result] = invoke({
-      method,
-      path,
-      args: [],
-      operationFragment,
-    });
-
-    expect(result).toMatchObject({
-      paths: {
-        "/test/{id}/foo": expect.toBeObject(),
-      },
-    });
-  });
-
   describe("tags", function () {
     it("applies controller tags", function () {
       const path = "/foo";
@@ -196,7 +176,7 @@ describe("extractSOCCustomMethodSpec", function () {
         {
           type: "custom",
           tags,
-        }
+        },
       );
 
       expect(result).toMatchObject({
@@ -230,7 +210,7 @@ describe("extractSOCCustomMethodSpec", function () {
         {
           type: "custom",
           tags: controllerTags,
-        }
+        },
       );
 
       expect(result).toMatchObject({
@@ -250,7 +230,7 @@ describe("extractSOCCustomMethodSpec", function () {
       const middleware = (
         req: Request,
         res: Response,
-        next: NextFunction
+        next: NextFunction,
       ) => {};
 
       const [result] = invoke(
@@ -272,7 +252,7 @@ describe("extractSOCCustomMethodSpec", function () {
               },
             },
           },
-        }
+        },
       );
 
       expect(result).toMatchObject({
@@ -293,7 +273,7 @@ describe("extractSOCCustomMethodSpec", function () {
       const middleware = (
         req: Request,
         res: Response,
-        next: NextFunction
+        next: NextFunction,
       ) => {};
 
       const [result] = invoke(
@@ -314,7 +294,7 @@ describe("extractSOCCustomMethodSpec", function () {
               },
             },
           },
-        }
+        },
       );
 
       expect(result).toMatchObject({
@@ -335,12 +315,12 @@ describe("extractSOCCustomMethodSpec", function () {
       const controllerMiddleware = (
         req: Request,
         res: Response,
-        next: NextFunction
+        next: NextFunction,
       ) => {};
       const methodMiddleware = (
         req: Request,
         res: Response,
-        next: NextFunction
+        next: NextFunction,
       ) => {};
 
       const [result] = invoke(
@@ -364,7 +344,7 @@ describe("extractSOCCustomMethodSpec", function () {
               },
             },
           },
-        }
+        },
       );
 
       expect(result).toMatchObject({
@@ -388,7 +368,7 @@ describe("extractSOCCustomMethodSpec", function () {
       const operationId = "foobar";
       const middleware = (
         ctx: OperationHandlerMiddlewareContext,
-        next: OperationHandlerMiddlewareNextFunction
+        next: OperationHandlerMiddlewareNextFunction,
       ) => {};
 
       const [result] = invoke(
@@ -411,7 +391,7 @@ describe("extractSOCCustomMethodSpec", function () {
               },
             },
           },
-        }
+        },
       );
 
       expect(result).toMatchObject({
@@ -431,7 +411,7 @@ describe("extractSOCCustomMethodSpec", function () {
       const operationId = "foobar";
       const middleware = (
         ctx: OperationHandlerMiddlewareContext,
-        next: OperationHandlerMiddlewareNextFunction
+        next: OperationHandlerMiddlewareNextFunction,
       ) => {};
 
       const [result] = invoke(
@@ -452,7 +432,7 @@ describe("extractSOCCustomMethodSpec", function () {
               },
             },
           },
-        }
+        },
       );
 
       expect(result).toMatchObject({
@@ -472,11 +452,11 @@ describe("extractSOCCustomMethodSpec", function () {
       const operationId = "foobar";
       const controllerMiddleware = (
         ctx: OperationHandlerMiddlewareContext,
-        next: OperationHandlerMiddlewareNextFunction
+        next: OperationHandlerMiddlewareNextFunction,
       ) => {};
       const methodMiddleware = (
         ctx: OperationHandlerMiddlewareContext,
-        next: OperationHandlerMiddlewareNextFunction
+        next: OperationHandlerMiddlewareNextFunction,
       ) => {};
 
       const [result] = invoke(
@@ -500,7 +480,7 @@ describe("extractSOCCustomMethodSpec", function () {
               },
             },
           },
-        }
+        },
       );
 
       expect(result).toMatchObject({

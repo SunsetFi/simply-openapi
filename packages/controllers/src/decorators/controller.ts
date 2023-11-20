@@ -4,6 +4,7 @@ import {
   getSOCControllerMetadata,
   mergeSOCControllerMetadata,
 } from "../metadata";
+import { expressToOpenAPIPath } from "../urls";
 
 export interface ControllerOptions {
   tags?: string[];
@@ -13,8 +14,12 @@ export function Controller(path?: string, opts?: ControllerOptions) {
   return function (target: any) {
     if (getSOCControllerMetadata(target)?.type === "bound") {
       throw new Error(
-        `Controller ${target.name} cannot be both a bound controller and a custom controller.`
+        `Controller ${target.name} cannot be both a bound controller and a custom controller.`,
       );
+    }
+
+    if (path) {
+      path = expressToOpenAPIPath(path);
     }
 
     mergeSOCControllerMetadata(target, {
@@ -29,7 +34,7 @@ export function BoundController(opts?: ControllerOptions) {
   return function (target: any) {
     if (getSOCControllerMetadata(target)?.type === "custom") {
       throw new Error(
-        `Controller ${target.name} cannot be both a bound controller and a custom controller.`
+        `Controller ${target.name} cannot be both a bound controller and a custom controller.`,
       );
     }
 
