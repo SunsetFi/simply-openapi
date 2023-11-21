@@ -2,6 +2,7 @@ import { OperationObject } from "openapi3-ts/oas31";
 import { PartialDeep } from "type-fest";
 
 import {
+  SOCCustomControllerMethodMetadata,
   getSOCControllerMethodMetadata,
   isSOCBoundControllerMethodMetadata,
   setSOCControllerMethodMetadata,
@@ -27,10 +28,10 @@ export function OpenAPIOperation(fragment: PartialDeep<OperationObject>) {
 
     // Mask the type as we know it's not a bound controller method,
     // but we may not have all the decorators yet and we are still partially building.
-    const newMetadata: any = {
+    const newMetadata: SOCCustomControllerMethodMetadata = {
       ...(metadata ?? {}),
       operationFragment: mergeCombineArrays(
-        metadata?.operationFragment ?? {},
+        (metadata as any)?.operationFragment ?? {},
         fragment,
       ),
     };

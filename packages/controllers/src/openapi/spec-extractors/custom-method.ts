@@ -9,13 +9,13 @@ import {
 } from "../../metadata";
 import { joinUrlPaths } from "../../urls";
 import { ControllerObject } from "../../types";
+import { nameController } from "../../utils";
 
 import { OpenAPIObjectExtractor } from "../types";
 import {
   SOCControllerMethodExtensionData,
   SOCControllerMethodExtensionName,
 } from "../extensions";
-import { nameController } from "../../utils";
 
 export const extractSOCCustomMethodSpec: OpenAPIObjectExtractor = (
   controller: ControllerObject,
@@ -28,17 +28,20 @@ export const extractSOCCustomMethodSpec: OpenAPIObjectExtractor = (
     return undefined;
   }
 
-  if (controllerMetadata && controllerMetadata.type === "bound") {
+  if (controllerMetadata?.type === "bound") {
     throw new Error(
       `Cannot extract OpenAPI spec for method ${String(
         methodName,
       )} of controller ${nameController(
         controller,
-      )} because it is a bound controller and the method is not a bound operation method.`,
+      )} because it is a bound controller and the method is not a bound controller method.  If you would like to mix bound and unbound controllers, you may do so with the @Controller decorator, or omit the decorator entirely.`,
     );
   }
 
-  const path = joinUrlPaths(controllerMetadata?.path ?? "/", metadata.path);
+  const path = joinUrlPaths(
+    (controllerMetadata as any)?.path ?? "/",
+    metadata.path,
+  );
 
   // controller middleware should run before operation middleware
 
@@ -77,7 +80,7 @@ export const extractSOCCustomMethodSpec: OpenAPIObjectExtractor = (
       ),
       tags: [
         ...get(spec, ["paths", path, metadata.method, "tags"], []),
-        ...(controllerMetadata?.tags ?? []),
+        ...((controllerMetadata as any)?.tags ?? []),
         ...(metadata.operationFragment.tags ?? []),
       ],
       [SOCControllerMethodExtensionName]: extension,

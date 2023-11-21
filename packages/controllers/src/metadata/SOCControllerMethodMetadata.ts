@@ -24,26 +24,36 @@ export interface SOCControllerMethodCommonMetadata {
 
 export interface SOCBoundControllerMethodMetadata
   extends SOCControllerMethodCommonMetadata {
-  operationId: string;
-  args: (SOCControllerMethodHandlerArg | undefined)[];
+  operationId?: string;
+  args?: (SOCControllerMethodHandlerArg | undefined)[];
 }
+export type ResolvedSOCBoundControllerMethodMetadata =
+  SOCBoundControllerMethodMetadata & {
+    operationId: string;
+  };
 export function isSOCBoundControllerMethodMetadata(
   metadata: SOCControllerMethodMetadata,
-): metadata is SOCBoundControllerMethodMetadata {
+): metadata is ResolvedSOCBoundControllerMethodMetadata {
   return "operationId" in metadata;
 }
 
 export interface SOCCustomControllerMethodMetadata
   extends SOCControllerMethodCommonMetadata {
-  path: string;
-  method: RequestMethod;
-  args: SOCControllerMethodHandlerArg[];
-  operationFragment: PartialDeep<OperationObject>;
+  path?: string;
+  method?: RequestMethod;
+  args?: (SOCControllerMethodHandlerArg | undefined)[];
+  operationFragment?: PartialDeep<OperationObject>;
 }
+export type ResolvedSOCCustomControllerMethodMetadata =
+  SOCCustomControllerMethodMetadata & {
+    path: string;
+    method: RequestMethod;
+    operationFragment: OperationObject;
+  };
 export function isSOCCustomControllerMethodMetadata(
   metadata: SOCControllerMethodMetadata,
-): metadata is SOCCustomControllerMethodMetadata {
-  return "method" in metadata;
+): metadata is ResolvedSOCCustomControllerMethodMetadata {
+  return "method" in metadata && "path" in metadata;
 }
 
 // FIXME: Make everything partial, as not all decorators may be present, and wont be during buildout.

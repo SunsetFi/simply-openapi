@@ -23,12 +23,12 @@ export interface SOCCommonControllerMetadata {
 
 export interface SOCBoundControllerMetadata
   extends SOCCommonControllerMetadata {
-  type: "bound";
+  type?: "bound";
 }
 
 export interface SOCCustomControllerMetadata
   extends SOCCommonControllerMetadata {
-  type: "custom";
+  type?: "custom";
 
   /**
    * The path of this controller.  This will prefix all method paths.

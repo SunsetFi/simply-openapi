@@ -41,7 +41,7 @@ export const extractSOCBoundMethodSpec: OpenAPIObjectExtractor = (
 
     const [path, method, operation] = opData;
 
-    for (const arg of metadata.args) {
+    for (const arg of metadata.args ?? []) {
       if (!arg || arg.type !== "openapi-parameter") {
         continue;
       }

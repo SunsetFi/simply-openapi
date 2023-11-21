@@ -41,7 +41,7 @@ function createMethodDecorator(method: RequestMethod): MethodDecorator {
         );
       }
 
-      if (existing && existing.method) {
+      if (existing && "method" in existing) {
         throw new Error(
           `Method handler ${String(
             methodName,
