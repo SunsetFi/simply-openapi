@@ -2,7 +2,7 @@
 
 By far the most common use case when creating backends in the wild is that the code and functionality come first, and documentation comes after. @simply-openapi/controllers is designed with this approach as a first class concept, supporting the generation of accurate and exacting OpenAPI specifications from the controllers themselves. This produces the document that can then be fed back into the library, producing the express router that will handle all of the validation and invocation of the controller methods.
 
-This tutorial will cover creating controllers and producing the OpenAPI spec from them.  For learning how to turn the resulting spec into an express router, see [Creating an Express Route](creating-an-express-route-from-your-controllers.md).
+This tutorial will cover creating controllers and producing the OpenAPI spec from them. For learning how to turn the resulting spec into an express router, see [Creating an Express Route](creating-express-routes.md).
 
 ## Writing a Controller
 
@@ -44,7 +44,7 @@ class WidgetController {
 
 This simple method will listen on `/widgets` for get requests, and asynchronously fetch widgets from the `getWidgets` function. As these will be plain JSON objects, they can be returned directly from the handler and @simply-openapi/controllers will interpret that as a request to send a 200 OK back with the `application/json` content type, with the body being the JSON serialized form of the result.
 
-Note that you can send any status code, and customize the results handling to fit any use case you may have. See further on in this tutorial for information about [custom responses and bodies](tutorial-controllers-with-automatic-openapi-generation.md#returning-results), or consider [Writing custom handler middleware](writing-handler-middleware.md) to interpret results as you wish.
+Note that you can send any status code, and customize the results handling to fit any use case you may have. See further on in this tutorial for information about [custom responses and bodies](tutorial-automatic-openapi-controllers.md#returning-results), or consider [Writing custom handler middleware](writing-handler-middleware.md) to interpret results as you wish.
 
 Now that we have a method in our controller, let's take a look at what OpenAPI spec will be generated from this:
 
@@ -72,7 +72,7 @@ Now that we have a method in our controller, let's take a look at what OpenAPI s
 
 As you see, we have not declared any validation or return types, but already the framework of our method has been documented.
 
-Take note of the `x-simply-controller-method` extension data stored on the operation object. This contains metadata about your controller and method that @simply-openapi/controllers can later use to build functioning express routers from this spec. Knowing of its presence can be useful as it provides a good view into how the library is handling your method, but it is otherwise undesirable to publish specs containing it. For more information about publishing the generated spec, see [Publishing your OpenAPI specification](../../../readme/controllers/publishing-your-openapi-specification.md).
+Take note of the `x-simply-controller-method` extension data stored on the operation object. This contains metadata about your controller and method that @simply-openapi/controllers can later use to build functioning express routers from this spec. Knowing of its presence can be useful as it provides a good view into how the library is handling your method, but it is otherwise undesirable to publish specs containing it. For more information about publishing the generated spec, see [Publishing your OpenAPI specification](../../../../readme/controllers/publishing-your-openapi-specification.md).
 
 This extension will be omitted from future examples for brevity.
 
@@ -178,13 +178,13 @@ With this change, let's see what our PathItem looks like now?
 
 While we should strive to make our OpenAPI contracts as accurate as possible, it may not always be advisable to enforce response body contracts at runtime. Failing a handler for returning an object that does not match the contract may muddy the waters if the endpoint has otherwise performed stateful changes, such as for a POST request.
 
-Because of this, responses are not validated by default like all other OpenAPI spec declarations. This can be enabled optionally, such as in a development environment or when performing e2e testing.  For more information, see [Creating an Express Route from your OpenAPI specification](creating-an-express-route-from-your-controllers.md).
+Because of this, responses are not validated by default like all other OpenAPI spec declarations. This can be enabled optionally, such as in a development environment or when performing e2e testing. For more information, see [Creating an Express Route from your OpenAPI specification](creating-express-routes.md).
 
 #### A note on the re-usability of typings
 
 Eventually, your back-end will be accessed by a client. To make things easier, you may wish to keep your typings and schemas in a separate package, so that front-ends can import the typings and use them on the client side. This will save both sides having to implement the typings and ensure the typings stay in sync.
 
-For more information, see [Consuming your API from clients](../../../readme/controllers/consuming-your-api-from-clients.md).
+For more information, see [Consuming your API from clients](../../../../readme/controllers/consuming-your-api-from-clients.md).
 
 ### Getting input
 
@@ -308,7 +308,7 @@ class WidgetController {
 }
 ```
 
-As you can see, we are using the `{widget_id}` stand-in for our path parameter. This style of specifying parameters is native to OpenAPI, and may differ from the :widget\_id style from express that you have seen before.  However, both styles are supported.  Whatever style you choose, the express router will receive the express style parameters, and the OpenAPI docs will document in the OpenAPI parameter style.
+As you can see, we are using the `{widget_id}` stand-in for our path parameter. This style of specifying parameters is native to OpenAPI, and may differ from the :widget\_id style from express that you have seen before. However, both styles are supported. Whatever style you choose, the express router will receive the express style parameters, and the OpenAPI docs will document in the OpenAPI parameter style.
 
 Additionally, you may notice that instead of passing an OpenAPI schema object, we are passing the string `"integer"`. This is a shorthand for when you only want to validate the data type and have no other additional validations. This shorthand converts to:
 
@@ -596,12 +596,12 @@ If you have additional OpenAPI specs you would like to add, all controllers and 
 
 ```
 
-This decorator can add any spec at all.  Keep in mind that @simply-openapi/controllers works off the spec, not the decorators, so added specifications of parameters or other schema objects will still participate in validation even if never referenced by any controller method.
+This decorator can add any spec at all. Keep in mind that @simply-openapi/controllers works off the spec, not the decorators, so added specifications of parameters or other schema objects will still participate in validation even if never referenced by any controller method.
 
 ## Creating the OpenAPI specification from your controllers
 
-Now that you have a controller, the next step is to build the OpenAPI specification.  From this, we can further create an express router to invoke our controllers.
+Now that you have a controller, the next step is to build the OpenAPI specification. From this, we can further create an express router to invoke our controllers.
 
-{% content-ref url="../../../readme/controllers/creating-openapi-specs-from-controllers.md" %}
-[creating-openapi-specs-from-controllers.md](../../../readme/controllers/creating-openapi-specs-from-controllers.md)
+{% content-ref url="../../../../readme/controllers/creating-openapi-specs-from-controllers.md" %}
+[creating-openapi-specs-from-controllers.md](../../../../readme/controllers/creating-openapi-specs-from-controllers.md)
 {% endcontent-ref %}
