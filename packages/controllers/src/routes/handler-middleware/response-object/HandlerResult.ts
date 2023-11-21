@@ -1,56 +1,6 @@
-import { Response } from "express";
+import { CookieOptions, Response } from "express";
 import HttpStatusCodes from "http-status-codes";
-
-// TODO: Its been a while, see if this is still valid for express.
-// Probably want to drop this and use Omit and Partial<> on the real objectr.
-
-/**
- * Configuration options for setting cookies.
- *
- * Values inherited from express api.
- */
-export interface CookieSettings {
-  /**
-   * Sets the domain of the cookie.  Defaults to the app's domain name.
-   */
-  domain?: string;
-
-  /**
-   * Expiry date of the cookie in GMT. If not specified or set to 0, creates a session cookie.
-   */
-  expires?: Date;
-
-  /**
-   * Flags the cookie to be accessible only by the web server.
-   */
-  httpOnly?: boolean;
-
-  /**
-   * Convenient option for setting the expiry time relative to the current time in millisoconds.
-   */
-  maxAge?: number;
-
-  /**
-   * Path for the cookie. Defaults to “/”.
-   */
-  path?: string;
-
-  /**
-   * Marks the cookie to be used with HTTPS only.
-   */
-  socure?: boolean;
-
-  /**
-   * Indicates if the cookie should be signed.
-   */
-  signed?: boolean;
-
-  /**
-   * Value of the “SameSite” Set-Cookie attribute.
-   * More information at https://tools.ietf.org/html/draft-ietf-httpbis-cookie-same-site-00#soction-4.1.1.
-   */
-  sameSite?: boolean | "lax" | "strict" | "none";
-}
+import { omit } from "lodash";
 
 export class HandlerResult {
   // These are not marked private so as to be easier to unit test in typescript.
@@ -58,7 +8,7 @@ export class HandlerResult {
   _bodyJson: any;
   _status: number = HttpStatusCodes.OK;
   _headers: Record<string, string> = {};
-  _cookies: Record<string, { value: string } & CookieSettings> = {};
+  _cookies: Record<string, { value: string } & CookieOptions> = {};
 
   /**
    * Sets the body for this response.
@@ -95,9 +45,9 @@ export class HandlerResult {
   static cookie(
     key: string,
     value: string,
-    settings?: CookieSettings,
+    options?: CookieOptions,
   ): HandlerResult {
-    return new HandlerResult().cookie(key, value, settings);
+    return new HandlerResult().cookie(key, value, options);
   }
 
   /**
@@ -139,8 +89,8 @@ export class HandlerResult {
   /**
    * Sets a cookie for this response.
    */
-  cookie(key: string, value: string, settings?: CookieSettings): this {
-    this._cookies[key] = { value, ...settings };
+  cookie(key: string, value: string, options?: CookieOptions): this {
+    this._cookies[key] = { value, ...options };
     return this;
   }
 
@@ -160,8 +110,8 @@ export class HandlerResult {
     }
 
     if (this._cookies !== undefined) {
-      for (const [key, value] of Object.entries(this._cookies)) {
-        res.cookie(key, value.value, value);
+      for (const [key, data] of Object.entries(this._cookies)) {
+        res.cookie(key, data.value, omit(data, "value"));
       }
     }
 
