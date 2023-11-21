@@ -72,7 +72,7 @@ Now that we have a method in our controller, let's take a look at what OpenAPI s
 
 As you see, we have not declared any validation or return types, but already the framework of our method has been documented.
 
-Take note of the `x-simply-controller-method` extension data stored on the operation object. This contains metadata about your controller and method that @simply-openapi/controllers can later use to build functioning express routers from this spec. Knowing of its presence can be useful as it provides a good view into how the library is handling your method, but it is otherwise undesirable to publish specs containing it. For more information about publishing the generated spec, see [Publishing your OpenAPI specification](../../../../readme/controllers/publishing-your-openapi-specification.md).
+Take note of the `x-simply-controller-method` extension data stored on the operation object. This contains metadata about your controller and method that @simply-openapi/controllers can later use to build functioning express routers from this spec. Knowing of its presence can be useful as it provides a good view into how the library is handling your method, but it is otherwise undesirable to publish specs containing it. For more information about publishing the generated spec, see [Publishing your OpenAPI specification](publishing-openapi-specs.md).
 
 This extension will be omitted from future examples for brevity.
 
@@ -184,7 +184,7 @@ Because of this, responses are not validated by default like all other OpenAPI s
 
 Eventually, your back-end will be accessed by a client. To make things easier, you may wish to keep your typings and schemas in a separate package, so that front-ends can import the typings and use them on the client side. This will save both sides having to implement the typings and ensure the typings stay in sync.
 
-For more information, see [Consuming your API from clients](../../../../readme/controllers/consuming-your-api-from-clients.md).
+For more information, see [Consuming your API from clients](../consuming-your-api-from-clients.md).
 
 ### Getting input
 
@@ -602,6 +602,6 @@ This decorator can add any spec at all. Keep in mind that @simply-openapi/contro
 
 Now that you have a controller, the next step is to build the OpenAPI specification. From this, we can further create an express router to invoke our controllers.
 
-{% content-ref url="../../../../readme/controllers/creating-openapi-specs-from-controllers.md" %}
-[creating-openapi-specs-from-controllers.md](../../../../readme/controllers/creating-openapi-specs-from-controllers.md)
+{% content-ref url="creating-openapi-specs.md" %}
+[creating-openapi-specs.md](creating-openapi-specs.md)
 {% endcontent-ref %}
