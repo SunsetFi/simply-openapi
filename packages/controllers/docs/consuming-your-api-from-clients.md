@@ -4,20 +4,20 @@
 
 TODO: Best practices for creating interfaces and schema
 
-* manually written
-* zod
-* separate types and schemas for shared concepts (Opaque IDs)
-* Eventually: @simply-openapi/schema-tools
-  * All the usual stuff thats been copy-pasted between projects
-    * jsonSchemaToOpenAPI()
-    * arrayOf()
-    * pickProperty()
-    * omitProperty()
-    * optional()
-    * nullable()
-    * default schemas
-      * nonEmptyString
-      * integerGTE1
+- manually written
+- zod
+- separate types and schemas for shared concepts (Opaque IDs)
+- Eventually: @simply-openapi/schema-tools
+  - All the usual stuff thats been copy-pasted between projects
+    - jsonSchemaToOpenAPI()
+    - arrayOf()
+    - pickProperty()
+    - omitProperty()
+    - optional()
+    - nullable()
+    - default schemas
+      - nonEmptyString
+      - integerGTE1
 
 ## Auto-generating clients
 

@@ -1,6 +1,6 @@
 # Publishing your OpenAPI specification
 
-While the OpenAPI spec produced by createOpenAPIFromControllers is fully formed and valid, you may wish to strip away metadata describing the handlers before publishing it.  The `stripSOCExtensions` function is provided to do this.
+While the OpenAPI spec produced by createOpenAPIFromControllers is fully formed and valid, you may wish to strip away metadata describing the handlers before publishing it. The `stripSOCExtensions` function is provided to do this.
 
 ```typescript
 let docs = createOpenAPIFromControllers(info, types);
