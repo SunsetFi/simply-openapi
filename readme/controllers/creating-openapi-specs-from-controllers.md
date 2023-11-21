@@ -54,7 +54,7 @@ const existingSpec: OpenAPIObject = {
   }
 };
 
-const spec = createOpenAPIFromControllers(existingSpec, controllers);
+const spec = addOpenAPIPathsFromController(existingSpec, controllers);
 ```
 
 With this method, you can supply additional spec that might be consumed or referenced by the controllers.  This is also the only way to use bound controllers and bound methods.
@@ -84,7 +84,7 @@ Note however that if you produce specs in this way, the metadata in the spec wil
 
 ## Caveat: Empty controllers
 
-To assist in detecting bugs, both functions will emit an error if they get passed an object that does not have any web request methods declared.  This is to catch issues where the wrong class or instance is passed in.
+To assist in detecting bugs, both functions will emit an error if they get passed an object that does not have any controller or web request decorators present. This is to catch issues where the wrong class or instance is passed in.
 
 This behavior can be disabled by using the `ignoreEmptyControllers` option.  The class will instead be ignored, and no information will be generated for it in the spec.
 

@@ -568,6 +568,36 @@ Note that if you do handle the response in your method, you should ensure your m
 
 To prevent you from accidentally leaving a request hanging, the library will throw an error by default if it completes the middleware stack for a handler and the response has not yet sent its headers. This is an optional feature that can be turned off at the router creation step.
 
+## Adding additional OpenAPI specs
+
+If you have additional OpenAPI specs you would like to add, all controllers and all methods take a `@OpenAPI` decorator that will merge its content with the root OpenAPI spec.
+
+```typescript
+  @Controller("/widgets")
+  @OpenAPI({
+    components: {
+      schemas: {
+        widgetId: {
+          type: "integer",
+          minimum: 1,
+        },
+      },
+    },
+  })
+  class WidgetController {
+    @Get("/{widgetId}")
+    getWidget(
+      @PathParam("widgetId", { $ref: "#/components/schemas/widgetId" })
+      widgetId: number,
+    ) {
+      ...
+    }
+  }
+
+```
+
+This decorator can add any spec at all.  Keep in mind that @simply-openapi/controllers works off the spec, not the decorators, so added specifications of parameters or other schema objects will still participate in validation even if never referenced by any controller method.
+
 ## Creating the OpenAPI specification from your controllers
 
 Now that you have a controller, the next step is to build the OpenAPI specification.  From this, we can further create an express router to invoke our controllers.
