@@ -119,8 +119,6 @@ export class HandlerResult {
       res.send(this._bodyRaw);
     } else if (this._bodyJson !== undefined) {
       res.json(this._bodyJson);
-    } else {
-      res.end();
     }
   }
 
