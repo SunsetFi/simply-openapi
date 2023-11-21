@@ -13,7 +13,7 @@ import { createParameterDecorator } from "./utils";
  * @param schema The schema of the parameter.
  * @param spec The specification of the OpenAPI parameter.
  */
-export function Header(
+export function HeaderParam(
   name: string,
   schema: SchemaObject | ReferenceObject | SchemaObjectType | null,
   spec?: BaseParameterObject,
@@ -36,12 +36,12 @@ export function Header(
  * @param schema The schema of the parameter.
  * @param spec The specification of the OpenAPI parameter.
  */
-export function RequiredHeader(
+export function RequiredHeaderParam(
   name: string,
   schema: SchemaObject | ReferenceObject | SchemaObjectType | null,
   spec?: BaseParameterObject,
 ): ParameterDecorator {
-  return Header(name, schema, {
+  return HeaderParam(name, schema, {
     ...spec,
     required: true,
   });

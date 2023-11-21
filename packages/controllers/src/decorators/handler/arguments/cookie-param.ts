@@ -13,7 +13,7 @@ import { createParameterDecorator } from "./utils";
  * @param schema The schema of the parameter.
  * @param spec The specification of the OpenAPI parameter.
  */
-export function Cookie(
+export function CookieParam(
   name: string,
   schema: SchemaObject | ReferenceObject | SchemaObjectType | null,
   spec?: BaseParameterObject,
@@ -37,12 +37,12 @@ export function Cookie(
  * @param schema The schema of the parameter.
  * @param spec The specification of the OpenAPI parameter.
  */
-export function RequiredCookie(
+export function RequiredCookieParam(
   name: string,
   schema: SchemaObject | ReferenceObject | SchemaObjectType | null,
   spec?: BaseParameterObject,
 ): ParameterDecorator {
-  return Cookie(name, schema, {
+  return CookieParam(name, schema, {
     ...spec,
     required: true,
   });

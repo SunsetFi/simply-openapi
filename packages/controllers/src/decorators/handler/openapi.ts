@@ -2,7 +2,6 @@ import { OperationObject } from "openapi3-ts/oas31";
 import { PartialDeep } from "type-fest";
 
 import {
-  SOCCustomControllerMethodMetadata,
   getSOCControllerMethodMetadata,
   isSOCBoundControllerMethodMetadata,
   setSOCControllerMethodMetadata,
