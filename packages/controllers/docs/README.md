@@ -12,8 +12,8 @@ At first glance, it might seem that this does not matter when you want a code-fi
 
 By having a 1-1 relation with the controllers, OpenAPI now becomes your litmus test for the controllers themselves. Want to ensure an API contract does not change? Put a snapshot test on it. Want to test that a query parameter is validated as only accepting numbers? Unit test the resulting spec. The specification becomes highly accurate metadata to your controllers, greatly simplifying the process of ensuring your APIs behave in the way you expect them to, and catching any inadvertent changes that might occur over the course of the software development lifecycle.
 
-{% content-ref url="tutorial-controllers-with-automatic-openapi-generation.md" %}
-[tutorial-controllers-with-automatic-openapi-generation.md](tutorial-controllers-with-automatic-openapi-generation.md)
+{% content-ref url="dev/tutorial-automatic-openapi-controllers.md" %}
+[tutorial-automatic-openapi-controllers.md](dev/tutorial-automatic-openapi-controllers.md)
 {% endcontent-ref %}
 
 ## The Benefits of OpenAPI-First controller design

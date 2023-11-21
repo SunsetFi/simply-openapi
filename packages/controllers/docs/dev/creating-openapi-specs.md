@@ -114,10 +114,10 @@ const spec = createOpenAPIFromControllers(
 
 Now that we have an OpenAPI spec, we can create a router, or export it for documentation.
 
-{% content-ref url="../../packages/controllers/docs/creating-an-express-route-from-your-controllers.md" %}
-[creating-an-express-route-from-your-controllers.md](../../packages/controllers/docs/creating-an-express-route-from-your-controllers.md)
+{% content-ref url="../../../packages/controllers/docs/creating-an-express-route-from-your-controllers.md" %}
+[creating-an-express-route-from-your-controllers.md](../../../packages/controllers/docs/creating-an-express-route-from-your-controllers.md)
 {% endcontent-ref %}
 
-{% content-ref url="publishing-your-openapi-specification.md" %}
-[publishing-your-openapi-specification.md](publishing-your-openapi-specification.md)
+{% content-ref url="publishing-openapi-specs.md" %}
+[publishing-openapi-specs.md](publishing-openapi-specs.md)
 {% endcontent-ref %}
