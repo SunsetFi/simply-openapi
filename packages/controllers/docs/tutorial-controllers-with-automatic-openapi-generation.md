@@ -44,7 +44,7 @@ class WidgetController {
 
 This simple method will listen on `/widgets` for get requests, and asynchronously fetch widgets from the `getWidgets` function. As these will be plain JSON objects, they can be returned directly from the handler and @simply-openapi/controllers will interpret that as a request to send a 200 OK back with the `application/json` content type, with the body being the JSON serialized form of the result.
 
-Note that you can send any status code, and customize the results handling to fit any use case you may have. See further on in this tutorial for information about custom responses and bodies, or consider [Writing custom handler middleware](writing-handler-middleware.md) to interpret results as you wish.
+Note that you can send any status code, and customize the results handling to fit any use case you may have. See further on in this tutorial for information about [custom responses and bodies](tutorial-controllers-with-automatic-openapi-generation.md#returning-results), or consider [Writing custom handler middleware](writing-handler-middleware.md) to interpret results as you wish.
 
 Now that we have a method in our controller, let's take a look at what OpenAPI spec will be generated from this:
 
