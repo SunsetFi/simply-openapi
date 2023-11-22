@@ -4,15 +4,15 @@ import { Request } from "express";
 import { BadRequest } from "http-errors";
 import { ValidationError } from "ajv";
 
-import { pickContentType, resolveReference } from "../../schema-utils";
-import { errorToMessage } from "../../ajv";
+import { pickContentType, resolveReference } from "../../../schema-utils";
+import { errorToMessage } from "../../../ajv";
 
 import {
   RequestDataProcessor,
   RequestDataProcessorFactory,
   ValueProcessorFunction,
 } from "./types";
-import { nameOperationFromRequestProcessorContext } from "./utils";
+import { nameOperationFromContext } from "../utils";
 
 const defaultRequestProcessor: RequestDataProcessor = (req) => ({
   body: req.body,
@@ -27,7 +27,7 @@ export const bodyRequestDataProcessorFactory: RequestDataProcessorFactory = (
     return defaultRequestProcessor;
   }
 
-  const compileSchema = (
+  const compileContentSchema = (
     key: string,
     schema: SchemaObject | ReferenceObject | undefined,
   ) => {
@@ -38,14 +38,14 @@ export const bodyRequestDataProcessorFactory: RequestDataProcessorFactory = (
     const resolved = resolveReference(ctx.spec, schema);
     if (!resolved) {
       throw new Error(
-        `Could not resolve requestBody schema reference for content type ${key} in operation ${nameOperationFromRequestProcessorContext(
+        `Could not resolve requestBody schema reference for content type ${key} in operation ${nameOperationFromContext(
           ctx,
         )}.`,
       );
     }
 
     try {
-      return ctx.createValueProcessor(resolved);
+      return ctx.compileSchema(resolved);
     } catch (e: any) {
       e.message = `Failed to compile schema for body ${key}: ${e.message}`;
       throw e;
@@ -55,7 +55,7 @@ export const bodyRequestDataProcessorFactory: RequestDataProcessorFactory = (
   const processors: Record<string, ValueProcessorFunction> = mapValues(
     // Content is required in the spec, but allow none I suppose...
     requestBody.content ?? {},
-    ({ schema }, key) => compileSchema(key, schema),
+    ({ schema }, key) => compileContentSchema(key, schema),
   );
 
   return (req: Request) => {

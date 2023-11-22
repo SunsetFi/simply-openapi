@@ -1,8 +1,10 @@
 import { OpenAPIObject } from "openapi3-ts/oas31";
-import { RequestMethod } from "../../types";
+import { Request, Response } from "express";
+
+import { RequestMethod } from "../../../types";
+
 import { MethodHandlerContext } from "../MethodHandlerContext";
 import { OperationHandlerArgumentDefinitions } from "../types";
-import { Request, Response } from "express";
 
 export class OperationHandlerMiddlewareContext extends MethodHandlerContext {
   static fromMethodHandlerContext(

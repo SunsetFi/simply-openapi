@@ -1,7 +1,7 @@
 import { SchemaObject } from "openapi3-ts/oas31";
 import Ajv, { ValidateFunction, ValidationError } from "ajv";
 
-import { sliceAjvError } from "../../ajv";
+import { sliceAjvError } from "../../../ajv";
 
 import { ValueProcessorFunction } from "../request-data";
 

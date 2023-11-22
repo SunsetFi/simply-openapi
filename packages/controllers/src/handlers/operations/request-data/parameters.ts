@@ -4,18 +4,18 @@ import { NotFound, BadRequest } from "http-errors";
 import { capitalize } from "lodash";
 import { ValidationError } from "ajv";
 
-import { resolveReference } from "../../schema-utils";
-import { ExtractedRequestData } from "../../types";
-import { errorToMessage } from "../../ajv";
+import { resolveReference } from "../../../schema-utils";
+import { ExtractedRequestData } from "../../../types";
+import { errorToMessage } from "../../../ajv";
 
 import { RequestDataProcessorFactory, ValueProcessorFunction } from "./types";
-import { nameOperationFromRequestProcessorContext } from "./utils";
+import { nameOperationFromContext } from "../utils";
 
 export const parametersRequestDataProcessorFactory: RequestDataProcessorFactory =
   (ctx) => {
     const parameters = ctx.parameters;
 
-    const compileSchema = (param: ParameterObject) => {
+    const compileParamSchema = (param: ParameterObject) => {
       if (!param.schema) {
         return (value: any) => value;
       }
@@ -25,12 +25,12 @@ export const parametersRequestDataProcessorFactory: RequestDataProcessorFactory 
         throw new Error(
           `Could not resolve parameter schema reference for parameter ${
             param.name
-          } in operation ${nameOperationFromRequestProcessorContext(ctx)}.`,
+          } in operation ${nameOperationFromContext(ctx)}.`,
         );
       }
 
       try {
-        return ctx.createValueProcessor(resolved);
+        return ctx.compileSchema(resolved);
       } catch (e: any) {
         e.message = `Failed to compile schema for parameter ${param.in} ${param.name}: ${e.message}`;
         throw e;
@@ -39,7 +39,7 @@ export const parametersRequestDataProcessorFactory: RequestDataProcessorFactory 
 
     const processors = parameters.reduce(
       (acc, param) => {
-        const processor = compileSchema(param);
+        const processor = compileParamSchema(param);
         acc[param.name] = processor;
         return acc;
       },

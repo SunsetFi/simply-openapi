@@ -2,8 +2,8 @@ import { IExtensionType } from "openapi3-ts/oas31";
 import { JSONSchema6 } from "json-schema";
 
 import ajv from "../../ajv";
-import { OperationHandlerMiddleware } from "../../routes";
 import { Middleware } from "../../types";
+import { OperationHandlerMiddleware } from "../../handlers";
 
 /**
  * Describes an argument that pulls data from an OpenAPI parameter.

@@ -9,7 +9,9 @@ import {
   Response,
 } from "../decorators";
 import { createOpenAPIFromControllers } from "../openapi";
-import { HandlerResult, createRouterFromSpec } from "../routes";
+import { HandlerResult } from "../handlers";
+import { createRouterFromSpec } from "../routes";
+
 import { getMockReq, getMockRes } from "./mocks";
 import { tapPromise, trackPromise } from "./tracked-promise";
 

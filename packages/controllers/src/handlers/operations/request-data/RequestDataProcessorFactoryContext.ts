@@ -1,15 +1,14 @@
 import { OpenAPIObject, SchemaObject } from "openapi3-ts/oas31";
 import Ajv from "ajv";
 
-import { RequestMethod } from "../../types";
+import { RequestMethod } from "../../../types";
 
 import { MethodHandlerContext } from "../MethodHandlerContext";
-
-import { SchemaObjectProcessorFactory } from "../utils/SchemaObjectProcessorFactory";
 
 import { OperationHandlerArgumentDefinitions } from "../types";
 
 import { ValueProcessorFunction } from "./types";
+import { SchemaObjectProcessorFactory } from "./SchemaObjectProcessorFactory";
 
 export class RequestDataProcessorFactoryContext extends MethodHandlerContext {
   static fromMethodHandlerContext(context: MethodHandlerContext, ajv: Ajv) {
@@ -38,13 +37,13 @@ export class RequestDataProcessorFactoryContext extends MethodHandlerContext {
     super(spec, path, method, controller, handler, handlerArgs);
     this._schemaObjectProcessorFactory = new SchemaObjectProcessorFactory(ajv);
   }
+
   /**
    * Create a value processor function with the given schema.
    * The returned function will validate the value against the schema, and may coerce it depending on user settings.
    * @param schema The schema to produce a validator for.
-   * @throws {ValidationError} The value does not conform to the schema.
    */
-  createValueProcessor(schema: SchemaObject): ValueProcessorFunction {
+  compileSchema(schema: SchemaObject): ValueProcessorFunction {
     return this._schemaObjectProcessorFactory.createValueProcessor(schema);
   }
 }

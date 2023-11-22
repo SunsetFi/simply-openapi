@@ -1,8 +1,9 @@
 import HttpStatusCodes from "http-status-codes";
 
-import { isJson } from "../../utils";
+import { isJson } from "../../../utils";
 
-import { nameOperationFromHandlerContext } from "./utils";
+import { nameOperationFromContext } from "../utils";
+
 import { OperationHandlerMiddlewareNextFunction } from "./types";
 import { OperationHandlerMiddlewareContext } from "./OperationHandlerMiddlewareContext";
 
@@ -26,7 +27,7 @@ export async function operationHandlerJsonResponseMiddleware(
 
   if (context.res.headersSent) {
     throw new Error(
-      `Operation ${nameOperationFromHandlerContext(
+      `Operation ${nameOperationFromContext(
         context,
       )} handler returned a result but the request has already sent its headers.`,
     );
@@ -34,7 +35,7 @@ export async function operationHandlerJsonResponseMiddleware(
 
   if (!isJson(result)) {
     throw new Error(
-      `Operation ${nameOperationFromHandlerContext(
+      `Operation ${nameOperationFromContext(
         context,
       )} handler returned a result that is not JSON serializable.  Are you missing a handler middleware for the response type ${context.res.getHeader(
         "accept",

@@ -1,9 +1,9 @@
-import { nameOperationFromHandlerContext } from "../utils";
+import { nameOperationFromContext } from "../../utils";
 
 import { OperationHandlerMiddlewareNextFunction } from "../types";
+import { OperationHandlerMiddlewareContext } from "../OperationHandlerMiddlewareContext";
 
 import { HandlerResult } from "./HandlerResult";
-import { OperationHandlerMiddlewareContext } from "../OperationHandlerMiddlewareContext";
 
 export async function operationHandlerResponseObjectMiddleware(
   context: OperationHandlerMiddlewareContext,
@@ -17,7 +17,7 @@ export async function operationHandlerResponseObjectMiddleware(
 
   if (context.res.headersSent) {
     throw new Error(
-      `Operation ${nameOperationFromHandlerContext(
+      `Operation ${nameOperationFromContext(
         context,
       )} handler returned a result but the request has already sent its headers.`,
     );

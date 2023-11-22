@@ -4,7 +4,7 @@ import { merge } from "lodash";
 
 import { SOCControllerMethodHandlerArg } from "../openapi";
 import { Middleware, RequestMethod } from "../types";
-import { OperationHandlerMiddleware } from "../routes";
+import { OperationHandlerMiddleware } from "../handlers";
 
 import { defineConstructorMetadata, getConstructorMetadata } from "./reflect";
 

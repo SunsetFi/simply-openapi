@@ -1,10 +1,10 @@
+import { OperationHandlerMiddleware } from "../handlers";
 import {
   SOCCommonControllerMetadata,
   SOCControllerMethodMetadata,
   mergeSOCControllerMetadata,
   mergeSOCControllerMethodMetadata,
 } from "../metadata";
-import { OperationHandlerMiddleware } from "../routes";
 import { Middleware } from "../types";
 
 export interface UseExpressMiddlewareOpts {

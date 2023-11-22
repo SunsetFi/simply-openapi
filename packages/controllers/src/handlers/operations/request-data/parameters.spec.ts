@@ -1,8 +1,6 @@
 import {
   OpenAPIObject,
   ParameterObject,
-  PathItemObject,
-  PathsObject,
   ReferenceObject,
   SchemaObject,
 } from "openapi3-ts/oas31";
@@ -26,7 +24,7 @@ beforeEach(() => {
   createValueProcessor.mockImplementation((schema: any) => valueProcessor);
 });
 
-jest.mock("../utils/SchemaObjectProcessorFactory", () => {
+jest.mock("./SchemaObjectProcessorFactory", () => {
   return {
     SchemaObjectProcessorFactory: jest.fn().mockImplementation(() => {
       return {

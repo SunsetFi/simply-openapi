@@ -22,7 +22,7 @@ beforeEach(() => {
   createValueProcessor.mockImplementation((schema: any) => valueProcessor);
 });
 
-jest.mock("../utils/SchemaObjectProcessorFactory", () => {
+jest.mock("./SchemaObjectProcessorFactory", () => {
   return {
     SchemaObjectProcessorFactory: jest.fn().mockImplementation(() => {
       return {

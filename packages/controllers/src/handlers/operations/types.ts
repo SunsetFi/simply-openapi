@@ -1,4 +1,4 @@
-import { SOCControllerMethodHandlerArg } from "../openapi";
+import { SOCControllerMethodHandlerArg } from "../../openapi";
 
 export type OperationHandlerArgumentDefinitions = (
   | SOCControllerMethodHandlerArg

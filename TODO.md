@@ -2,9 +2,25 @@
   - Missing path items!
   - See predefined locations for #/components
 - Support custom parameter types similar to SEC1
+  - We are nearly there, but the logic may be spread out between custom schema extractors and custom request processors
+    - If we continue this direction, have a function that returns both the createOpenAPI and createRouter functions from bundles of both, as a plugin system
+      - Embrace classes, and have those functions hang off an instance of SimpylOpenAPIControllers?
+- Validate incomming oapi.
 - Tests for decorators
 - Additional packages:
   - Package for OpenAPI Schema Object utils: pickProperty, omitProperty, arrayOf, maybe, optionalProperty, jsonSchemaToSchemaObject
   - Package for DTOs: class-validator / class-validators-json-schema (for openapi) / class-transformer
   - Package for zipkin
   - Package for promethius
+- ajv isnt a perfect fit to openapi
+  - This is: https://github.com/hyperjump-io/json-schema
+    - Unfortunately, this is globally scoped, so we run the risk of corrupting and polluting the validation system if other libs or the user uses it too.
+  - express-openapi-validator middleware? Stricter than we are, and we might need to keep our coersion unless we stop using a router per handler.
+  - Make @simply-openapi/schema-tools wth a converter from oapi schema object to a modern json-schema and stick to ajv
+- The world is slowly moving on from express, and fastify's schema validation is interesting.
+  - We dont actually have too hard of a dependency on express, we just have:
+    - middleware (koa has its own variant, fastify doesnt have this, but has adapters... we would want to support its hooks instead)
+      - Drop express middleware altogether in favor of our own?
+    - req/res decorators (koa and fastify have equivalents)
+    - we return a router
+  - Abstract out the router generation? Can we do that and still take advantage of the speed benefits / features of each?

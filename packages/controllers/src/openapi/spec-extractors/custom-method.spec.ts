@@ -14,7 +14,7 @@ import { SOCControllerMethodExtensionName } from "../extensions";
 import {
   OperationHandlerMiddlewareContext,
   OperationHandlerMiddlewareNextFunction,
-} from "../../routes";
+} from "../../handlers";
 
 import { extractSOCCustomMethodSpec } from "./custom-method";
 

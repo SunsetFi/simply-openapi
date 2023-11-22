@@ -1,6 +1,6 @@
 import AJV from "ajv";
 import { isObject, isFunction } from "lodash";
-import { OpenAPIObject, SchemaObject } from "openapi3-ts/oas31";
+import { OpenAPIObject } from "openapi3-ts/oas31";
 
 import {
   SOCControllerMethodExtensionData,
@@ -10,13 +10,18 @@ import {
 import { ControllerInstance, Middleware, RequestMethod } from "../../types";
 import { isConstructor, isNotNullOrUndefined } from "../../utils";
 
-import { RequestDataProcessorFactory } from "../request-data";
-import { OperationHandlerMiddleware } from "../handler-middleware";
-import { MethodHandlerContext } from "../MethodHandlerContext";
-import { RequestDataProcessorFactoryContext } from "../request-data";
-import { OperationContext } from "../OperationContext";
-
+import { MethodHandlerContext } from "./MethodHandlerContext";
+import { OperationContext } from "./OperationContext";
 import { MethodHandler } from "./MethodHandler";
+import {
+  RequestDataProcessorFactory,
+  RequestDataProcessorFactoryContext,
+} from "./request-data";
+import defaultRequestDataProcessors from "./request-data/defaultRequestDataProcessors";
+import { OperationHandlerMiddleware } from "./handler-middleware";
+import defaultHandlerMiddleware from "./handler-middleware/defaultHandlerMiddleware";
+import { operationHandlerFallbackResponseMiddleware } from "./handler-middleware/fallback";
+import defaultExpressMiddleware from "./express-middleware/defaultExpressMiddleware";
 
 export interface CreateMethodHandlerOpts {
   /**
@@ -67,6 +72,13 @@ export interface CreateMethodHandlerOpts {
    * Middleware to apply to the express router after the request.
    */
   postExpressMiddleware?: Middleware[];
+
+  /**
+   * If true, ensure that all responses are handled by the handler.
+   * If false, no such check will be performed, and handlers that return undefined may leave requests hanging open.
+   * @default true
+   */
+  ensureResponsesHandled?: boolean;
 }
 
 export function createMethodHandlerFromSpec(
@@ -134,16 +146,27 @@ export function createMethodHandlerFromSpec(
       ajv,
     );
 
-  const processors = (opts.requestDataProcessorFactories ?? [])
+  const requestDataProcessorFactories = [
+    ...defaultRequestDataProcessors,
+    ...(opts.requestDataProcessorFactories ?? []),
+  ];
+
+  const processors = requestDataProcessorFactories
     .map((factory) => factory(requestDataProcessorContext))
     .filter(isNotNullOrUndefined);
 
   const handlerMiddleware = [
+    ...defaultHandlerMiddleware,
     ...(opts.handlerMiddleware ?? []),
     ...(extensionData.handlerMiddleware ?? []),
   ];
 
+  if (opts.ensureResponsesHandled !== false) {
+    handlerMiddleware.unshift(operationHandlerFallbackResponseMiddleware);
+  }
+
   const preExpressMiddleware = [
+    ...defaultExpressMiddleware,
     ...(opts.preExpressMiddleware ?? []),
     ...(extensionData.preExpressMiddleware ?? []),
   ];

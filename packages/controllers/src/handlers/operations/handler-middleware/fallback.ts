@@ -1,4 +1,4 @@
-import { nameOperationFromHandlerContext } from "./utils";
+import { nameOperationFromContext } from "../utils";
 
 import { OperationHandlerMiddlewareNextFunction } from "./types";
 import { OperationHandlerMiddlewareContext } from "./OperationHandlerMiddlewareContext";
@@ -13,7 +13,7 @@ export async function operationHandlerFallbackResponseMiddleware(
 
   if (result !== undefined) {
     throw new Error(
-      `Operation ${nameOperationFromHandlerContext(
+      `Operation ${nameOperationFromContext(
         context,
       )} returned a result that was not handled by any middleware, and was not sent back to the client.  Are you missing a handler middleware for ${
         responseType == null ? "your response" : `response type ${responseType}`
@@ -23,7 +23,7 @@ export async function operationHandlerFallbackResponseMiddleware(
 
   if (!context.res.headersSent) {
     throw new Error(
-      `Operation ${nameOperationFromHandlerContext(
+      `Operation ${nameOperationFromContext(
         context,
       )} did not send a response for the handler result.  Are you missing a handler middleware for ${
         responseType == null ? "your response" : `response type ${responseType}`

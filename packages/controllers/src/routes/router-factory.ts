@@ -17,21 +17,12 @@ import { requestMethods } from "../utils";
 import { openAPIToExpressPath } from "../urls";
 import { createOpenAPIAjv } from "../ajv";
 
-import { createMethodHandlerFromSpec } from "./utils/handler-from-spec";
-
 import {
-  operationHandlerJsonResponseMiddleware,
-  operationHandlerFallbackResponseMiddleware,
-  operationHandlerResponseObjectMiddleware,
+  OperationContext,
   OperationHandlerMiddleware,
-} from "./handler-middleware";
-import { maybeParseJson } from "./express-middleware";
-import {
   RequestDataProcessorFactory,
-  bodyRequestDataProcessorFactory,
-  parametersRequestDataProcessorFactory,
-} from "./request-data";
-import { OperationContext } from "./OperationContext";
+  createMethodHandlerFromSpec,
+} from "../handlers";
 
 export interface RouteCreationContext {
   openApi: OpenAPIObject;
@@ -154,40 +145,6 @@ class RouterFromSpecFactory {
 
     // Factories run in order, so our default should be last.
     _opts.handlerFactories.push(this._socOperationHandlerFactory.bind(this));
-
-    if (!_opts.preExpressMiddleware) {
-      _opts.preExpressMiddleware = [];
-    }
-
-    _opts.preExpressMiddleware.push(maybeParseJson);
-
-    if (!_opts.postExpressMiddleware) {
-      _opts.postExpressMiddleware = [];
-    }
-
-    if (!_opts.handlerMiddleware) {
-      _opts.handlerMiddleware = [];
-    }
-
-    _opts.handlerMiddleware.unshift(
-      operationHandlerJsonResponseMiddleware,
-      operationHandlerResponseObjectMiddleware,
-    );
-
-    if (!_opts.requestDataProcessorFactories) {
-      _opts.requestDataProcessorFactories = [];
-    }
-
-    _opts.requestDataProcessorFactories.unshift(
-      bodyRequestDataProcessorFactory,
-      parametersRequestDataProcessorFactory,
-    );
-
-    if (_opts.ensureResponsesHandled !== false) {
-      _opts.handlerMiddleware.unshift(
-        operationHandlerFallbackResponseMiddleware,
-      );
-    }
   }
 
   createRouterFromSpec(): Router {

@@ -5,8 +5,8 @@ import {
   PathItemObject,
   RequestBodyObject,
 } from "openapi3-ts/oas31";
-import { RequestMethod } from "../types";
-import { resolveReference } from "../schema-utils";
+import { RequestMethod } from "../../types";
+import { resolveReference } from "../../schema-utils";
 
 export class OperationContext {
   private _pathItem: PathItemObject;

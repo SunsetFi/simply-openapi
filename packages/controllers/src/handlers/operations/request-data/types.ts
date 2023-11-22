@@ -1,6 +1,6 @@
 import { Request } from "express";
 
-import { ExtractedRequestData } from "../../types";
+import { ExtractedRequestData } from "../../../types";
 
 import { RequestDataProcessorFactoryContext } from "./RequestDataProcessorFactoryContext";
 

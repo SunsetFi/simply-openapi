@@ -1,6 +1,6 @@
 import { OpenAPIObject } from "openapi3-ts/oas31";
 
-import { RequestMethod } from "../types";
+import { RequestMethod } from "../../types";
 
 import { OperationContext } from "./OperationContext";
 import { OperationHandlerArgumentDefinitions } from "./types";

@@ -10,13 +10,13 @@ import {
   isExtractedRequestExtensionName,
 } from "../../types";
 
+import { RequestDataProcessor } from "./request-data";
 import {
   OperationHandlerMiddleware,
   OperationHandlerMiddlewareContext,
   OperationHandlerMiddlewareNextFunction,
-} from "../handler-middleware";
-import { RequestDataProcessor } from "../request-data";
-import { MethodHandlerContext } from "../MethodHandlerContext";
+} from "./handler-middleware";
+import { MethodHandlerContext } from "./MethodHandlerContext";
 
 export class MethodHandler {
   private _selfRoute = Router({ mergeParams: true });

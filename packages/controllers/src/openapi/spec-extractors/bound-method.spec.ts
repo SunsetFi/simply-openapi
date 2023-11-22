@@ -14,14 +14,14 @@ import { SOCControllerMethodExtensionName } from "../extensions";
 import {
   OperationHandlerMiddlewareContext,
   OperationHandlerMiddlewareNextFunction,
-} from "../../routes";
+} from "../../handlers";
 
 import { extractSOCBoundMethodSpec } from "./bound-method";
 
 describe("extractSOCBoundMethodSpec", function () {
   function createTestInstance(
     methodMetadata: SOCControllerMethodMetadata | null,
-    controllerMetadata: SOCControllerMetadata | null
+    controllerMetadata: SOCControllerMetadata | null,
   ): [controller: object, methodName: string | symbol] {
     const methodName = "testMethod";
     class Controller {
@@ -42,7 +42,7 @@ describe("extractSOCBoundMethodSpec", function () {
   function invoke(
     metadata: SOCControllerMethodMetadata | null,
     controllerMetadata: SOCControllerMetadata | null = null,
-    input: Partial<OpenAPIObject> | null = null
+    input: Partial<OpenAPIObject> | null = null,
   ): [
     result: Partial<OpenAPIObject> | undefined,
     controller: object,
@@ -56,12 +56,12 @@ describe("extractSOCBoundMethodSpec", function () {
           version: "1.0.0",
         },
       },
-      input ?? {}
+      input ?? {},
     );
 
     const [controller, methodName] = createTestInstance(
       metadata,
-      controllerMetadata
+      controllerMetadata,
     );
 
     let result = extractSOCBoundMethodSpec(controller, methodName);
@@ -110,7 +110,7 @@ describe("extractSOCBoundMethodSpec", function () {
               },
             },
           },
-        }
+        },
       );
 
     expect(test).toThrowWithMessage(Error, new RegExp(operationId));
@@ -134,7 +134,7 @@ describe("extractSOCBoundMethodSpec", function () {
             },
           },
         },
-      }
+      },
     );
 
     expect(result).toMatchObject({
@@ -183,7 +183,7 @@ describe("extractSOCBoundMethodSpec", function () {
               },
             },
           },
-        }
+        },
       );
 
       expect(result).toMatchObject({
@@ -243,7 +243,7 @@ describe("extractSOCBoundMethodSpec", function () {
               },
             },
           },
-        }
+        },
       );
 
       expect(result).toMatchObject({
@@ -297,7 +297,7 @@ describe("extractSOCBoundMethodSpec", function () {
                 },
               },
             },
-          }
+          },
         );
 
       expect(testFunc).toThrowWithMessage(Error, new RegExp(parameterName));
@@ -310,7 +310,7 @@ describe("extractSOCBoundMethodSpec", function () {
       const middleware = (
         req: Request,
         res: Response,
-        next: NextFunction
+        next: NextFunction,
       ) => {};
 
       const [result] = invoke(
@@ -331,7 +331,7 @@ describe("extractSOCBoundMethodSpec", function () {
               },
             },
           },
-        }
+        },
       );
 
       expect(result).toMatchObject({
@@ -352,7 +352,7 @@ describe("extractSOCBoundMethodSpec", function () {
       const middleware = (
         req: Request,
         res: Response,
-        next: NextFunction
+        next: NextFunction,
       ) => {};
 
       const [result] = invoke(
@@ -371,7 +371,7 @@ describe("extractSOCBoundMethodSpec", function () {
               },
             },
           },
-        }
+        },
       );
 
       expect(result).toMatchObject({
@@ -392,12 +392,12 @@ describe("extractSOCBoundMethodSpec", function () {
       const controllerMiddleware = (
         req: Request,
         res: Response,
-        next: NextFunction
+        next: NextFunction,
       ) => {};
       const methodMiddleware = (
         req: Request,
         res: Response,
-        next: NextFunction
+        next: NextFunction,
       ) => {};
 
       const [result] = invoke(
@@ -419,7 +419,7 @@ describe("extractSOCBoundMethodSpec", function () {
               },
             },
           },
-        }
+        },
       );
 
       expect(result).toMatchObject({
@@ -441,7 +441,7 @@ describe("extractSOCBoundMethodSpec", function () {
       const operationId = "foobar";
       const middleware = (
         ctx: OperationHandlerMiddlewareContext,
-        next: OperationHandlerMiddlewareNextFunction
+        next: OperationHandlerMiddlewareNextFunction,
       ) => {};
 
       const [result] = invoke(
@@ -462,7 +462,7 @@ describe("extractSOCBoundMethodSpec", function () {
               },
             },
           },
-        }
+        },
       );
 
       expect(result).toMatchObject({
@@ -482,7 +482,7 @@ describe("extractSOCBoundMethodSpec", function () {
       const operationId = "foobar";
       const middleware = (
         ctx: OperationHandlerMiddlewareContext,
-        next: OperationHandlerMiddlewareNextFunction
+        next: OperationHandlerMiddlewareNextFunction,
       ) => {};
 
       const [result] = invoke(
@@ -501,7 +501,7 @@ describe("extractSOCBoundMethodSpec", function () {
               },
             },
           },
-        }
+        },
       );
 
       expect(result).toMatchObject({
@@ -521,11 +521,11 @@ describe("extractSOCBoundMethodSpec", function () {
       const operationId = "foobar";
       const controllerMiddleware = (
         ctx: OperationHandlerMiddlewareContext,
-        next: OperationHandlerMiddlewareNextFunction
+        next: OperationHandlerMiddlewareNextFunction,
       ) => {};
       const methodMiddleware = (
         ctx: OperationHandlerMiddlewareContext,
-        next: OperationHandlerMiddlewareNextFunction
+        next: OperationHandlerMiddlewareNextFunction,
       ) => {};
 
       const [result] = invoke(
@@ -547,7 +547,7 @@ describe("extractSOCBoundMethodSpec", function () {
               },
             },
           },
-        }
+        },
       );
 
       expect(result).toMatchObject({
