@@ -2,34 +2,18 @@ import { Request } from "express";
 import { ParameterObject } from "openapi3-ts/oas31";
 import { NotFound, BadRequest } from "http-errors";
 import { capitalize } from "lodash";
+import { ValidationError } from "ajv";
 
 import { resolveReference } from "../../schema-utils";
-
 import { ExtractedRequestData } from "../../types";
+import { errorToMessage } from "../../ajv";
 
 import { RequestDataProcessorFactory, ValueProcessorFunction } from "./types";
 import { nameOperationFromRequestProcessorContext } from "./utils";
-import { ValidationError } from "ajv";
-import { errorToMessage } from "../../ajv";
 
 export const parametersRequestDataProcessorFactory: RequestDataProcessorFactory =
   (ctx) => {
-    // Find the parameter object in the OpenAPI operation
-    const resolvedParams = [
-      ...(ctx.operation.parameters ?? []),
-      ...(ctx.pathItem.parameters ?? []),
-    ].map((param) => {
-      const resolved = resolveReference(ctx.spec, param);
-      if (!resolved) {
-        throw new Error(
-          `Could not resolve parameter reference for parameter in operation ${nameOperationFromRequestProcessorContext(
-            ctx,
-          )}.`,
-        );
-      }
-
-      return resolved;
-    });
+    const parameters = ctx.parameters;
 
     const compileSchema = (param: ParameterObject) => {
       if (!param.schema) {
@@ -53,7 +37,7 @@ export const parametersRequestDataProcessorFactory: RequestDataProcessorFactory 
       }
     };
 
-    const processors = resolvedParams.reduce(
+    const processors = parameters.reduce(
       (acc, param) => {
         const processor = compileSchema(param);
         acc[param.name] = processor;
@@ -96,7 +80,7 @@ export const parametersRequestDataProcessorFactory: RequestDataProcessorFactory 
         parameters: {},
       };
 
-      for (const param of resolvedParams) {
+      for (const param of parameters) {
         const processor = processors[param.name];
 
         const rawValue = getValue(param);

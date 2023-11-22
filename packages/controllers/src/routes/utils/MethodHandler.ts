@@ -16,7 +16,7 @@ import {
   OperationHandlerMiddlewareNextFunction,
 } from "../handler-middleware";
 import { RequestDataProcessor } from "../request-data";
-import { MethodHandlerContext } from "../types";
+import { MethodHandlerContext } from "../MethodHandlerContext";
 
 export class MethodHandler {
   private _selfRoute = Router({ mergeParams: true });
@@ -71,11 +71,11 @@ export class MethodHandler {
       const args = this._extractArgs(req, res, requestData);
 
       const result = await this._runHandler(
-        {
-          ...this._context,
+        OperationHandlerMiddlewareContext.fromMethodHandlerContext(
+          this._context,
           req,
           res,
-        },
+        ),
         args,
       );
 

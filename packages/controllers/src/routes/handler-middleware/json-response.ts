@@ -3,10 +3,8 @@ import HttpStatusCodes from "http-status-codes";
 import { isJson } from "../../utils";
 
 import { nameOperationFromHandlerContext } from "./utils";
-import {
-  OperationHandlerMiddlewareContext,
-  OperationHandlerMiddlewareNextFunction,
-} from "./types";
+import { OperationHandlerMiddlewareNextFunction } from "./types";
+import { OperationHandlerMiddlewareContext } from "./OperationHandlerMiddlewareContext";
 
 export async function operationHandlerJsonResponseMiddleware(
   context: OperationHandlerMiddlewareContext,

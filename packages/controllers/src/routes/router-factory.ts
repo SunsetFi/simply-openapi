@@ -31,7 +31,7 @@ import {
   bodyRequestDataProcessorFactory,
   parametersRequestDataProcessorFactory,
 } from "./request-data";
-import { OperationContext } from "./types";
+import { OperationContext } from "./OperationContext";
 
 export interface RouteCreationContext {
   openApi: OpenAPIObject;

@@ -13,13 +13,32 @@ import { NotFound, BadRequest } from "http-errors";
 import { ValidationError } from "ajv";
 import "jest-extended";
 
-import { RequestDataProcessorFactoryContext } from "./types";
 import { parametersRequestDataProcessorFactory } from "./parameters";
 
-describe("parametersRequestDataProcessorFactory", function () {
-  const valueProcessor = jest.fn((value) => value);
-  const createValueProcessor = jest.fn((schema: any) => valueProcessor);
+const valueProcessor = jest.fn((value) => value);
+const createValueProcessor = jest.fn((schema: any) => valueProcessor);
 
+beforeEach(() => {
+  valueProcessor.mockReset();
+  valueProcessor.mockImplementation((value) => value);
+
+  createValueProcessor.mockReset();
+  createValueProcessor.mockImplementation((schema: any) => valueProcessor);
+});
+
+jest.mock("../utils/SchemaObjectProcessorFactory", () => {
+  return {
+    SchemaObjectProcessorFactory: jest.fn().mockImplementation(() => {
+      return {
+        createValueProcessor,
+      };
+    }),
+  };
+});
+
+import { RequestDataProcessorFactoryContext } from "./RequestDataProcessorFactoryContext";
+
+describe("parametersRequestDataProcessorFactory", function () {
   function createProcessor(
     param: ParameterObject | ReferenceObject,
     path: string = "/",
@@ -44,31 +63,17 @@ describe("parametersRequestDataProcessorFactory", function () {
       additionalSpec,
     );
 
-    const ctx: RequestDataProcessorFactoryContext = {
+    const ctx = new RequestDataProcessorFactoryContext(
       spec,
       path,
-      method: "get",
-      pathItem: spec.paths![path] as PathItemObject,
-      operation: spec.paths![path].get!,
-      controller: {},
-      handler: () => {},
-      createValueProcessor,
-    };
-
-    const processor = parametersRequestDataProcessorFactory(
-      merge(ctx, {
-        spec: {
-          paths: {
-            "/": {
-              get: {
-                parameters: [param],
-                responses: {},
-              },
-            },
-          } satisfies PathsObject,
-        },
-      }),
+      "get",
+      {},
+      () => {},
+      [],
+      null as any,
     );
+
+    const processor = parametersRequestDataProcessorFactory(ctx);
 
     return processor!;
   }

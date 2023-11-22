@@ -2,8 +2,10 @@ import { mapValues } from "lodash";
 import { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 import { Request } from "express";
 import { BadRequest } from "http-errors";
+import { ValidationError } from "ajv";
 
 import { pickContentType, resolveReference } from "../../schema-utils";
+import { errorToMessage } from "../../ajv";
 
 import {
   RequestDataProcessor,
@@ -11,8 +13,6 @@ import {
   ValueProcessorFunction,
 } from "./types";
 import { nameOperationFromRequestProcessorContext } from "./utils";
-import { ValidationError } from "ajv";
-import { errorToMessage } from "../../ajv";
 
 const defaultRequestProcessor: RequestDataProcessor = (req) => ({
   body: req.body,
@@ -21,17 +21,10 @@ const defaultRequestProcessor: RequestDataProcessor = (req) => ({
 export const bodyRequestDataProcessorFactory: RequestDataProcessorFactory = (
   ctx,
 ) => {
-  if (!ctx.operation.requestBody) {
-    return defaultRequestProcessor;
-  }
+  const requestBody = ctx.requestBody;
 
-  const requestBody = resolveReference(ctx.spec, ctx.operation.requestBody);
   if (!requestBody) {
-    throw new Error(
-      `Could not resolve requestBody reference for operation ${nameOperationFromRequestProcessorContext(
-        ctx,
-      )}.`,
-    );
+    return defaultRequestProcessor;
   }
 
   const compileSchema = (

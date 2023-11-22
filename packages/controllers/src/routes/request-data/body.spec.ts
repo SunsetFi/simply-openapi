@@ -1,53 +1,79 @@
-import { MockRequest } from "@jest-mock/express/dist/src/request";
-import { getMockReq } from "@jest-mock/express";
 import { merge } from "lodash";
 import { PartialDeep } from "type-fest";
 import { BadRequest } from "http-errors";
 import { ValidationError } from "ajv";
-import { SchemaObject } from "openapi3-ts/oas31";
+import {
+  OpenAPIObject,
+  ReferenceObject,
+  RequestBodyObject,
+  SchemaObject,
+} from "openapi3-ts/oas31";
+import { getMockReq } from "@jest-mock/express";
 import "jest-extended";
 
-import { RequestDataProcessorFactoryContext } from "./types";
+const valueProcessor = jest.fn((value) => value);
+const createValueProcessor = jest.fn((schema: any) => valueProcessor);
+
+beforeEach(() => {
+  valueProcessor.mockReset();
+  valueProcessor.mockImplementation((value) => value);
+
+  createValueProcessor.mockReset();
+  createValueProcessor.mockImplementation((schema: any) => valueProcessor);
+});
+
+jest.mock("../utils/SchemaObjectProcessorFactory", () => {
+  return {
+    SchemaObjectProcessorFactory: jest.fn().mockImplementation(() => {
+      return {
+        createValueProcessor,
+      };
+    }),
+  };
+});
+
+import { RequestDataProcessorFactoryContext } from "./RequestDataProcessorFactoryContext";
+
 import { bodyRequestDataProcessorFactory } from "./body";
 
 describe("bodyRequestDataProcessorFactory", function () {
-  const valueProcessor = jest.fn((value) => value);
-  const createValueProcessor = jest.fn((schema: any) => valueProcessor);
-  beforeEach(() => {
-    valueProcessor.mockReset();
-    valueProcessor.mockImplementation((value) => value);
-
-    createValueProcessor.mockReset();
-    createValueProcessor.mockImplementation((schema: any) => valueProcessor);
-  });
-
-  function invoke(
-    ctx: PartialDeep<RequestDataProcessorFactoryContext>,
-    req: MockRequest,
+  function createProcessor(
+    requestBody: RequestBodyObject | ReferenceObject | undefined,
+    path: string = "/",
+    additionalSpec?: PartialDeep<OpenAPIObject>,
   ) {
-    const processor = bodyRequestDataProcessorFactory(
-      merge(
-        {
-          spec: {
-            openapi: "3.0.0",
-            info: {
-              title: "Test",
-              version: "1.0.0",
+    const spec = merge(
+      {
+        openapi: "3.0.0",
+        info: {
+          title: "Test",
+          version: "1.0.0",
+        },
+        paths: {
+          [path]: {
+            get: {
+              requestBody,
+              responses: {},
             },
           },
-          path: "/",
-          method: "get",
-          pathItem: {},
-          operation: {},
-          controller: {},
-          handler: () => {},
-          createValueProcessor,
-        } as any,
-        ctx,
-      ),
-    )!;
+        },
+      } as OpenAPIObject,
+      additionalSpec,
+    );
 
-    return processor(getMockReq(req));
+    const ctx = new RequestDataProcessorFactoryContext(
+      spec,
+      path,
+      "get",
+      {},
+      () => {},
+      [],
+      null as any,
+    );
+
+    const processor = bodyRequestDataProcessorFactory(ctx);
+
+    return processor!;
   }
 
   it("returns the body as-is if no requestBody is present", function () {
@@ -55,12 +81,9 @@ describe("bodyRequestDataProcessorFactory", function () {
       foo: "bar",
     };
 
-    const result = invoke(
-      {},
-      {
-        body,
-      },
-    );
+    const processor = createProcessor(undefined);
+
+    const result = processor(getMockReq({ body }));
 
     expect(result).toEqual({ body });
   });
@@ -72,27 +95,23 @@ describe("bodyRequestDataProcessorFactory", function () {
 
     const schema = { "x-is-schema": true };
 
-    invoke(
+    const processor = createProcessor(
       {
-        operation: {
-          requestBody: {
-            $ref: "#/components/requestBodies/testBody",
-          },
-        },
-        spec: {
-          components: {
-            requestBodies: {
-              testBody: {
-                required: true,
-                content: {
-                  "*/*": { schema },
-                },
+        $ref: "#/components/requestBodies/testBody",
+      },
+      "/",
+      {
+        components: {
+          requestBodies: {
+            testBody: {
+              required: true,
+              content: {
+                "*/*": { schema },
               },
             },
           },
         },
       },
-      { body },
     );
 
     expect(createValueProcessor).toHaveBeenCalledWith(schema);
@@ -100,16 +119,7 @@ describe("bodyRequestDataProcessorFactory", function () {
 
   it("throws if the request body is an unknown reference", function () {
     const test = () =>
-      invoke(
-        {
-          operation: {
-            requestBody: {
-              $ref: "#/components/requestBodies/testBody",
-            },
-          },
-        },
-        {},
-      );
+      createProcessor({ $ref: "#/components/requestBodies/testBody" });
 
     expect(test).toThrowWithMessage(Error, /Could not resolve requestBody/);
   });
@@ -119,30 +129,23 @@ describe("bodyRequestDataProcessorFactory", function () {
       foo: "bar",
     };
 
-    const result = invoke(
+    const result = createProcessor(
       {
-        operation: {
-          requestBody: {},
-        },
+        content: {},
       },
-      { body },
-    );
+      "/",
+    )(getMockReq({ body }));
 
     expect(result).toEqual({ body });
   });
 
   it("throws bad request when a required body is not provided", function () {
-    const test = () =>
-      invoke(
-        {
-          operation: {
-            requestBody: {
-              required: true,
-            },
-          },
-        },
-        { body: {} },
-      );
+    const processor = createProcessor({
+      required: true,
+      content: {},
+    });
+
+    const test = () => processor(getMockReq({ body: {} }));
 
     expect(test).toThrowWithMessage(BadRequest, /Request body is required/);
   });
@@ -157,20 +160,13 @@ describe("bodyRequestDataProcessorFactory", function () {
       },
     };
 
-    invoke(
-      {
-        operation: {
-          requestBody: {
-            content: {
-              "*/*": {
-                schema,
-              },
-            },
-          },
+    createProcessor({
+      content: {
+        "*/*": {
+          schema,
         },
       },
-      {},
-    );
+    });
 
     expect(createValueProcessor).toHaveBeenCalledWith(schema);
   });
@@ -188,20 +184,15 @@ describe("bodyRequestDataProcessorFactory", function () {
       },
     };
 
-    invoke(
-      {
-        operation: {
-          requestBody: {
-            content: {
-              "*/*": {
-                schema,
-              },
-            },
-          },
+    const processor = createProcessor({
+      content: {
+        "*/*": {
+          schema,
         },
       },
-      { body },
-    );
+    });
+
+    processor(getMockReq({ body }));
 
     expect(valueProcessor).toHaveBeenCalledWith(body);
   });
@@ -244,33 +235,27 @@ describe("bodyRequestDataProcessorFactory", function () {
 
     let valueProcessors = new Map<string, ReturnType<typeof jest.fn>>();
 
-    const createValueProcessor = jest.fn((schema: SchemaObject) => {
+    createValueProcessor.mockImplementation((schema: SchemaObject) => {
       const processor = jest.fn((value) => value);
       valueProcessors.set(schema["x-for"], processor);
       return processor;
     });
 
-    invoke(
-      {
-        operation: {
-          requestBody: {
-            content: {
-              "*/*": {
-                schema: schemaAny,
-              },
-              "foo/bar": {
-                schema: schemaFooBar,
-              },
-              "foo/*": {
-                schema: schemaFoo,
-              },
-            },
-          },
+    const processor = createProcessor({
+      content: {
+        "*/*": {
+          schema: schemaAny,
         },
-        createValueProcessor,
+        "foo/bar": {
+          schema: schemaFooBar,
+        },
+        "foo/*": {
+          schema: schemaFoo,
+        },
       },
-      { body, headers: { "content-type": contentType } },
-    );
+    });
+
+    processor(getMockReq({ body, headers: { "content-type": contentType } }));
 
     expect(createValueProcessor).toHaveBeenCalledWith(schemaFooBar);
 
@@ -304,21 +289,22 @@ describe("bodyRequestDataProcessorFactory", function () {
       ]);
     });
 
-    const test = () =>
-      invoke(
-        {
-          operation: {
-            requestBody: {
-              content: {
-                "*/*": {
-                  schema: {},
-                },
+    const processor = createProcessor({
+      content: {
+        "*/*": {
+          schema: {
+            type: "object",
+            properties: {
+              foo: {
+                type: "integer",
               },
             },
           },
         },
-        { body },
-      );
+      },
+    });
+
+    const test = () => processor(getMockReq({ body }));
 
     expect(test).toThrowWithMessage(
       BadRequest,
@@ -336,54 +322,40 @@ describe("bodyRequestDataProcessorFactory", function () {
       },
     };
 
-    invoke(
+    createProcessor(
       {
-        operation: {
-          requestBody: {
-            content: {
-              "*/*": {
-                schema: {
-                  $ref: "#/components/schemas/Test",
-                },
-              },
-            },
-          },
-        },
-        spec: {
-          components: {
-            schemas: {
-              Test: schema,
+        content: {
+          "*/*": {
+            schema: {
+              $ref: "#/components/schemas/Test",
             },
           },
         },
       },
-      {},
+      "/",
+      {
+        components: {
+          schemas: {
+            Test: schema,
+          },
+        },
+      },
     );
 
     expect(createValueProcessor).toHaveBeenCalledWith(schema);
   });
 
   it("throws an error when the schema reference is unknown", function () {
-    const body = {
-      foo: "a",
-    };
     const test = () =>
-      invoke(
-        {
-          operation: {
-            requestBody: {
-              content: {
-                "*/*": {
-                  schema: {
-                    $ref: "#/components/schemas/Test",
-                  },
-                },
-              },
+      createProcessor({
+        content: {
+          "*/*": {
+            schema: {
+              $ref: "#/components/schemas/Test",
             },
           },
         },
-        { body },
-      );
+      });
 
     expect(test).toThrowWithMessage(
       Error,

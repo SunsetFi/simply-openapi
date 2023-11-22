@@ -1,4 +1,4 @@
-import { RequestDataProcessorFactoryContext } from "./types";
+import { RequestDataProcessorFactoryContext } from "./RequestDataProcessorFactoryContext";
 
 export function nameOperationFromRequestProcessorContext(
   context: RequestDataProcessorFactoryContext,

@@ -1,4 +1,4 @@
-import AJV, { ValidateFunction, ValidationError } from "ajv";
+import AJV from "ajv";
 import { isObject, isFunction } from "lodash";
 import { OpenAPIObject, SchemaObject } from "openapi3-ts/oas31";
 
@@ -9,13 +9,15 @@ import {
 } from "../../openapi";
 import { ControllerInstance, Middleware, RequestMethod } from "../../types";
 import { isConstructor, isNotNullOrUndefined } from "../../utils";
-import { sliceAjvError } from "../../ajv";
 
-import { MethodHandlerContext, OperationContext } from "../types";
 import { RequestDataProcessorFactory } from "../request-data";
 import { OperationHandlerMiddleware } from "../handler-middleware";
+import { MethodHandlerContext } from "../MethodHandlerContext";
+import { RequestDataProcessorFactoryContext } from "../request-data";
+import { OperationContext } from "../OperationContext";
 
 import { MethodHandler } from "./MethodHandler";
+
 export interface CreateMethodHandlerOpts {
   /**
    * Resolve a controller specified in the x-simply-controller-method extension into a controller object.
@@ -114,74 +116,27 @@ export function createMethodHandlerFromSpec(
     resolveHandler = defaultResolveHandler;
   }
 
-  const ctx: OperationContext = {
-    spec,
-    path,
-    method,
-    pathItem,
-    operation,
-  };
+  const opContext = new OperationContext(spec, path, method);
 
-  const controller = resolveController(extensionData.controller, ctx);
-  const handler = resolveHandler(controller, extensionData.handler, ctx);
+  const controller = resolveController(extensionData.controller, opContext);
+  const handler = resolveHandler(controller, extensionData.handler, opContext);
 
-  const createValueProcessor = (schema: SchemaObject) => {
-    // Wrap the value so that coersion functions properly on non-reference values.
-    const wrappedSchema: SchemaObject = {
-      type: "object",
-      properties: {
-        value: schema,
-      },
-      required: ["value"],
-    };
-
-    let validate: ValidateFunction;
-    try {
-      validate = ajv.compile(wrappedSchema);
-    } catch (e: any) {
-      console.error(
-        "\n\n\nCOMPILE ERROR",
-        e.message,
-        JSON.stringify(wrappedSchema, null, 2),
-      );
-      throw e;
-    }
-    return (value: any) => {
-      const wrapper = { value };
-      if (!validate(wrapper)) {
-        throw new ValidationError(
-          validate.errors!.map((error) => sliceAjvError(error, "value")),
-        );
-      }
-
-      return wrapper.value;
-    };
-  };
-
-  const processors = (opts.requestDataProcessorFactories ?? [])
-    .map((factory) =>
-      factory({
-        spec,
-        path,
-        method,
-        pathItem,
-        operation,
-        controller,
-        handler,
-        createValueProcessor,
-      }),
-    )
-    .filter(isNotNullOrUndefined);
-
-  const context: MethodHandlerContext = {
-    spec,
-    path,
-    method,
-    pathItem,
-    operation,
+  const methodContext = MethodHandlerContext.fromOperationContext(
+    opContext,
     controller,
     handler,
-  };
+    extensionData.handlerArgs ?? [],
+  );
+
+  const requestDataProcessorContext =
+    RequestDataProcessorFactoryContext.fromMethodHandlerContext(
+      methodContext,
+      ajv,
+    );
+
+  const processors = (opts.requestDataProcessorFactories ?? [])
+    .map((factory) => factory(requestDataProcessorContext))
+    .filter(isNotNullOrUndefined);
 
   const handlerMiddleware = [
     ...(opts.handlerMiddleware ?? []),
@@ -203,7 +158,7 @@ export function createMethodHandlerFromSpec(
     handlerMiddleware,
     preExpressMiddleware,
     postExpressMiddleware,
-    context,
+    methodContext,
   );
 }
 

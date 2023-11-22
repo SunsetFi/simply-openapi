@@ -1,19 +1,4 @@
-import { Request, Response } from "express";
-
-import { MethodHandlerContext } from "../types";
-
-export interface OperationHandlerMiddlewareContext
-  extends MethodHandlerContext {
-  /**
-   * The express request.
-   */
-  req: Request;
-
-  /**
-   * The express response.
-   */
-  res: Response;
-}
+import { OperationHandlerMiddlewareContext } from "./OperationHandlerMiddlewareContext";
 
 /**
  * Function to invoke the next middleware in the chain.
