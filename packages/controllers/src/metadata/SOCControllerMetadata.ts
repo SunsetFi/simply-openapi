@@ -9,7 +9,7 @@ import { defineConstructorMetadata, getConstructorMetadata } from "./reflect";
 
 const SOCControllerMetadataKey = "soc:controller";
 
-export interface SOCCommonControllerMetadata {
+export interface SOCSharedControllerMetadata {
   /**
    * Middleware for transforming the arguments or response of the handler.
    */
@@ -22,12 +22,18 @@ export interface SOCCommonControllerMetadata {
 }
 
 export interface SOCBoundControllerMetadata
-  extends SOCCommonControllerMetadata {
+  extends SOCSharedControllerMetadata {
   type?: "bound";
 }
 
+export function isSOCBoundControllerMetadata(
+  metadata: SOCControllerMetadata,
+): metadata is SOCBoundControllerMetadata {
+  return metadata.type === "bound";
+}
+
 export interface SOCCustomControllerMetadata
-  extends SOCCommonControllerMetadata {
+  extends SOCSharedControllerMetadata {
   type?: "custom";
 
   /**
@@ -52,8 +58,6 @@ export function isSOCCustomControllerMetadata(
   return metadata.type === "custom";
 }
 
-// FIXME: Make everything partial, as not all decorators may be present, and wont be during buildout.
-// Validate for this in spec builder.
 export type SOCControllerMetadata =
   | SOCBoundControllerMetadata
   | SOCCustomControllerMetadata;

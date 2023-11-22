@@ -1,4 +1,4 @@
 export * from "./response-object";
 
-export * from "./OperationHandlerMiddlewareContext";
+export * from "../../RequestContext";
 export * from "./types";

@@ -1,4 +1,4 @@
-import { OperationHandlerMiddlewareContext } from "./OperationHandlerMiddlewareContext";
+import { RequestContext } from "../../RequestContext";
 
 /**
  * Function to invoke the next middleware in the chain.
@@ -7,6 +7,6 @@ import { OperationHandlerMiddlewareContext } from "./OperationHandlerMiddlewareC
 export type OperationHandlerMiddlewareNextFunction = () => Promise<any>;
 
 export type OperationHandlerMiddleware = (
-  context: OperationHandlerMiddlewareContext,
+  context: RequestContext,
   next: OperationHandlerMiddlewareNextFunction,
 ) => Promise<any> | any;

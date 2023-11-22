@@ -1,10 +1,9 @@
 import { OpenAPIObject } from "openapi3-ts/oas31";
 
-import {
-  getSOCControllerMetadata,
-  mergeSOCControllerMetadata,
-} from "../metadata";
+import { mergeSOCControllerMetadata } from "../metadata";
 import { expressToOpenAPIPath } from "../urls";
+
+import { ensureAtMostOneController } from "./utils";
 
 export interface ControllerOptions {
   tags?: string[];
@@ -12,19 +11,7 @@ export interface ControllerOptions {
 
 export function Controller(path?: string, opts?: ControllerOptions) {
   return function (target: any) {
-    const metadata = getSOCControllerMetadata(target);
-
-    if (metadata?.type) {
-      if (metadata?.type !== "custom") {
-        throw new Error(
-          `Controller ${target.name} cannot be both a bound controller and a custom controller.`,
-        );
-      }
-
-      throw new Error(
-        `Controller ${target.name} cannot have multiple @Controller or @BoundController decorators.`,
-      );
-    }
+    ensureAtMostOneController(target);
 
     if (path) {
       path = expressToOpenAPIPath(path);
@@ -40,18 +27,7 @@ export function Controller(path?: string, opts?: ControllerOptions) {
 
 export function BoundController() {
   return function (target: any) {
-    const metadata = getSOCControllerMetadata(target);
-    if (metadata?.type) {
-      if (metadata?.type !== "bound") {
-        throw new Error(
-          `Controller ${target.name} cannot be both a bound controller and a custom controller.`,
-        );
-      }
-
-      throw new Error(
-        `Controller ${target.name} cannot have multiple @Controller or @BoundController decorators.`,
-      );
-    }
+    ensureAtMostOneController(target);
 
     mergeSOCControllerMetadata(target, { type: "bound" });
   };

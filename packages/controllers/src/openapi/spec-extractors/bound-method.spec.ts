@@ -2,6 +2,7 @@ import { OpenAPIObject } from "openapi3-ts/oas31";
 import { merge } from "lodash";
 import { Request, Response, NextFunction } from "express";
 import "jest-extended";
+import { PartialDeep } from "type-fest";
 
 import {
   SOCControllerMetadata,
@@ -12,8 +13,8 @@ import {
 
 import { SOCControllerMethodExtensionName } from "../extensions";
 import {
-  OperationHandlerMiddlewareContext,
   OperationHandlerMiddlewareNextFunction,
+  RequestContext,
 } from "../../handlers";
 
 import { extractSOCBoundMethodSpec } from "./bound-method";
@@ -44,7 +45,7 @@ describe("extractSOCBoundMethodSpec", function () {
     controllerMetadata: SOCControllerMetadata | null = null,
     input: Partial<OpenAPIObject> | null = null,
   ): [
-    result: Partial<OpenAPIObject> | undefined,
+    result: PartialDeep<OpenAPIObject> | undefined,
     controller: object,
     methodName: string | symbol,
   ] {
@@ -440,7 +441,7 @@ describe("extractSOCBoundMethodSpec", function () {
     it("configures controller middleware", function () {
       const operationId = "foobar";
       const middleware = (
-        ctx: OperationHandlerMiddlewareContext,
+        ctx: RequestContext,
         next: OperationHandlerMiddlewareNextFunction,
       ) => {};
 
@@ -481,7 +482,7 @@ describe("extractSOCBoundMethodSpec", function () {
     it("configures method middleware", function () {
       const operationId = "foobar";
       const middleware = (
-        ctx: OperationHandlerMiddlewareContext,
+        ctx: RequestContext,
         next: OperationHandlerMiddlewareNextFunction,
       ) => {};
 
@@ -520,11 +521,11 @@ describe("extractSOCBoundMethodSpec", function () {
     it("orders method middleware after controller middleware", function () {
       const operationId = "foobar";
       const controllerMiddleware = (
-        ctx: OperationHandlerMiddlewareContext,
+        ctx: RequestContext,
         next: OperationHandlerMiddlewareNextFunction,
       ) => {};
       const methodMiddleware = (
-        ctx: OperationHandlerMiddlewareContext,
+        ctx: RequestContext,
         next: OperationHandlerMiddlewareNextFunction,
       ) => {};
 

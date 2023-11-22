@@ -1,12 +1,12 @@
 import { nameOperationFromContext } from "../../utils";
 
 import { OperationHandlerMiddlewareNextFunction } from "../types";
-import { OperationHandlerMiddlewareContext } from "../OperationHandlerMiddlewareContext";
+import { RequestContext } from "../../../RequestContext";
 
 import { HandlerResult } from "./HandlerResult";
 
 export async function operationHandlerResponseObjectMiddleware(
-  context: OperationHandlerMiddlewareContext,
+  context: RequestContext,
   next: OperationHandlerMiddlewareNextFunction,
 ) {
   const result = await next();

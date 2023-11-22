@@ -3,7 +3,7 @@ import Ajv from "ajv";
 
 import { RequestMethod } from "../../../types";
 
-import { MethodHandlerContext } from "../MethodHandlerContext";
+import { MethodHandlerContext } from "../../MethodHandlerContext";
 
 import { OperationHandlerArgumentDefinitions } from "../types";
 

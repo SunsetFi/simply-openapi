@@ -1,9 +1,9 @@
 import { OperationHandlerMiddleware } from "../handlers";
 import {
-  SOCCommonControllerMetadata,
   SOCControllerMethodMetadata,
   mergeSOCControllerMetadata,
   mergeSOCControllerMethodMetadata,
+  SOCControllerMetadata,
 } from "../metadata";
 import { Middleware } from "../types";
 
@@ -16,7 +16,7 @@ export function UseExpressMiddleware(
 ) {
   return (target: any, propertyKey?: string | symbol | undefined) => {
     function middlewareInjector<
-      T extends SOCCommonControllerMetadata | SOCControllerMethodMetadata,
+      T extends SOCControllerMetadata | SOCControllerMethodMetadata,
     >(originalMetadata: T): T {
       const expressMiddleware = [
         ...(originalMetadata.preExpressMiddleware ?? []),
@@ -49,7 +49,7 @@ export function UseHandlerMiddleware(
 ) {
   return (target: any, propertyKey?: string | symbol | undefined) => {
     function middlewareInjector<
-      T extends SOCCommonControllerMetadata | SOCControllerMethodMetadata,
+      T extends SOCControllerMetadata | SOCControllerMethodMetadata,
     >(originalMetadata: T): T {
       const handlerMiddleware = [...(originalMetadata.handlerMiddleware ?? [])];
       if (opts.order === "before") {

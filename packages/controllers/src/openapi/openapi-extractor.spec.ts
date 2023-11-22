@@ -3,7 +3,8 @@ import "jest-extended";
 
 import { setSOCControllerMethodMetadata } from "../metadata";
 
-import { createOpenAPIFromControllers } from "./metadata-weaver";
+import { createOpenAPIFromControllers } from "./openapi-extractor";
+import { ControllerObject } from "../types";
 
 describe("createOpenAPIFromControllers", function () {
   it("creates the base openapi specification", function () {
@@ -13,7 +14,7 @@ describe("createOpenAPIFromControllers", function () {
         version: "1.0.0",
       },
       [],
-      {}
+      {},
     );
 
     expect(result).toMatchObject({
@@ -38,8 +39,8 @@ describe("createOpenAPIFromControllers", function () {
           version: "1.0.0",
         },
         [controller],
-        {}
-      )
+        {},
+      ),
     ).toThrowWithMessage(Error, /has no SOC-decorated methods/);
   });
 
@@ -60,7 +61,7 @@ describe("createOpenAPIFromControllers", function () {
         args: [],
         operationFragment: {},
       },
-      methodName
+      methodName,
     );
 
     const result = createOpenAPIFromControllers(
@@ -69,7 +70,7 @@ describe("createOpenAPIFromControllers", function () {
         version: "1.0.0",
       },
       [controller],
-      {}
+      {},
     );
 
     expect(result).toMatchObject({
@@ -81,14 +82,16 @@ describe("createOpenAPIFromControllers", function () {
     });
   });
 
-  describe("operationSpecExtractors", function () {
-    it("calls custom operationSpecExtractors", function () {
+  describe("controllerSpecExtractors", function () {
+    it("calls custom method controllerSpecExtractors", function () {
       const methodName = "testMethod";
       const controller = {
         [methodName]: function () {},
       };
 
-      const extractor = jest.fn(() => ({}));
+      const extractor = jest.fn(
+        (controller: ControllerObject, methodName: string | symbol) => ({}),
+      );
 
       createOpenAPIFromControllers(
         {
@@ -97,14 +100,67 @@ describe("createOpenAPIFromControllers", function () {
         },
         [controller],
         {
-          operationSpecExtractors: [extractor],
-        }
+          controllerSpecExtractors: [extractor],
+        },
       );
 
       expect(extractor).toHaveBeenCalledWith(controller, methodName);
     });
 
-    it("runs operationSpecExtractors after the built in extractor", function () {
+    it("calls custom controller controllerSpecExtractors", function () {
+      const methodName = "testMethod";
+      const controller = {
+        [methodName]: function () {},
+      };
+
+      const extractor = jest.fn((controller: ControllerObject) => ({}));
+
+      createOpenAPIFromControllers(
+        {
+          title: "Test",
+          version: "1.0.0",
+        },
+        [controller],
+        {
+          controllerSpecExtractors: [extractor],
+        },
+      );
+
+      expect(extractor).toHaveBeenCalledWith(controller);
+    });
+
+    it("calls custom controller method extractors after controller extractors", function () {
+      const methodName = "testMethod";
+      const controller = {
+        [methodName]: function () {},
+      };
+
+      const controllerExtractor = jest.fn((controller) => ({}));
+      const controllerMethodExtractor = jest.fn((controller, method) => ({}));
+
+      createOpenAPIFromControllers(
+        {
+          title: "Test",
+          version: "1.0.0",
+        },
+        [controller],
+        {
+          controllerSpecExtractors: [
+            controllerMethodExtractor,
+            controllerExtractor,
+          ],
+        },
+      );
+
+      expect(controllerExtractor).toHaveBeenCalled();
+      expect(controllerMethodExtractor).toHaveBeenCalled();
+
+      expect(controllerExtractor).toHaveBeenCalledBefore(
+        controllerMethodExtractor,
+      );
+    });
+
+    it("runs controllerSpecExtractors after the built in extractor", function () {
       const methodName = "testMethod";
       const controller = {
         [methodName]: function () {},
@@ -121,11 +177,13 @@ describe("createOpenAPIFromControllers", function () {
           args: [],
           operationFragment: {},
         },
-        methodName
+        methodName,
       );
 
       const replacer = jest.fn((value: OpenAPIObject) => value);
-      const extractor = jest.fn(() => replacer);
+      const extractor = jest.fn(
+        (controller: ControllerObject, methodName: string | symbol) => replacer,
+      );
 
       createOpenAPIFromControllers(
         {
@@ -134,8 +192,8 @@ describe("createOpenAPIFromControllers", function () {
         },
         [controller],
         {
-          operationSpecExtractors: [extractor],
-        }
+          controllerSpecExtractors: [extractor],
+        },
       );
 
       expect(replacer).toHaveBeenCalledWith(
@@ -145,7 +203,7 @@ describe("createOpenAPIFromControllers", function () {
               [method]: expect.toBeObject(),
             },
           },
-        })
+        }),
       );
     });
 
@@ -166,11 +224,14 @@ describe("createOpenAPIFromControllers", function () {
           args: [],
           operationFragment: {},
         },
-        methodName
+        methodName,
       );
 
       const extractorResult = { "x-test": true };
-      const extractor = () => extractorResult;
+      const extractor = (
+        controller: ControllerObject,
+        methodName: string | symbol,
+      ) => extractorResult;
 
       const result = createOpenAPIFromControllers(
         {
@@ -179,8 +240,8 @@ describe("createOpenAPIFromControllers", function () {
         },
         [controller],
         {
-          operationSpecExtractors: [extractor],
-        }
+          controllerSpecExtractors: [extractor],
+        },
       );
 
       expect(result).toMatchObject({
@@ -210,7 +271,7 @@ describe("createOpenAPIFromControllers", function () {
           args: [],
           operationFragment: {},
         },
-        methodName
+        methodName,
       );
 
       const replacedSpec: OpenAPIObject = {
@@ -219,7 +280,10 @@ describe("createOpenAPIFromControllers", function () {
         "x-test": true,
       };
       const extractorResult = (spec: OpenAPIObject) => replacedSpec;
-      const extractor = () => extractorResult;
+      const extractor = (
+        controller: ControllerObject,
+        methodName: string | symbol,
+      ) => extractorResult;
 
       const result = createOpenAPIFromControllers(
         {
@@ -228,8 +292,8 @@ describe("createOpenAPIFromControllers", function () {
         },
         [controller],
         {
-          operationSpecExtractors: [extractor],
-        }
+          controllerSpecExtractors: [extractor],
+        },
       );
 
       expect(result).toEqual(replacedSpec);

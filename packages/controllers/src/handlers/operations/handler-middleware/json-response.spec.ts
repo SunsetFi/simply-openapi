@@ -2,18 +2,17 @@ import { getMockReq, getMockRes } from "@jest-mock/express";
 import { Response } from "express";
 import "jest-extended";
 
+import { RequestContext } from "../../RequestContext";
+
 import { operationHandlerJsonResponseMiddleware } from "./json-response";
-import { OperationHandlerMiddlewareContext } from "./OperationHandlerMiddlewareContext";
 
 describe("operationHandlerJsonResponseMiddleware", function () {
-  function createContext(
-    mockRes?: Response,
-  ): OperationHandlerMiddlewareContext {
+  function createContext(mockRes?: Response): RequestContext {
     if (!mockRes) {
       mockRes = getMockRes().res;
     }
 
-    return new OperationHandlerMiddlewareContext(
+    return new RequestContext(
       {
         openapi: "3.1.0",
         info: { title: "Test", version: "1.0.0" },

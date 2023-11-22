@@ -5,10 +5,10 @@ import { isJson } from "../../../utils";
 import { nameOperationFromContext } from "../utils";
 
 import { OperationHandlerMiddlewareNextFunction } from "./types";
-import { OperationHandlerMiddlewareContext } from "./OperationHandlerMiddlewareContext";
+import { RequestContext } from "../../RequestContext";
 
 export async function operationHandlerJsonResponseMiddleware(
-  context: OperationHandlerMiddlewareContext,
+  context: RequestContext,
   next: OperationHandlerMiddlewareNextFunction,
 ) {
   const result = await next();

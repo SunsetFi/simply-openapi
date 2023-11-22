@@ -10,8 +10,8 @@ import {
 import { ControllerInstance, Middleware, RequestMethod } from "../../types";
 import { isConstructor, isNotNullOrUndefined } from "../../utils";
 
-import { MethodHandlerContext } from "./MethodHandlerContext";
-import { OperationContext } from "./OperationContext";
+import { MethodHandlerContext } from "../MethodHandlerContext";
+import { OperationContext } from "../OperationContext";
 import { MethodHandler } from "./MethodHandler";
 import {
   RequestDataProcessorFactory,

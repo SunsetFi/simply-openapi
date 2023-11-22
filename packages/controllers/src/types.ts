@@ -22,3 +22,5 @@ export function isExtractedRequestExtensionName(
 ): name is ExtractedRequestExtensionName {
   return name.startsWith("x-");
 }
+
+export type MaybePromise<T> = T | Promise<T>;

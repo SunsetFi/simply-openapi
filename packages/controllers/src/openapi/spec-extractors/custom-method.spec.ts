@@ -1,6 +1,7 @@
 import { OpenAPIObject, OperationObject } from "openapi3-ts/oas31";
 import { merge } from "lodash";
 import { Request, Response, NextFunction } from "express";
+import { PartialDeep } from "type-fest";
 import "jest-extended";
 
 import {
@@ -12,7 +13,7 @@ import {
 
 import { SOCControllerMethodExtensionName } from "../extensions";
 import {
-  OperationHandlerMiddlewareContext,
+  RequestContext,
   OperationHandlerMiddlewareNextFunction,
 } from "../../handlers";
 
@@ -42,13 +43,13 @@ describe("extractSOCCustomMethodSpec", function () {
   function invoke(
     metadata: SOCControllerMethodMetadata | null,
     controllerMetadata: SOCControllerMetadata | null = null,
-    input: Partial<OpenAPIObject> | null = null,
+    input: PartialDeep<OpenAPIObject> | null = null,
   ): [
-    result: Partial<OpenAPIObject> | undefined,
+    result: PartialDeep<OpenAPIObject> | undefined,
     controller: object,
     methodName: string | symbol,
   ] {
-    const finalInput: OpenAPIObject = merge(
+    const finalInput = merge(
       {
         openapi: "3.1.0",
         info: {
@@ -57,7 +58,7 @@ describe("extractSOCCustomMethodSpec", function () {
         },
       },
       input ?? {},
-    );
+    ) as OpenAPIObject;
 
     const [controller, methodName] = createTestInstance(
       metadata,
@@ -367,7 +368,7 @@ describe("extractSOCCustomMethodSpec", function () {
     it("configures controller middleware", function () {
       const operationId = "foobar";
       const middleware = (
-        ctx: OperationHandlerMiddlewareContext,
+        ctx: RequestContext,
         next: OperationHandlerMiddlewareNextFunction,
       ) => {};
 
@@ -410,7 +411,7 @@ describe("extractSOCCustomMethodSpec", function () {
     it("configures method middleware", function () {
       const operationId = "foobar";
       const middleware = (
-        ctx: OperationHandlerMiddlewareContext,
+        ctx: RequestContext,
         next: OperationHandlerMiddlewareNextFunction,
       ) => {};
 
@@ -451,11 +452,11 @@ describe("extractSOCCustomMethodSpec", function () {
     it("orders method middleware after controller middleware", function () {
       const operationId = "foobar";
       const controllerMiddleware = (
-        ctx: OperationHandlerMiddlewareContext,
+        ctx: RequestContext,
         next: OperationHandlerMiddlewareNextFunction,
       ) => {};
       const methodMiddleware = (
-        ctx: OperationHandlerMiddlewareContext,
+        ctx: RequestContext,
         next: OperationHandlerMiddlewareNextFunction,
       ) => {};
 

@@ -13,10 +13,10 @@ import {
 import { RequestDataProcessor } from "./request-data";
 import {
   OperationHandlerMiddleware,
-  OperationHandlerMiddlewareContext,
+  RequestContext,
   OperationHandlerMiddlewareNextFunction,
 } from "./handler-middleware";
-import { MethodHandlerContext } from "./MethodHandlerContext";
+import { MethodHandlerContext } from "../MethodHandlerContext";
 
 export class MethodHandler {
   private _selfRoute = Router({ mergeParams: true });
@@ -71,11 +71,7 @@ export class MethodHandler {
       const args = this._extractArgs(req, res, requestData);
 
       const result = await this._runHandler(
-        OperationHandlerMiddlewareContext.fromMethodHandlerContext(
-          this._context,
-          req,
-          res,
-        ),
+        RequestContext.fromMethodHandlerContext(this._context, req, res),
         args,
       );
 
@@ -90,7 +86,7 @@ export class MethodHandler {
   }
 
   private async _runHandler(
-    context: OperationHandlerMiddlewareContext,
+    context: RequestContext,
     args: any[],
   ): Promise<any> {
     const stack = this._handlerMiddleware;
