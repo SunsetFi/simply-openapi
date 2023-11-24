@@ -1,4 +1,4 @@
-export * from "./response-object";
+export * from "./handler-result";
 
 export * from "../../RequestContext";
 export * from "./types";

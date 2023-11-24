@@ -3,7 +3,7 @@ import Ajv, { ValidateFunction, ValidationError } from "ajv";
 
 import { sliceAjvError } from "../../../ajv";
 
-import { ValueProcessorFunction } from "../request-data";
+import { ValueProcessorFunction } from ".";
 
 export class SchemaObjectProcessorFactory {
   constructor(private _ajv: Ajv) {}

@@ -8,20 +8,18 @@ import { pickContentType, resolveReference } from "../../../schema-utils";
 import { errorToMessage } from "../../../ajv";
 
 import {
-  RequestDataProcessor,
-  RequestDataProcessorFactory,
+  RequestProcessor,
+  RequestProcessorFactory,
   ValueProcessorFunction,
 } from "./types";
 import { nameOperationFromContext } from "../utils";
 import { RequestContext } from "../handler-middleware";
 
-const defaultRequestProcessor: RequestDataProcessor = (ctx) => ({
+const defaultRequestProcessor: RequestProcessor = (ctx) => ({
   body: ctx.req.body,
 });
 
-export const bodyRequestDataProcessorFactory: RequestDataProcessorFactory = (
-  ctx,
-) => {
+export const bodyRequestProcessorFactory: RequestProcessorFactory = (ctx) => {
   const requestBody = ctx.requestBody;
 
   if (!requestBody) {

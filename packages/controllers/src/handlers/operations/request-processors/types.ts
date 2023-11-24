@@ -1,9 +1,9 @@
 import { MaybePromise } from "../../../types";
 
-import { ExtractedRequestData } from "../types";
+import { RequestData } from "../types";
 import { RequestContext } from "../handler-middleware";
 
-import { RequestDataProcessorFactoryContext } from "./RequestDataProcessorFactoryContext";
+import { RequestProcessorFactoryContext } from "./RequestProcessorFactoryContext";
 
 export type ValueProcessorFunction = (value: any) => any;
 /**
@@ -13,9 +13,9 @@ export type ValueProcessorFunction = (value: any) => any;
 /**
  * A factory function for creating a function that will both validate and extract data from a request made to an OpenAPI operation.
  */
-export type RequestDataProcessorFactory = (
-  ctx: RequestDataProcessorFactoryContext,
-) => RequestDataProcessor | null | undefined;
+export type RequestProcessorFactory = (
+  ctx: RequestProcessorFactoryContext,
+) => RequestProcessor | null | undefined;
 
 /**
  * A function that will both validate and extract data from a request made to an OpenAPI operation.
@@ -26,8 +26,8 @@ export type RequestDataProcessorFactory = (
  * The function can return either a partial ExtractedRequestData object, which will be merged,
  * or a function that takes the previous ExtractedRequestData object and returns a new ExtractedRequestData to use.
  */
-export type RequestDataProcessor = (
+export type RequestProcessor = (
   ctx: RequestContext,
 ) =>
-  | MaybePromise<Partial<ExtractedRequestData>>
-  | ((previous: ExtractedRequestData) => MaybePromise<ExtractedRequestData>);
+  | MaybePromise<Partial<RequestData>>
+  | ((previous: RequestData) => MaybePromise<RequestData>);

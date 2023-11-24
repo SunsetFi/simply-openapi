@@ -9,7 +9,10 @@ import {
   SchemaObject,
 } from "openapi3-ts/oas31";
 import { getMockReq, getMockRes } from "@jest-mock/express";
+import { MockRequest } from "@jest-mock/express/dist/src/request";
 import "jest-extended";
+
+import { RequestContext } from "../handler-middleware";
 
 const valueProcessor = jest.fn((value) => value);
 const createValueProcessor = jest.fn((schema: any) => valueProcessor);
@@ -32,19 +35,17 @@ jest.mock("./SchemaObjectProcessorFactory", () => {
   };
 });
 
-import { RequestDataProcessorFactoryContext } from "./RequestDataProcessorFactoryContext";
+import { RequestProcessorFactoryContext } from "./RequestProcessorFactoryContext";
 
-import { bodyRequestDataProcessorFactory } from "./body";
-import { MockRequest } from "@jest-mock/express/dist/src/request";
-import { RequestDataProcessor } from "./types";
-import { RequestContext } from "../handler-middleware";
+import { bodyRequestProcessorFactory } from "./body";
+import { RequestProcessor } from "./types";
 
-describe("bodyRequestDataProcessorFactory", function () {
+describe("bodyRequestProcessorFactory", function () {
   function createProcessor(
     requestBody: RequestBodyObject | ReferenceObject | undefined,
     path: string = "/",
     additionalSpec?: PartialDeep<OpenAPIObject>,
-  ): (req: MockRequest) => ReturnType<RequestDataProcessor> {
+  ): (req: MockRequest) => ReturnType<RequestProcessor> {
     const spec = merge(
       {
         openapi: "3.0.0",
@@ -64,7 +65,7 @@ describe("bodyRequestDataProcessorFactory", function () {
       additionalSpec,
     );
 
-    const ctx = new RequestDataProcessorFactoryContext(
+    const ctx = new RequestProcessorFactoryContext(
       spec,
       path,
       "get",
@@ -86,7 +87,7 @@ describe("bodyRequestDataProcessorFactory", function () {
         getMockRes().res,
       );
 
-    const processor = bodyRequestDataProcessorFactory(ctx);
+    const processor = bodyRequestProcessorFactory(ctx);
 
     return (req) => processor!(createRequestCtx(req));
   }

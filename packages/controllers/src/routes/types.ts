@@ -3,7 +3,7 @@ import { RequestHandler } from "express";
 import { RouteCreationContext } from "./RouteCreationContext";
 import {
   OperationHandlerMiddleware,
-  RequestDataProcessorFactory,
+  RequestProcessorFactory,
 } from "../handlers";
 
 export type OperationHandlerFactory = (
@@ -35,7 +35,7 @@ export interface OperationHandlerOptions {
    * Request data processors are responsible for both validating the request conforms to the OpenAPI specification
    * as well as extracting the data to be presented to the handler function.
    */
-  requestDataProcessorFactories?: RequestDataProcessorFactory[];
+  requestProcessorFactories?: RequestProcessorFactory[];
 
   /**
    * If true, ensure that all responses are handled by the handler.

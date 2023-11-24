@@ -11,7 +11,7 @@ export interface CommonExtractedRequestData {
   security: Record<string, any>;
 }
 export type ExtractedRequestExtensionName = `x-${string}`;
-export type ExtractedRequestData = CommonExtractedRequestData & {
+export type RequestData = CommonExtractedRequestData & {
   [extensionName: ExtractedRequestExtensionName]: any;
 };
 export function isExtractedRequestExtensionName(

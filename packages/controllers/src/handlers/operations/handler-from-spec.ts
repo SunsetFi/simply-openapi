@@ -14,10 +14,10 @@ import { MethodHandlerContext } from "../MethodHandlerContext";
 import { OperationContext } from "../OperationContext";
 import { MethodHandler } from "./MethodHandler";
 import {
-  RequestDataProcessorFactory,
-  RequestDataProcessorFactoryContext,
-} from "./request-data";
-import defaultRequestDataProcessors from "./request-data/defaultRequestDataProcessors";
+  RequestProcessorFactory,
+  RequestProcessorFactoryContext,
+} from "./request-processors";
+import defaultRequestProcessors from "./request-processors/defaultRequestProcessors";
 import { OperationHandlerMiddleware } from "./handler-middleware";
 import defaultHandlerMiddleware from "./handler-middleware/defaultHandlerMiddleware";
 import { operationHandlerFallbackResponseMiddleware } from "./handler-middleware/fallback";
@@ -49,10 +49,10 @@ export interface CreateMethodHandlerOpts {
   ) => Function;
 
   /**
-   * Request data processors are responsible for both validating the request conforms to the OpenAPI specification
+   * Request processors are responsible for both validating the request conforms to the OpenAPI specification
    * as well as extracting the data to be presented to the handler function.
    */
-  requestDataProcessorFactories?: RequestDataProcessorFactory[];
+  requestProcessorFactories?: RequestProcessorFactory[];
 
   /**
    * Middleware to apply to all handlers.
@@ -140,19 +140,16 @@ export function createMethodHandlerFromSpec(
     extensionData.handlerArgs ?? [],
   );
 
-  const requestDataProcessorContext =
-    RequestDataProcessorFactoryContext.fromMethodHandlerContext(
-      methodContext,
-      ajv,
-    );
+  const requestProcessorContext =
+    RequestProcessorFactoryContext.fromMethodHandlerContext(methodContext, ajv);
 
-  const requestDataProcessorFactories = [
-    ...defaultRequestDataProcessors,
-    ...(opts.requestDataProcessorFactories ?? []),
+  const requestProcessorFactories = [
+    ...defaultRequestProcessors,
+    ...(opts.requestProcessorFactories ?? []),
   ];
 
-  const processors = requestDataProcessorFactories
-    .map((factory) => factory(requestDataProcessorContext))
+  const processors = requestProcessorFactories
+    .map((factory) => factory(requestProcessorContext))
     .filter(isNotNullOrUndefined);
 
   const handlerMiddleware = [

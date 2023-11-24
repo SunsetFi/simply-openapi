@@ -9,9 +9,10 @@ import { getMockReq, getMockRes } from "@jest-mock/express";
 import { PartialDeep } from "type-fest";
 import { NotFound, BadRequest } from "http-errors";
 import { ValidationError } from "ajv";
+import { MockRequest } from "@jest-mock/express/dist/src/request";
 import "jest-extended";
 
-import { parametersRequestDataProcessorFactory } from "./parameters";
+import { RequestContext } from "../handler-middleware";
 
 const valueProcessor = jest.fn((value) => value);
 const createValueProcessor = jest.fn((schema: any) => valueProcessor);
@@ -34,17 +35,16 @@ jest.mock("./SchemaObjectProcessorFactory", () => {
   };
 });
 
-import { RequestDataProcessorFactoryContext } from "./RequestDataProcessorFactoryContext";
-import { MockRequest } from "@jest-mock/express/dist/src/request";
-import { RequestContext } from "../handler-middleware";
-import { RequestDataProcessor } from "./types";
+import { parametersRequestProcessorFactory } from "./parameters";
+import { RequestProcessorFactoryContext } from "./RequestProcessorFactoryContext";
+import { RequestProcessor } from "./types";
 
-describe("parametersRequestDataProcessorFactory", function () {
+describe("parametersRequestProcessorFactory", function () {
   function createProcessor(
     param: ParameterObject | ReferenceObject,
     path: string = "/",
     additionalSpec?: PartialDeep<OpenAPIObject>,
-  ): (req: MockRequest) => ReturnType<RequestDataProcessor> {
+  ): (req: MockRequest) => ReturnType<RequestProcessor> {
     const spec = merge(
       {
         openapi: "3.0.0",
@@ -64,7 +64,7 @@ describe("parametersRequestDataProcessorFactory", function () {
       additionalSpec,
     );
 
-    const ctx = new RequestDataProcessorFactoryContext(
+    const ctx = new RequestProcessorFactoryContext(
       spec,
       path,
       "get",
@@ -74,7 +74,7 @@ describe("parametersRequestDataProcessorFactory", function () {
       null as any,
     );
 
-    const processor = parametersRequestDataProcessorFactory(ctx);
+    const processor = parametersRequestProcessorFactory(ctx);
 
     const createRequestCtx = (req: MockRequest) =>
       new RequestContext(

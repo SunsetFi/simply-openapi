@@ -10,9 +10,9 @@ import { OperationHandlerArgumentDefinitions } from "../types";
 import { ValueProcessorFunction } from "./types";
 import { SchemaObjectProcessorFactory } from "./SchemaObjectProcessorFactory";
 
-export class RequestDataProcessorFactoryContext extends MethodHandlerContext {
+export class RequestProcessorFactoryContext extends MethodHandlerContext {
   static fromMethodHandlerContext(context: MethodHandlerContext, ajv: Ajv) {
-    return new RequestDataProcessorFactoryContext(
+    return new RequestProcessorFactoryContext(
       context.spec,
       context.path,
       context.method,

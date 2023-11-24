@@ -5,9 +5,9 @@ import { SOCControllerMethodHandlerArg } from "../../openapi";
 import { isNotNullOrUndefined } from "../../utils";
 import { ControllerInstance, Middleware } from "../../types";
 
-import { ExtractedRequestData, isExtractedRequestExtensionName } from "./types";
+import { RequestData, isExtractedRequestExtensionName } from "./types";
 
-import { RequestDataProcessor } from "./request-data";
+import { RequestProcessor } from "./request-processors";
 import {
   OperationHandlerMiddleware,
   RequestContext,
@@ -22,7 +22,7 @@ export class MethodHandler {
     private _controller: ControllerInstance,
     private _handler: Function,
     private _handlerArgs: (SOCControllerMethodHandlerArg | undefined)[],
-    private _dataProcessors: RequestDataProcessor[],
+    private _requestProcessors: RequestProcessor[],
     private _handlerMiddleware: OperationHandlerMiddleware[],
     preExpressMiddleware: Middleware[],
     postExpressMiddleware: Middleware[],
@@ -51,7 +51,7 @@ export class MethodHandler {
     next: NextFunction,
   ) {
     try {
-      const requestData: ExtractedRequestData = {
+      const requestData: RequestData = {
         body: undefined,
         parameters: {},
         security: {},
@@ -67,7 +67,7 @@ export class MethodHandler {
       // so as to call security before the others.  This is important, as we don't want to validate against
       // the rest of the schema and reveal things about the request if the security fails.
       // This isnt too important for public spec, but it might be private, who knows.
-      for (const processor of this._dataProcessors) {
+      for (const processor of this._requestProcessors) {
         let result = processor(ctx);
         if (typeof result === "function") {
           result = await result(requestData);
@@ -124,7 +124,7 @@ export class MethodHandler {
   private _extractArgs(
     req: Request,
     res: Response,
-    requestData: ExtractedRequestData,
+    requestData: RequestData,
   ): any[] {
     return (this._handlerArgs ?? []).filter(isNotNullOrUndefined).map((arg) => {
       if (!arg) {
