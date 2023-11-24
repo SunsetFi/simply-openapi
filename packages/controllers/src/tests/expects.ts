@@ -2,8 +2,10 @@
 export function expectNextCalledWithError(
   next: any,
   constructor: object,
-  message: RegExp,
+  message?: RegExp,
 ) {
   expect(next).toHaveBeenCalledWith(expect.any(constructor));
-  expect(next.mock.calls[0][0].message).toMatch(message);
+  if (message) {
+    expect(next.mock.calls[0][0].message).toMatch(message);
+  }
 }

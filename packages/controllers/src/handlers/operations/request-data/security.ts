@@ -2,7 +2,7 @@ import {
   SecurityRequirementObject,
   SecuritySchemeObject,
 } from "openapi3-ts/oas31";
-import { BadRequest } from "http-errors";
+import { Unauthorized, isHttpError } from "http-errors";
 
 import {
   SOCAuthenticationExtensionData,
@@ -30,7 +30,7 @@ export const securityRequestDataProcessorFactory: RequestDataProcessorFactory =
 
         const value = ctx.req[source][name];
         if (!value) {
-          throw new BadRequest(
+          throw new Unauthorized(
             `Missing security ${singularSource[source]} "${name}".`,
           );
         }
@@ -57,7 +57,7 @@ export const securityRequestDataProcessorFactory: RequestDataProcessorFactory =
         if (scheme.scheme === "basic") {
           const value = getValue("headers", "authorization");
           if (!value.startsWith("Basic ")) {
-            throw new BadRequest(
+            throw new Unauthorized(
               `Invalid HTTP basic authentication header "${value}".`,
             );
           }
@@ -65,7 +65,7 @@ export const securityRequestDataProcessorFactory: RequestDataProcessorFactory =
           const data = Buffer.from(value.slice(6), "base64").toString();
           const index = data.indexOf(":");
           if (index === -1) {
-            throw new BadRequest(
+            throw new Unauthorized(
               `Invalid HTTP basic authentication header "${value}".`,
             );
           }
@@ -79,7 +79,7 @@ export const securityRequestDataProcessorFactory: RequestDataProcessorFactory =
         if (scheme.scheme === "bearer") {
           const value = getValue("headers", "authorization");
           if (!value.startsWith("Bearer ")) {
-            throw new BadRequest(
+            throw new Unauthorized(
               `Invalid HTTP bearer authentication header "${value}".`,
             );
           }
@@ -131,6 +131,7 @@ export const securityRequestDataProcessorFactory: RequestDataProcessorFactory =
         if (typeof handler === "function") {
           return await handler.call(controller, value, scopes, ctx);
         } else {
+          // FIXME: Determine this at factory time, not runtime.
           throw new Error(
             `Security scheme "${key}" does not have a valid security authenticator.`,
           );
@@ -153,13 +154,28 @@ export const securityRequestDataProcessorFactory: RequestDataProcessorFactory =
         return result;
       }
 
+      let desiredError: Error | undefined;
       for (const security of securities) {
-        const result = await checkSecurityRequirements(security);
-        if (result !== false) {
-          return {
-            security: result,
-          };
+        try {
+          const result = await checkSecurityRequirements(security);
+          if (result !== false) {
+            return {
+              security: result,
+            };
+          }
+        } catch (e: any) {
+          if (isHttpError(e)) {
+            // Remember the error, but keep trying other security methods.
+            desiredError = e;
+            continue;
+          }
+
+          throw e;
         }
+      }
+
+      if (securities.length > 0) {
+        throw (securities.length === 1 && desiredError) || new Unauthorized();
       }
 
       return {};
