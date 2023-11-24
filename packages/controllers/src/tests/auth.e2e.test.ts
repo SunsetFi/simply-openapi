@@ -31,14 +31,14 @@ describe("E2E: Auth", function () {
 
     const auth: SecuritySchemeObject = {
       type: "apiKey",
-      name: "apiKey",
-      in: "Authentication",
+      in: "header",
+      name: "X-API-Key",
     };
 
     @Authenticator("widgetAuth", auth)
     class WidgetAuthenticator implements AuthenticationController {
       authenticate(value: string, scopes: string[], ctx: RequestContext) {
-        return unauthenticatedFn(value, scopes, ctx);
+        return authenticatorFn(value, scopes, ctx);
       }
     }
 
@@ -122,7 +122,11 @@ describe("E2E: Auth", function () {
     });
 
     it("calls the authenticator for an authenticated request", function (done) {
-      const req = getMockReq("GET", "/authenticated");
+      const req = getMockReq("GET", "/authenticated", {
+        headers: {
+          "x-api-key": "foo",
+        },
+      });
       const { res, next } = getMockRes();
 
       router(req, res, next);
@@ -132,7 +136,11 @@ describe("E2E: Auth", function () {
         try {
           expect(next).not.toHaveBeenCalled();
 
-          expect(authenticatorFn).toHaveBeenCalled();
+          expect(authenticatorFn).toHaveBeenCalledWith(
+            "foo",
+            ["scope"],
+            expect.anything(),
+          );
           expect(authenticatedFn).toHaveBeenCalled();
 
           expect(authenticatorFn).toHaveBeenCalledBefore(authenticatedFn);

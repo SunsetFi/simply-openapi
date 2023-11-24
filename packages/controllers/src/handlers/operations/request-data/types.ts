@@ -1,6 +1,7 @@
-import { Request } from "express";
+import { MaybePromise } from "../../../types";
 
-import { ExtractedRequestData } from "../../../types";
+import { ExtractedRequestData } from "../types";
+import { RequestContext } from "../handler-middleware";
 
 import { RequestDataProcessorFactoryContext } from "./RequestDataProcessorFactoryContext";
 
@@ -26,7 +27,7 @@ export type RequestDataProcessorFactory = (
  * or a function that takes the previous ExtractedRequestData object and returns a new ExtractedRequestData to use.
  */
 export type RequestDataProcessor = (
-  req: Request,
+  ctx: RequestContext,
 ) =>
-  | Partial<ExtractedRequestData>
-  | ((previous: ExtractedRequestData) => ExtractedRequestData);
+  | MaybePromise<Partial<ExtractedRequestData>>
+  | ((previous: ExtractedRequestData) => MaybePromise<ExtractedRequestData>);

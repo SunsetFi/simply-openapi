@@ -1,42 +1,21 @@
 import { Router, RequestHandler } from "express";
-import {
-  OpenAPIObject,
-  OperationObject,
-  PathItemObject,
-} from "openapi3-ts/oas31";
+import { OpenAPIObject, PathItemObject } from "openapi3-ts/oas31";
 import { Entries } from "type-fest";
 import { pick } from "lodash";
 import AJV, { Options as AjvOptions } from "ajv";
 
-import {
-  SOCControllerMethodExtensionData,
-  SOCControllerMethodExtensionName,
-} from "../openapi";
+import { SOCControllerMethodExtensionData } from "../openapi";
 import { ControllerInstance, RequestMethod } from "../types";
 import { requestMethods } from "../utils";
 import { openAPIToExpressPath } from "../urls";
 import { createOpenAPIAjv } from "../ajv";
+import { OperationContext } from "../handlers";
 
-import {
-  OperationContext,
-  OperationHandlerMiddleware,
-  RequestDataProcessorFactory,
-  createMethodHandlerFromSpec,
-} from "../handlers";
+import { OperationHandlerFactory, OperationHandlerOptions } from "./types";
+import { socOperationHandlerFactory } from "./handler-factories";
+import { RouteCreationContext } from "./RouteCreationContext";
 
-export interface RouteCreationContext {
-  openApi: OpenAPIObject;
-  path: string;
-  pathItem: PathItemObject;
-  method: RequestMethod;
-}
-
-export type OperationHandlerFactory = (
-  operation: OperationObject,
-  ctx: RouteCreationContext,
-) => RequestHandler | null | undefined;
-
-export interface CreateRouterOptions {
+export interface CreateRouterOptions extends OperationHandlerOptions {
   /**
    * Options to pass to the AJV instance used to validate requests.
    */
@@ -80,38 +59,6 @@ export interface CreateRouterOptions {
    * the x-simply-controller-method extensions.
    */
   handlerFactories?: OperationHandlerFactory[];
-
-  /**
-   * Middleware to apply to all handlers.
-   * This middleware will apply in-order before any middleware registered on the operation.
-   *
-   * In addition to the middleware specified here, the last middleware will always be one that
-   * processes json responses.
-   */
-  handlerMiddleware?: OperationHandlerMiddleware[];
-
-  /**
-   * Middleware to apply to the express router before the handler.
-   */
-  preExpressMiddleware?: RequestHandler[];
-
-  /**
-   * Middleware to apply to the express router after the handler.
-   */
-  postExpressMiddleware?: RequestHandler[];
-
-  /**
-   * Request data processors are responsible for both validating the request conforms to the OpenAPI specification
-   * as well as extracting the data to be presented to the handler function.
-   */
-  requestDataProcessorFactories?: RequestDataProcessorFactory[];
-
-  /**
-   * If true, ensure that all responses are handled by the handler.
-   * If false, no such check will be performed, and handlers that return undefined may leave requests hanging open.
-   * @default true
-   */
-  ensureResponsesHandled?: boolean;
 }
 
 /**
@@ -144,7 +91,7 @@ class RouterFromSpecFactory {
     }
 
     // Factories run in order, so our default should be last.
-    _opts.handlerFactories.push(this._socOperationHandlerFactory.bind(this));
+    _opts.handlerFactories.push(socOperationHandlerFactory);
   }
 
   createRouterFromSpec(): Router {
@@ -163,25 +110,6 @@ class RouterFromSpecFactory {
     return router;
   }
 
-  private _socOperationHandlerFactory(
-    operation: OperationObject,
-    ctx: RouteCreationContext,
-  ): RequestHandler | null {
-    const metadata = operation[SOCControllerMethodExtensionName];
-    if (!metadata) {
-      return null;
-    }
-
-    var handler = createMethodHandlerFromSpec(
-      this._openApi,
-      ctx.path,
-      ctx.method,
-      this._ajv,
-      this._opts,
-    );
-    return handler.handle.bind(handler);
-  }
-
   private _connectRouteHandlers(
     router: Router,
     path: string,
@@ -198,14 +126,11 @@ class RouterFromSpecFactory {
         continue;
       }
 
+      const ctx = new RouteCreationContext(openApi, path, method, this._ajv);
+
       let handler: RequestHandler | null | undefined;
       for (const handlerFactory of opts.handlerFactories!) {
-        handler = handlerFactory(operation, {
-          openApi,
-          path,
-          pathItem,
-          method,
-        });
+        handler = handlerFactory(ctx, this._opts);
 
         if (handler) {
           break;

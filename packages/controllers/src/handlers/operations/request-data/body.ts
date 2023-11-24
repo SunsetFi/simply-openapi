@@ -13,9 +13,10 @@ import {
   ValueProcessorFunction,
 } from "./types";
 import { nameOperationFromContext } from "../utils";
+import { RequestContext } from "../handler-middleware";
 
-const defaultRequestProcessor: RequestDataProcessor = (req) => ({
-  body: req.body,
+const defaultRequestProcessor: RequestDataProcessor = (ctx) => ({
+  body: ctx.req.body,
 });
 
 export const bodyRequestDataProcessorFactory: RequestDataProcessorFactory = (
@@ -58,9 +59,9 @@ export const bodyRequestDataProcessorFactory: RequestDataProcessorFactory = (
     ({ schema }, key) => compileContentSchema(key, schema),
   );
 
-  return (req: Request) => {
+  return (reqCtx: RequestContext) => {
     // unfortunately, express (maybe body-parser?) gives us an empty object if no body.
-    if (!req.body || Object.keys(req.body).length === 0) {
+    if (!reqCtx.req.body || Object.keys(reqCtx.req.body).length === 0) {
       if (requestBody.required) {
         throw new BadRequest(`Request body is required.`);
       }
@@ -70,7 +71,7 @@ export const bodyRequestDataProcessorFactory: RequestDataProcessorFactory = (
       };
     }
 
-    const contentType = req.headers["content-type"] ?? "";
+    const contentType = reqCtx.req.headers["content-type"] ?? "";
 
     const processor = pickContentType(contentType, processors);
     if (!processor) {
@@ -79,7 +80,7 @@ export const bodyRequestDataProcessorFactory: RequestDataProcessorFactory = (
         // Required was already taken care of, so just
         // return whatever we have.
         return {
-          body: req.body,
+          body: reqCtx.req.body,
         };
       }
 
@@ -96,7 +97,7 @@ export const bodyRequestDataProcessorFactory: RequestDataProcessorFactory = (
 
     try {
       return {
-        body: processor(req.body),
+        body: processor(reqCtx.req.body),
       };
     } catch (err: any) {
       if (err instanceof ValidationError) {

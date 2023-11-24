@@ -5,11 +5,13 @@ import { capitalize } from "lodash";
 import { ValidationError } from "ajv";
 
 import { resolveReference } from "../../../schema-utils";
-import { ExtractedRequestData } from "../../../types";
 import { errorToMessage } from "../../../ajv";
 
-import { RequestDataProcessorFactory, ValueProcessorFunction } from "./types";
+import { ExtractedRequestData } from "../types";
 import { nameOperationFromContext } from "../utils";
+
+import { RequestDataProcessorFactory, ValueProcessorFunction } from "./types";
+import { RequestContext } from "../handler-middleware";
 
 export const parametersRequestDataProcessorFactory: RequestDataProcessorFactory =
   (ctx) => {
@@ -46,17 +48,17 @@ export const parametersRequestDataProcessorFactory: RequestDataProcessorFactory 
       {} as Record<string, ValueProcessorFunction>,
     );
 
-    return (req: Request) => {
+    return (reqCtx: RequestContext) => {
       const getValue = (param: ParameterObject) => {
         switch (param.in) {
           case "path":
-            return req.params[param.name];
+            return reqCtx.req.params[param.name];
           case "query":
-            return req.query[param.name];
+            return reqCtx.req.query[param.name];
           case "cookie":
-            return req.cookies[param.name];
+            return reqCtx.req.cookies[param.name];
           case "header":
-            return req.headers[param.name];
+            return reqCtx.req.headers[param.name];
           default:
             throw new Error(`Unsupported parameter location: ${param.in}`);
         }

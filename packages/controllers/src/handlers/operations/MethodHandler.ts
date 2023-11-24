@@ -3,12 +3,9 @@ import { merge } from "lodash";
 
 import { SOCControllerMethodHandlerArg } from "../../openapi";
 import { isNotNullOrUndefined } from "../../utils";
-import {
-  ControllerInstance,
-  ExtractedRequestData,
-  Middleware,
-  isExtractedRequestExtensionName,
-} from "../../types";
+import { ControllerInstance, Middleware } from "../../types";
+
+import { ExtractedRequestData, isExtractedRequestExtensionName } from "./types";
 
 import { RequestDataProcessor } from "./request-data";
 import {
@@ -57,23 +54,31 @@ export class MethodHandler {
       const requestData: ExtractedRequestData = {
         body: undefined,
         parameters: {},
+        security: {},
       };
 
+      const ctx = RequestContext.fromMethodHandlerContext(
+        this._context,
+        req,
+        res,
+      );
+
+      // Note: For performance we could await all of these in parallel, but we run them in order
+      // so as to call security before the others.  This is important, as we don't want to validate against
+      // the rest of the schema and reveal things about the request if the security fails.
+      // This isnt too important for public spec, but it might be private, who knows.
       for (const processor of this._dataProcessors) {
-        let result = processor(req);
+        let result = processor(ctx);
         if (typeof result === "function") {
-          result = result(requestData);
+          result = await result(requestData);
         } else {
-          merge(requestData, result);
+          merge(requestData, await result);
         }
       }
 
       const args = this._extractArgs(req, res, requestData);
 
-      const result = await this._runHandler(
-        RequestContext.fromMethodHandlerContext(this._context, req, res),
-        args,
-      );
+      const result = await this._runHandler(ctx, args);
 
       if (result !== undefined) {
         throw new Error(

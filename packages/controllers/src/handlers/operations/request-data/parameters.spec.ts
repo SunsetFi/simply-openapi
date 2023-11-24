@@ -5,7 +5,7 @@ import {
   SchemaObject,
 } from "openapi3-ts/oas31";
 import { merge } from "lodash";
-import { getMockReq } from "@jest-mock/express";
+import { getMockReq, getMockRes } from "@jest-mock/express";
 import { PartialDeep } from "type-fest";
 import { NotFound, BadRequest } from "http-errors";
 import { ValidationError } from "ajv";
@@ -35,13 +35,16 @@ jest.mock("./SchemaObjectProcessorFactory", () => {
 });
 
 import { RequestDataProcessorFactoryContext } from "./RequestDataProcessorFactoryContext";
+import { MockRequest } from "@jest-mock/express/dist/src/request";
+import { RequestContext } from "../handler-middleware";
+import { RequestDataProcessor } from "./types";
 
 describe("parametersRequestDataProcessorFactory", function () {
   function createProcessor(
     param: ParameterObject | ReferenceObject,
     path: string = "/",
     additionalSpec?: PartialDeep<OpenAPIObject>,
-  ) {
+  ): (req: MockRequest) => ReturnType<RequestDataProcessor> {
     const spec = merge(
       {
         openapi: "3.0.0",
@@ -73,7 +76,19 @@ describe("parametersRequestDataProcessorFactory", function () {
 
     const processor = parametersRequestDataProcessorFactory(ctx);
 
-    return processor!;
+    const createRequestCtx = (req: MockRequest) =>
+      new RequestContext(
+        spec,
+        path,
+        "get",
+        {},
+        () => {},
+        [],
+        getMockReq(req),
+        getMockRes().res,
+      );
+
+    return (req) => processor!(createRequestCtx(req));
   }
 
   beforeEach(() => {
@@ -129,13 +144,11 @@ describe("parametersRequestDataProcessorFactory", function () {
 
     const processor = createProcessor(param);
 
-    processor(
-      getMockReq({
-        query: {
-          foo: "bar",
-        },
-      }),
-    );
+    processor({
+      query: {
+        foo: "bar",
+      },
+    });
 
     expect(valueProcessor).toHaveBeenCalledWith("bar");
   });
@@ -155,13 +168,13 @@ describe("parametersRequestDataProcessorFactory", function () {
 
       const processor = createProcessor(param, `/{${name}}`);
 
-      const req = getMockReq({
-        params: {
-          [name]: value,
-        },
-      });
-
-      expect(processor(req)).toEqual({ parameters: { [name]: value } });
+      expect(
+        processor({
+          params: {
+            [name]: value,
+          },
+        }),
+      ).toEqual({ parameters: { [name]: value } });
     });
 
     it("returns 404 if the the path param is not present", function () {
@@ -177,11 +190,11 @@ describe("parametersRequestDataProcessorFactory", function () {
 
       const processor = createProcessor(param, `/{${name}}`);
 
-      const req = getMockReq({
-        params: {},
-      });
-
-      expect(() => processor(req)).toThrow(NotFound);
+      expect(() =>
+        processor({
+          params: {},
+        }),
+      ).toThrow(NotFound);
     });
 
     it("returns 404 if the the path param is not valid", function () {
@@ -209,13 +222,13 @@ describe("parametersRequestDataProcessorFactory", function () {
         ]);
       });
 
-      const req = getMockReq({
-        params: {
-          [name]: value,
-        },
-      });
-
-      expect(() => processor(req)).toThrow(NotFound);
+      expect(() =>
+        processor({
+          params: {
+            [name]: value,
+          },
+        }),
+      ).toThrow(NotFound);
     });
   });
 
@@ -234,13 +247,13 @@ describe("parametersRequestDataProcessorFactory", function () {
 
       const processor = createProcessor(param);
 
-      const req = getMockReq({
-        query: {
-          [name]: value,
-        },
-      });
-
-      expect(processor(req)).toEqual({ parameters: { [name]: value } });
+      expect(
+        processor({
+          query: {
+            [name]: value,
+          },
+        }),
+      ).toEqual({ parameters: { [name]: value } });
     });
 
     it("provides undefined if the optional query param is not present", function () {
@@ -256,11 +269,11 @@ describe("parametersRequestDataProcessorFactory", function () {
 
       const processor = createProcessor(param);
 
-      const req = getMockReq({
-        query: {},
-      });
-
-      expect(processor(req)).toMatchObject({
+      expect(
+        processor({
+          query: {},
+        }),
+      ).toMatchObject({
         parameters: {
           [name]: undefined,
         },
@@ -281,14 +294,11 @@ describe("parametersRequestDataProcessorFactory", function () {
 
       const processor = createProcessor(param);
 
-      const req = getMockReq({
-        query: {},
-      });
-
-      expect(() => processor(req)).toThrowWithMessage(
-        BadRequest,
-        /Query parameter "foo" is required/,
-      );
+      expect(() =>
+        processor({
+          query: {},
+        }),
+      ).toThrowWithMessage(BadRequest, /Query parameter "foo" is required/);
     });
 
     it("returns 400 if the the query param is not valid", function () {
@@ -316,13 +326,13 @@ describe("parametersRequestDataProcessorFactory", function () {
         ]);
       });
 
-      const req = getMockReq({
-        query: {
-          [name]: value,
-        },
-      });
-
-      expect(() => processor(req)).toThrowWithMessage(
+      expect(() =>
+        processor({
+          query: {
+            [name]: value,
+          },
+        }),
+      ).toThrowWithMessage(
         BadRequest,
         /Query parameter "foo" is invalid: value should be integer/,
       );
@@ -344,13 +354,13 @@ describe("parametersRequestDataProcessorFactory", function () {
 
       const processor = createProcessor(param);
 
-      const req = getMockReq({
-        headers: {
-          [name]: value,
-        },
-      });
-
-      expect(processor(req)).toEqual({ parameters: { [name]: value } });
+      expect(
+        processor({
+          headers: {
+            [name]: value,
+          },
+        }),
+      ).toEqual({ parameters: { [name]: value } });
     });
 
     it("provides undefined if the optional header param is not present", function () {
@@ -366,11 +376,11 @@ describe("parametersRequestDataProcessorFactory", function () {
 
       const processor = createProcessor(param);
 
-      const req = getMockReq({
-        headers: {},
-      });
-
-      expect(processor(req)).toMatchObject({
+      expect(
+        processor({
+          headers: {},
+        }),
+      ).toMatchObject({
         parameters: {
           [name]: undefined,
         },
@@ -391,14 +401,11 @@ describe("parametersRequestDataProcessorFactory", function () {
 
       const processor = createProcessor(param);
 
-      const req = getMockReq({
-        headers: {},
-      });
-
-      expect(() => processor(req)).toThrowWithMessage(
-        BadRequest,
-        /Header parameter "foo" is required/,
-      );
+      expect(() =>
+        processor({
+          headers: {},
+        }),
+      ).toThrowWithMessage(BadRequest, /Header parameter "foo" is required/);
     });
 
     it("returns 400 if the the header param is not valid", function () {
@@ -426,13 +433,13 @@ describe("parametersRequestDataProcessorFactory", function () {
         ]);
       });
 
-      const req = getMockReq({
-        headers: {
-          [name]: value,
-        },
-      });
-
-      expect(() => processor(req)).toThrowWithMessage(
+      expect(() =>
+        processor({
+          headers: {
+            [name]: value,
+          },
+        }),
+      ).toThrowWithMessage(
         BadRequest,
         /Header parameter "foo" is invalid: value should be integer/,
       );
@@ -454,13 +461,13 @@ describe("parametersRequestDataProcessorFactory", function () {
 
       const processor = createProcessor(param);
 
-      const req = getMockReq({
-        cookies: {
-          [name]: value,
-        },
-      });
-
-      expect(processor(req)).toEqual({ parameters: { [name]: value } });
+      expect(
+        processor({
+          cookies: {
+            [name]: value,
+          },
+        }),
+      ).toEqual({ parameters: { [name]: value } });
     });
 
     it("provides undefined if the optional cookie param is not present", function () {
@@ -476,11 +483,11 @@ describe("parametersRequestDataProcessorFactory", function () {
 
       const processor = createProcessor(param);
 
-      const req = getMockReq({
-        cookies: {},
-      });
-
-      expect(processor(req)).toMatchObject({
+      expect(
+        processor({
+          cookies: {},
+        }),
+      ).toMatchObject({
         parameters: {
           [name]: undefined,
         },
@@ -501,14 +508,11 @@ describe("parametersRequestDataProcessorFactory", function () {
 
       const processor = createProcessor(param);
 
-      const req = getMockReq({
-        cookie: {},
-      });
-
-      expect(() => processor(req)).toThrowWithMessage(
-        BadRequest,
-        /Cookie parameter "foo" is required/,
-      );
+      expect(() =>
+        processor({
+          cookie: {},
+        }),
+      ).toThrowWithMessage(BadRequest, /Cookie parameter "foo" is required/);
     });
 
     it("returns 400 if the the cookie param is not valid", function () {
@@ -536,13 +540,13 @@ describe("parametersRequestDataProcessorFactory", function () {
         ]);
       });
 
-      const req = getMockReq({
-        cookies: {
-          [name]: value,
-        },
-      });
-
-      expect(() => processor(req)).toThrowWithMessage(
+      expect(() =>
+        processor({
+          cookies: {
+            [name]: value,
+          },
+        }),
+      ).toThrowWithMessage(
         BadRequest,
         /Cookie parameter "foo" is invalid: value should be integer/,
       );

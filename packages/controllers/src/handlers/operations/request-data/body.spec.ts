@@ -8,7 +8,7 @@ import {
   RequestBodyObject,
   SchemaObject,
 } from "openapi3-ts/oas31";
-import { getMockReq } from "@jest-mock/express";
+import { getMockReq, getMockRes } from "@jest-mock/express";
 import "jest-extended";
 
 const valueProcessor = jest.fn((value) => value);
@@ -35,13 +35,16 @@ jest.mock("./SchemaObjectProcessorFactory", () => {
 import { RequestDataProcessorFactoryContext } from "./RequestDataProcessorFactoryContext";
 
 import { bodyRequestDataProcessorFactory } from "./body";
+import { MockRequest } from "@jest-mock/express/dist/src/request";
+import { RequestDataProcessor } from "./types";
+import { RequestContext } from "../handler-middleware";
 
 describe("bodyRequestDataProcessorFactory", function () {
   function createProcessor(
     requestBody: RequestBodyObject | ReferenceObject | undefined,
     path: string = "/",
     additionalSpec?: PartialDeep<OpenAPIObject>,
-  ) {
+  ): (req: MockRequest) => ReturnType<RequestDataProcessor> {
     const spec = merge(
       {
         openapi: "3.0.0",
@@ -71,9 +74,21 @@ describe("bodyRequestDataProcessorFactory", function () {
       null as any,
     );
 
+    const createRequestCtx = (req: MockRequest) =>
+      new RequestContext(
+        spec,
+        path,
+        "get",
+        {},
+        () => {},
+        [],
+        getMockReq(req),
+        getMockRes().res,
+      );
+
     const processor = bodyRequestDataProcessorFactory(ctx);
 
-    return processor!;
+    return (req) => processor!(createRequestCtx(req));
   }
 
   it("returns the body as-is if no requestBody is present", function () {
@@ -83,7 +98,7 @@ describe("bodyRequestDataProcessorFactory", function () {
 
     const processor = createProcessor(undefined);
 
-    const result = processor(getMockReq({ body }));
+    const result = processor({ body });
 
     expect(result).toEqual({ body });
   });
@@ -95,7 +110,7 @@ describe("bodyRequestDataProcessorFactory", function () {
 
     const schema = { "x-is-schema": true };
 
-    const processor = createProcessor(
+    createProcessor(
       {
         $ref: "#/components/requestBodies/testBody",
       },
@@ -134,7 +149,7 @@ describe("bodyRequestDataProcessorFactory", function () {
         content: {},
       },
       "/",
-    )(getMockReq({ body }));
+    )({ body });
 
     expect(result).toEqual({ body });
   });
@@ -145,7 +160,7 @@ describe("bodyRequestDataProcessorFactory", function () {
       content: {},
     });
 
-    const test = () => processor(getMockReq({ body: {} }));
+    const test = () => processor({ body: {} });
 
     expect(test).toThrowWithMessage(BadRequest, /Request body is required/);
   });
@@ -192,7 +207,7 @@ describe("bodyRequestDataProcessorFactory", function () {
       },
     });
 
-    processor(getMockReq({ body }));
+    processor({ body });
 
     expect(valueProcessor).toHaveBeenCalledWith(body);
   });
@@ -255,7 +270,7 @@ describe("bodyRequestDataProcessorFactory", function () {
       },
     });
 
-    processor(getMockReq({ body, headers: { "content-type": contentType } }));
+    processor({ body, headers: { "content-type": contentType } });
 
     expect(createValueProcessor).toHaveBeenCalledWith(schemaFooBar);
 
@@ -304,7 +319,7 @@ describe("bodyRequestDataProcessorFactory", function () {
       },
     });
 
-    const test = () => processor(getMockReq({ body }));
+    const test = () => processor({ body });
 
     expect(test).toThrowWithMessage(
       BadRequest,

@@ -4,6 +4,8 @@ import {
   ParameterObject,
   PathItemObject,
   RequestBodyObject,
+  SecurityRequirementObject,
+  SecuritySchemeObject,
 } from "openapi3-ts/oas31";
 import { RequestMethod } from "../types";
 import { resolveReference } from "../schema-utils";
@@ -67,6 +69,48 @@ export class OperationContext {
    */
   get operation(): OperationObject {
     return this._operation;
+  }
+
+  private _securitySchemes: Record<string, SecuritySchemeObject> | undefined;
+  get securitySchemes(): Record<string, SecuritySchemeObject> {
+    if (!this._securitySchemes) {
+      this._securitySchemes = Object.entries(
+        this.spec.components?.securitySchemes ?? {},
+      ).reduce(
+        (acc, pair) => {
+          const key = pair[0];
+          const scheme = pair[1];
+          const resolved = resolveReference(this.spec, scheme);
+          if (!resolved) {
+            throw new Error(
+              `Could not resolve security scheme reference for security scheme ${key}.`,
+            );
+          }
+
+          acc[key] = resolved;
+          return acc;
+        },
+        {} as Record<string, SecuritySchemeObject>,
+      );
+    }
+
+    return this._securitySchemes;
+  }
+
+  private _securities: SecurityRequirementObject[] | undefined;
+
+  /**
+   * The resolved security requirements for this operation.
+   */
+  get securities(): SecurityRequirementObject[] {
+    if (!this._securities) {
+      this._securities = [
+        ...(this.spec.security ?? []),
+        ...(this.operation.security ?? []),
+      ];
+    }
+
+    return this._securities;
   }
 
   private _parameters: ParameterObject[] | undefined;
