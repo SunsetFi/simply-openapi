@@ -9,156 +9,36 @@ import {
   SOCAuthenticatorExtensionName,
 } from "../../../openapi";
 
-import { RequestProcessorFactory } from "./types";
+import { RequestContext } from "../handler-middleware";
 
-const singularSource = {
-  headers: "header",
-  query: "query parameter",
-  cookies: "cookie",
-};
+import { RequestProcessorFactory } from "./types";
+import { RequestProcessorFactoryContext } from "./RequestProcessorFactoryContext";
 
 export const securityRequestProcessorFactory: RequestProcessorFactory = (
   ctx,
 ) => {
-  const securities = ctx.securities;
-  const schemes = ctx.securitySchemes;
+  const processor = new SecurityRequestProcessor(ctx);
+  return processor.process.bind(processor);
+};
 
-  return async (ctx) => {
-    function getValue(source: "headers" | "query" | "cookies", name: string) {
-      if (source === "headers") {
-        name = name.toLowerCase();
-      }
+class SecurityRequestProcessor {
+  private _schemes: Record<string, SecuritySchemeObject>;
+  private _securities: SecurityRequirementObject[];
 
-      const value = ctx.req[source][name];
-      if (!value) {
-        throw new Unauthorized(
-          `Missing security ${singularSource[source]} "${name}".`,
-        );
-      }
+  constructor(ctx: RequestProcessorFactoryContext) {
+    this._schemes = ctx.securitySchemes;
 
-      return String(value);
-    }
+    // TODO: Validate that all securities are defined.
+    this._securities = ctx.securities;
 
-    function getApiKeySchemeValue(scheme: SecuritySchemeObject) {
-      switch (scheme.in) {
-        case "header":
-          return getValue("headers", scheme.name!);
-        case "query":
-          return getValue("query", scheme.name!);
-        case "cookie":
-          return getValue("cookies", scheme.name!);
-        default:
-          throw new Error(
-            `Unknown API key security scheme location "${scheme.in}".`,
-          );
-      }
-    }
+    // TODO: We do a lot of lookup and validation at runtime.  Do this at factory time.
+  }
 
-    function getHttpSchemeValue(scheme: SecuritySchemeObject) {
-      if (scheme.scheme === "basic") {
-        const value = getValue("headers", "authorization");
-        if (!value.startsWith("Basic ")) {
-          throw new Unauthorized(
-            `Invalid HTTP basic authentication header "${value}".`,
-          );
-        }
-
-        const data = Buffer.from(value.slice(6), "base64").toString();
-        const index = data.indexOf(":");
-        if (index === -1) {
-          throw new Unauthorized(
-            `Invalid HTTP basic authentication header "${value}".`,
-          );
-        }
-
-        return {
-          username: data.slice(0, index),
-          password: data.slice(index + 1),
-        };
-      }
-
-      if (scheme.scheme === "bearer") {
-        const value = getValue("headers", "authorization");
-        if (!value.startsWith("Bearer ")) {
-          throw new Unauthorized(
-            `Invalid HTTP bearer authentication header "${value}".`,
-          );
-        }
-
-        return value.slice(7);
-      }
-
-      throw new Error(
-        `Unknown HTTP security scheme scheme "${scheme.scheme}".`,
-      );
-    }
-
-    function getSchemeValue(scheme: SecuritySchemeObject) {
-      switch (scheme.type) {
-        case "apiKey":
-          return getApiKeySchemeValue(scheme);
-        case "http":
-          return getHttpSchemeValue(scheme);
-        case "oauth2":
-          return ctx.req.headers.authorization;
-        case "openIdConnect":
-          return ctx.req.headers.authorization;
-      }
-    }
-
-    async function checkSecurity(key: string, scopes: string[]) {
-      const scheme = schemes[key];
-      if (scheme == null) {
-        throw new Error(`Unknown security scheme "${key}"`);
-      }
-
-      const extension: SOCAuthenticationExtensionData =
-        scheme[SOCAuthenticatorExtensionName];
-      if (!extension) {
-        throw new Error(
-          `Security scheme "${key}" does not have a security authenticator extension.`,
-        );
-      }
-
-      const value = getSchemeValue(scheme);
-
-      // FIXME: These really should be processed by the route factory and not here.
-      const controller = extension.controller;
-      let handler = extension.handler;
-      if (typeof handler === "string" || typeof handler === "symbol") {
-        handler = (controller as any)[handler];
-      }
-
-      if (typeof handler === "function") {
-        return await handler.call(controller, value, scopes, ctx);
-      } else {
-        // FIXME: Determine this at factory time, not runtime.
-        throw new Error(
-          `Security scheme "${key}" does not have a valid security authenticator.`,
-        );
-      }
-    }
-
-    async function checkSecurityRequirements(
-      security: SecurityRequirementObject,
-    ) {
-      let result: Record<string, any> = {};
-      for (const [key, scopes] of Object.entries(security)) {
-        const securityResult = await checkSecurity(key, scopes);
-        if (Boolean(securityResult) === false) {
-          return false;
-        }
-
-        result[key] = securityResult;
-      }
-
-      return result;
-    }
-
+  async process(ctx: RequestContext) {
     let desiredError: Error | undefined;
-    for (const security of securities) {
+    for (const security of this._securities) {
       try {
-        const result = await checkSecurityRequirements(security);
+        const result = await this._checkSecurityRequirements(security, ctx);
         if (result !== false) {
           return {
             security: result,
@@ -175,10 +55,164 @@ export const securityRequestProcessorFactory: RequestProcessorFactory = (
       }
     }
 
-    if (securities.length > 0) {
-      throw (securities.length === 1 && desiredError) || new Unauthorized();
+    if (this._securities.length > 0) {
+      throw (
+        (this._securities.length === 1 && desiredError) || new Unauthorized()
+      );
     }
 
     return {};
-  };
-};
+  }
+
+  private async _checkSecurityRequirements(
+    security: SecurityRequirementObject,
+    ctx: RequestContext,
+  ) {
+    let result: Record<string, any> = {};
+    for (const [key, scopes] of Object.entries(security)) {
+      const securityResult = await this._checkSecurityRequirement(
+        key,
+        scopes,
+        ctx,
+      );
+      if (Boolean(securityResult) === false) {
+        return false;
+      }
+
+      result[key] = securityResult;
+    }
+
+    return result;
+  }
+
+  private _getSchemeValue(scheme: SecuritySchemeObject, ctx: RequestContext) {
+    switch (scheme.type) {
+      case "apiKey":
+        return this._getApiKeySchemeValue(scheme, ctx);
+      case "http":
+        return this._getHttpSchemeValue(scheme, ctx);
+      case "oauth2":
+        return ctx.req.headers.authorization;
+      case "openIdConnect":
+        return ctx.req.headers.authorization;
+    }
+  }
+
+  private _getHttpSchemeValue(
+    scheme: SecuritySchemeObject,
+    ctx: RequestContext,
+  ) {
+    const value = ctx.getHeader("authorization");
+    if (!value || Array.isArray(value)) {
+      throw new Unauthorized();
+    }
+
+    if (scheme.scheme === "basic") {
+      if (!value.startsWith("Basic ")) {
+        throw new Unauthorized(
+          `Invalid HTTP basic authentication header "${value}".`,
+        );
+      }
+
+      const data = Buffer.from(value.slice(6), "base64").toString();
+      const index = data.indexOf(":");
+      if (index === -1) {
+        throw new Unauthorized(
+          `Invalid HTTP basic authentication header "${value}".`,
+        );
+      }
+
+      return {
+        username: data.slice(0, index),
+        password: data.slice(index + 1),
+      };
+    }
+
+    if (scheme.scheme === "bearer") {
+      if (!value.startsWith("Bearer ")) {
+        throw new Unauthorized(
+          `Invalid HTTP bearer authentication header "${value}".`,
+        );
+      }
+
+      return value.slice(7);
+    }
+
+    throw new Error(`Unknown HTTP security scheme scheme "${scheme.scheme}".`);
+  }
+
+  private async _checkSecurityRequirement(
+    schemeName: string,
+    scopes: string[],
+    ctx: RequestContext,
+  ) {
+    const scheme = this._schemes[schemeName];
+    if (scheme == null) {
+      throw new Error(`Unknown security scheme "${schemeName}"`);
+    }
+
+    const extension: SOCAuthenticationExtensionData =
+      scheme[SOCAuthenticatorExtensionName];
+    if (!extension) {
+      throw new Error(
+        `Security scheme "${schemeName}" does not have a security authenticator extension.`,
+      );
+    }
+
+    const value = this._getSchemeValue(scheme, ctx);
+
+    // FIXME: These really should be processed by the route factory and not here.
+    const controller = extension.controller;
+    let handler = extension.handler;
+    if (typeof handler === "string" || typeof handler === "symbol") {
+      handler = (controller as any)[handler];
+    }
+
+    if (typeof handler === "function") {
+      return await handler.call(controller, value, scopes, ctx);
+    } else {
+      // FIXME: Determine this at factory time, not runtime.
+      throw new Error(
+        `Security scheme "${schemeName}" does not have a valid security authenticator.`,
+      );
+    }
+  }
+
+  private _getApiKeySchemeValue(
+    scheme: SecuritySchemeObject,
+    ctx: RequestContext,
+  ) {
+    if (scheme.type !== "apiKey") {
+      throw new Error(
+        `Security scheme "${scheme.name}" is not an API key security scheme.`,
+      );
+    }
+
+    if (!scheme.name || scheme.name === "") {
+      throw new Error(`Security scheme "${scheme.name}" does not have a name.`);
+    }
+
+    let value: any;
+    switch (scheme.in) {
+      case "header":
+        value = ctx.getHeader(scheme.name);
+        break;
+      case "query":
+        value = ctx.getQuery(scheme.name);
+        break;
+      case "cookie":
+        value = ctx.getCookie(scheme.name);
+        break;
+      default:
+        throw new Error(
+          `Unknown API key security scheme location "${scheme.in}".`,
+        );
+    }
+
+    if (value === undefined) {
+      throw new Unauthorized();
+    }
+
+    return value;
+  }
+}

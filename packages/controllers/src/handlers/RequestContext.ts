@@ -50,4 +50,16 @@ export class RequestContext extends MethodHandlerContext {
   get res(): Response {
     return this._res;
   }
+
+  getHeader(name: string) {
+    return this.req.headers[name.toLowerCase()];
+  }
+
+  getQuery(name: string) {
+    return this.req.query[name];
+  }
+
+  getCookie(name: string) {
+    return this.req.cookies[name];
+  }
 }

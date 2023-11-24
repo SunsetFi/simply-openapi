@@ -15,9 +15,6 @@ export interface OperationHandlerOptions {
   /**
    * Middleware to apply to all handlers.
    * This middleware will apply in-order before any middleware registered on the operation.
-   *
-   * In addition to the middleware specified here, the last middleware will always be one that
-   * processes json responses.
    */
   handlerMiddleware?: OperationHandlerMiddleware[];
 
@@ -25,11 +22,6 @@ export interface OperationHandlerOptions {
    * Middleware to apply to the express router before the handler.
    */
   preExpressMiddleware?: RequestHandler[];
-
-  /**
-   * Middleware to apply to the express router after the handler.
-   */
-  postExpressMiddleware?: RequestHandler[];
 
   /**
    * Request data processors are responsible for both validating the request conforms to the OpenAPI specification
