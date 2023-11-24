@@ -76,6 +76,15 @@ The [HTTP Bearer](https://swagger.io/docs/specification/authentication/bearer-au
 @simply-openapi/controllers will validate the presense of this header and the Bearer prefix, before extracting the payload (everything after `Bearer `) and passing it as the value to your authentication method.
 
 ```typescript
+import {
+  Authenticator,
+  AuthenticationController,
+  RequestContext,
+  Controller,
+  RequireAuthentication,
+  Get,
+} from "@simply-openapi/controllers";
+
 @Authenticator("widgetAuth", {
   type: "http",
   scheme: "bearer",
