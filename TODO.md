@@ -24,3 +24,6 @@
     - req/res decorators (koa and fastify have equivalents)
     - we return a router
   - Abstract out the router generation? Can we do that and still take advantage of the speed benefits / features of each?
+- https://github.com/sinclairzx81/typebox might be a better choice than zod.
+- Look at having a common metadata for OpenAPI root objects, and process all of them from all controllers regardless of type.
+- Allow having authenticators be decorators directly on methods in a controller?

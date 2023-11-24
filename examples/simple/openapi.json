@@ -1,4 +1,13 @@
 {
+  "components": {
+    "securitySchemes": {
+      "apiKey": {
+        "type": "apiKey",
+        "name": "x-api-key",
+        "in": "header"
+      }
+    }
+  },
   "openapi": "3.1.0",
   "info": {
     "title": "Simple Example",
@@ -8,38 +17,6 @@
     "/widgets": {
       "get": {
         "operationId": "WidgetsController.getAllWidgets",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "disposition",
-            "description": "Filter by disposition",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "happy",
-                "sad"
-              ]
-            }
-          },
-          {
-            "in": "query",
-            "name": "limit",
-            "description": "Limit the number of results",
-            "schema": {
-              "type": "number",
-              "minimum": 0
-            }
-          },
-          {
-            "in": "query",
-            "name": "offset",
-            "description": "Offset the results",
-            "schema": {
-              "type": "number",
-              "minimum": 0
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "All widgets",
@@ -77,6 +54,38 @@
             }
           }
         },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "disposition",
+            "description": "Filter by disposition",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "happy",
+                "sad"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "description": "Limit the number of results",
+            "schema": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "description": "Offset the results",
+            "schema": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        ],
         "description": "Get all widgets",
         "tags": [
           "widget"
@@ -84,34 +93,6 @@
       },
       "post": {
         "operationId": "WidgetsController.createWidget",
-        "requestBody": {
-          "required": true,
-          "description": "The content of the widget",
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "disposition": {
-                    "type": "string",
-                    "enum": [
-                      "happy",
-                      "sad"
-                    ]
-                  }
-                },
-                "required": [
-                  "name",
-                  "disposition"
-                ]
-              }
-            }
-          }
-        },
         "responses": {
           "201": {
             "description": "The created widget",
@@ -160,6 +141,41 @@
             "content": {}
           }
         },
+        "requestBody": {
+          "required": true,
+          "description": "The content of the widget",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "disposition": {
+                    "type": "string",
+                    "enum": [
+                      "happy",
+                      "sad"
+                    ]
+                  }
+                },
+                "required": [
+                  "name",
+                  "disposition"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": [
+              "write:widgets"
+            ]
+          }
+        ],
         "description": "Create a widget",
         "tags": [
           "widget"
@@ -169,17 +185,6 @@
     "/widgets/{id}": {
       "get": {
         "operationId": "WidgetsController.getWidgetById",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "description": "The ID of the widget",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "The widget",
@@ -218,6 +223,18 @@
             "content": {}
           }
         },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "description": "The ID of the widget",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "description": "Get a widget by ID",
         "tags": [
           "widget"

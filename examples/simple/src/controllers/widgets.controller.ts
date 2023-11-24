@@ -8,6 +8,7 @@ import {
   RequiredJsonBody,
   Post,
   HandlerResult,
+  RequireAuthentication,
 } from "@simply-openapi/controllers";
 import HttpStatusCodes from "http-status-codes";
 import { NotFound } from "http-errors";
@@ -31,6 +32,7 @@ import {
   getWidgetById,
   getWidgets,
 } from "../services/widgets.service";
+import { WidgetAuthenticator } from "./widgets.authenticator";
 
 @Controller("widgets", {
   tags: ["widget"],
@@ -96,6 +98,7 @@ export class WidgetsController {
   @EmptyResponse(HttpStatusCodes.BAD_REQUEST, {
     description: "Invalid widget",
   })
+  @RequireAuthentication(WidgetAuthenticator, ["write:widgets"])
   async createWidget(
     @RequiredJsonBody(creatableWidgetSchema, {
       description: "The content of the widget",
