@@ -53,6 +53,13 @@ describe("E2E: Body", function () {
     handleEmptyRequest() {
       return HandlerResult.status(201);
     }
+
+    @Get("/handler-response")
+    handlerResponseRequest() {
+      return HandlerResult.status(201)
+        .header("foo", "bar")
+        .json({ foo: "bar" });
+    }
   }
 
   let spec: OpenAPIObject;
@@ -176,6 +183,32 @@ describe("E2E: Body", function () {
         }
       }, 10);
     });
+  });
+
+  it("handles HandlerResult responses", function (done) {
+    const req = getMockReq("GET", "/handler-response");
+    const { res, next } = getMockRes();
+
+    router(req, res, next);
+
+    // Even with sync functions, we await promises, which trampolines us out
+    setTimeout(() => {
+      try {
+        expect(next).not.toHaveBeenCalled();
+
+        expect(res.status).toHaveBeenCalledWith(201);
+        expect(res.setHeader).toHaveBeenCalledWith("foo", "bar");
+        expect(res.setHeader).toHaveBeenCalledWith(
+          "Content-Type",
+          "application/json",
+        );
+        expect(res.json).toHaveBeenCalledWith({ foo: "bar" });
+
+        done();
+      } catch (e) {
+        done(e);
+      }
+    }, 10);
   });
 });
 

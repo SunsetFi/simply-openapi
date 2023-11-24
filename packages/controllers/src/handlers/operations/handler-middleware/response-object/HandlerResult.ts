@@ -105,7 +105,7 @@ export class HandlerResult {
 
     if (this._headers !== undefined) {
       for (const [key, value] of Object.entries(this._headers)) {
-        res.set(key, value);
+        res.setHeader(key, value);
       }
     }
 
