@@ -12,16 +12,17 @@ import { isConstructor, isNotNullOrUndefined } from "../../utils";
 
 import { MethodHandlerContext } from "../MethodHandlerContext";
 import { OperationContext } from "../OperationContext";
+
 import { MethodHandler } from "./MethodHandler";
 import {
   RequestProcessorFactory,
   RequestProcessorFactoryContext,
 } from "./request-processors";
 import defaultRequestProcessors from "./request-processors/defaultRequestProcessors";
-import { OperationHandlerMiddleware } from "./handler-middleware";
-import defaultHandlerMiddleware from "./handler-middleware/defaultHandlerMiddleware";
-import { operationHandlerFallbackResponseMiddleware } from "./handler-middleware/fallback";
 import defaultExpressMiddleware from "./express-middleware/defaultExpressMiddleware";
+import { OperationHandlerMiddleware } from "./handler-middleware";
+import { operationHandlerFallbackResponseMiddleware } from "./handler-middleware/fallback";
+import defaultHandlerMiddleware from "./handler-middleware/defaultHandlerMiddleware";
 
 export interface CreateMethodHandlerOpts {
   /**

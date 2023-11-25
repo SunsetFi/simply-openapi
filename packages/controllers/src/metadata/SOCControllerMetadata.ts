@@ -1,11 +1,11 @@
 import { OpenAPIObject } from "openapi3-ts/oas31";
 import { PartialDeep } from "type-fest";
-import { merge } from "lodash";
 
 import { ControllerObject, Middleware } from "../types";
 import { OperationHandlerMiddleware } from "../handlers";
 
 import { defineConstructorMetadata, getConstructorMetadata } from "./reflect";
+import { mergeCombineArrays } from "../utils";
 
 const SOCControllerMetadataKey = "soc:controller";
 
@@ -77,7 +77,7 @@ export function mergeSOCControllerMetadata(
     const previous = getSOCControllerMetadata(target) ?? {};
     defineConstructorMetadata(
       SOCControllerMetadataKey,
-      merge(previous, metadata),
+      mergeCombineArrays(previous, metadata),
       target,
     );
   }

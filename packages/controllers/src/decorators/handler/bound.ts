@@ -1,6 +1,8 @@
 import {
   SOCCustomControllerMetadata,
+  SOCCustomControllerMethodMetadata,
   getSOCControllerMetadata,
+  getSOCControllerMethodMetadata,
   mergeSOCControllerMethodMetadata,
 } from "../../metadata";
 
@@ -17,10 +19,23 @@ export function BindOperation(operationId: string) {
     // Early on we considered not letting this be used on path controllers, but I am allowing it for cases
     // where mixed external and internal openapi definitions are desired.
 
-    const metadata = getSOCControllerMetadata(target);
-    if (metadata && (metadata as SOCCustomControllerMetadata).openapiFragment) {
+    const controllerMetadata = getSOCControllerMetadata(target);
+    if (
+      controllerMetadata &&
+      (controllerMetadata as SOCCustomControllerMetadata).openapiFragment
+    ) {
       throw new Error(
-        `@BindOperation() cannot be used on methods that also are bound to produce OpenAPI specs.  Did you try to mix it with @OpenAPIOperation, @PathParam, @QueryParam, or a method decorator?`
+        `@BindOperation() cannot be used on methods that also are bound to produce OpenAPI specs.  Did you try to mix it with @OpenAPIOperation, @PathParam, @QueryParam, or a method decorator?`,
+      );
+    }
+
+    const methodMetadata = getSOCControllerMethodMetadata(target, methodName);
+    if (
+      methodMetadata &&
+      (methodMetadata as SOCCustomControllerMethodMetadata).method
+    ) {
+      throw new Error(
+        `@BindOperation() cannot be used on methods that also are bound to produce OpenAPI specs.  Did you try to mix it with @Get, @Post, ...?`,
       );
     }
 

@@ -1,7 +1,6 @@
-import { merge } from "lodash";
-
 import { getSOCAuthenticatorMetadata } from "../../metadata";
 import { ControllerObject } from "../../types";
+import { mergeCombineArrays } from "../../utils";
 
 import { OpenAPIObjectExtractor } from "../types";
 import {
@@ -23,7 +22,7 @@ export const extractSOCAuthenticatorSpec: OpenAPIObjectExtractor = (
     handler: "authenticate",
   };
 
-  return merge({}, metadata.openapiFragment, {
+  return mergeCombineArrays({}, metadata.openapiFragment, {
     components: {
       securitySchemes: {
         [metadata.name]: {

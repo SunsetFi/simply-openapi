@@ -7,23 +7,27 @@
       - Embrace classes, and have those functions hang off an instance of SimpylOpenAPIControllers?
 - Validate incomming oapi.
 - Tests for decorators
+- Remove direct support for express middleware and instead make an adapter function to convert express middleware to handler middleware.
+  - One step in separataing us from express for use in other frameworks.
 - Additional packages:
   - Package for OpenAPI Schema Object utils: pickProperty, omitProperty, arrayOf, maybe, optionalProperty, jsonSchemaToSchemaObject
   - Package for DTOs: class-validator / class-validators-json-schema (for openapi) / class-transformer
-  - Package for zipkin
   - Package for promethius
 - ajv isnt a perfect fit to openapi
   - This is: https://github.com/hyperjump-io/json-schema
     - Unfortunately, this is globally scoped, so we run the risk of corrupting and polluting the validation system if other libs or the user uses it too.
   - express-openapi-validator middleware? Stricter than we are, and we might need to keep our coersion unless we stop using a router per handler.
-  - Make @simply-openapi/schema-tools wth a converter from oapi schema object to a modern json-schema and stick to ajv
 - The world is slowly moving on from express, and fastify's schema validation is interesting.
   - We dont actually have too hard of a dependency on express, we just have:
     - middleware (koa has its own variant, fastify doesnt have this, but has adapters... we would want to support its hooks instead)
       - Drop express middleware altogether in favor of our own?
     - req/res decorators (koa and fastify have equivalents)
-    - we return a router
+    - we return an express router
   - Abstract out the router generation? Can we do that and still take advantage of the speed benefits / features of each?
 - https://github.com/sinclairzx81/typebox might be a better choice than zod.
+  - Which ones can add description keys to the generated schema? Neither? Both? Check how easy it would be to add this to one or the other and contribute it.
 - Look at having a common metadata for OpenAPI root objects, and process all of them from all controllers regardless of type.
+- Look at having operation fragments as its own metadata type, that can be on controllers. If on controller, merge into all handlers of that controller
+  - this would allow for controller-scoped authentication, that would apply only to methods of that controller.
+    - This is a critical use case for authentication normally covered by middleware on a controller level.
 - Allow having authenticators be decorators directly on methods in a controller?

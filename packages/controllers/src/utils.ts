@@ -143,10 +143,14 @@ export function isConstructor(object: object): boolean {
   return prototype && prototype.constructor === object;
 }
 
-export function mergeCombineArrays(object: any, source: any) {
-  return mergeWith(object, source, (objValue, srcValue): any => {
-    if (Array.isArray(objValue)) {
-      return objValue.concat(srcValue);
-    }
-  });
+export function mergeCombineArrays(object: any, ...sources: any[]) {
+  for (const source of sources) {
+    object = mergeWith(object, source, (objValue, srcValue): any => {
+      if (Array.isArray(objValue)) {
+        return objValue.concat(srcValue);
+      }
+    });
+  }
+
+  return object;
 }

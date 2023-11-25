@@ -5,6 +5,8 @@ import { SOCControllerMethodHandlerArg } from "../../openapi";
 import { isNotNullOrUndefined } from "../../utils";
 import { ControllerInstance, Middleware } from "../../types";
 
+import { MethodHandlerContext } from "../MethodHandlerContext";
+
 import { RequestData, isExtractedRequestExtensionName } from "./types";
 
 import { RequestProcessor } from "./request-processors";
@@ -13,7 +15,6 @@ import {
   RequestContext,
   OperationHandlerMiddlewareNextFunction,
 } from "./handler-middleware";
-import { MethodHandlerContext } from "../MethodHandlerContext";
 
 export class MethodHandler {
   private _selfRoute = Router({ mergeParams: true });
@@ -51,6 +52,9 @@ export class MethodHandler {
     next: NextFunction,
   ) {
     try {
+      // It would be nice if handler middleware could mess with the req object properties so that we could embed express middleware,
+      // but we have a chicken-egg thing where we do not want to invoke middleware unless the request is valid, and the validators
+      // are responsible for pulling the request data.
       const requestData: RequestData = {
         body: undefined,
         parameters: {},
@@ -66,7 +70,6 @@ export class MethodHandler {
       // Note: For performance we could await all of these in parallel, but we run them in order
       // so as to call security before the others.  This is important, as we don't want to validate against
       // the rest of the schema and reveal things about the request if the security fails.
-      // This isnt too important for public spec, but it might be private, who knows.
       for (const processor of this._requestProcessors) {
         let result = processor(ctx);
         if (typeof result === "function") {
@@ -78,6 +81,8 @@ export class MethodHandler {
 
       const args = this._extractArgs(req, res, requestData);
 
+      // Would be nice to associate requestData with the request context, but we use request context in the processors to build the request data.
+      // This would itself not be a problem except for the fact that we let request processors return entirely new request data objects.
       const result = await this._runHandler(ctx, args);
 
       if (result !== undefined) {
@@ -96,29 +101,20 @@ export class MethodHandler {
   ): Promise<any> {
     const stack = this._handlerMiddleware;
 
-    const executeMiddleware = async (
-      index: number,
-      args: any[],
-    ): Promise<any> => {
+    const executeMiddleware = async (index: number): Promise<any> => {
       if (index >= stack.length) {
         return this._handler.apply(this._controller, args);
       }
 
       const next: OperationHandlerMiddlewareNextFunction = async () => {
-        return executeMiddleware(index + 1, args);
+        return executeMiddleware(index + 1);
       };
-
-      // We originally wanted handlers to be able to swap out arguments passed to the handler,
-      // but that use case is now more robustly covered by request data processors.
-      // next.withArgs = async (...newArgs: any[]) => {
-      //   return executeMiddleware(index + 1, newArgs);
-      // };
 
       const currentMiddleware = stack[index];
       return currentMiddleware(context, next);
     };
 
-    return executeMiddleware(0, args);
+    return executeMiddleware(0);
   }
 
   private _extractArgs(
@@ -140,7 +136,7 @@ export class MethodHandler {
           // It should be safe to return undefined here, as the processor should have thrown for required parameters.
           return requestData.parameters[arg.parameterName];
         case "openapi-requestbody":
-          // It should be safe to return undefined here, as the processor should have thrown for required headers.
+          // It should be safe to return undefined here, as the processor should have thrown for required bodies.
           return requestData.body;
         case "request-raw":
           return req;

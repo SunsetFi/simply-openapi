@@ -1,5 +1,5 @@
 import { OpenAPIObject, OperationObject } from "openapi3-ts/oas31";
-import { get, merge } from "lodash";
+import { get } from "lodash";
 import { set } from "lodash/fp";
 
 import {
@@ -9,7 +9,7 @@ import {
 } from "../../metadata";
 import { joinUrlPaths } from "../../urls";
 import { ControllerObject } from "../../types";
-import { nameController } from "../../utils";
+import { mergeCombineArrays, nameController } from "../../utils";
 
 import { OpenAPIObjectExtractor } from "../types";
 import {
@@ -73,7 +73,7 @@ export const extractSOCCustomMethodSpec: OpenAPIObjectExtractor = (
     const op: OperationObject = {
       operationId: `${nameController(controller)}.${String(methodName)}`,
       responses: {},
-      ...merge(
+      ...mergeCombineArrays(
         {},
         get(spec, ["paths", path, metadata.method], {}),
         metadata.operationFragment as OperationObject,

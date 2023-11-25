@@ -1,9 +1,10 @@
 import { OpenAPIObject } from "openapi3-ts/oas31";
 import { PartialDeep } from "type-fest";
-import { merge } from "lodash";
+
+import { ControllerObject } from "../types";
+import { mergeCombineArrays } from "../utils";
 
 import { defineConstructorMetadata, getConstructorMetadata } from "./reflect";
-import { ControllerObject } from "../types";
 
 const SOCAuthenticatorMetadataKey = "soc:authenticator";
 
@@ -27,7 +28,7 @@ export function mergeSOCAuthenticatorMetadata(
     const previous = getSOCAuthenticatorMetadata(target) ?? {};
     defineConstructorMetadata(
       SOCAuthenticatorMetadataKey,
-      merge(previous, metadata),
+      mergeCombineArrays(previous, metadata),
       target,
     );
   }
