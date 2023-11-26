@@ -1,6 +1,6 @@
 # Table of contents
 
-- [Forward: Why derive behavior from OpenAPI](README.md)
+- [Forward: Why derive behavior from OpenAPI](forward-why-use-openapi.md)
 
 ## Development <a href="#dev" id="dev"></a>
 

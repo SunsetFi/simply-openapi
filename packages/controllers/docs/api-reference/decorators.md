@@ -306,7 +306,7 @@ This is a helper decorator for the simplified use case where you have a response
 
 The first argument is the status code to document.
 
-The second argument is optional, and takes a partial OpenAPI response object ot merge at the response level.
+The second argument is optional, and takes a partial OpenAPI response object to merge at the response level.
 
 ```typescript
 import { Post, EmptyResponse } from "@simply-openapi/controllers"
