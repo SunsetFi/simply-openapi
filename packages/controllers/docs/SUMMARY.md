@@ -11,7 +11,7 @@
 * [Creating OpenAPI specs from Controllers](dev/creating-openapi-specs.md)
 * [Creating an Express Route from your OpenAPI specification](dev/creating-express-routes.md)
 * [Publishing your OpenAPI specification](dev/publishing-openapi-specs.md)
-* [Reducing interface and schema duplication](dev/reducing-interface-and-schema-duplication-with-zod.md)
+* [Reducing interface and schema duplication](dev/reducing-interface-and-schema-duplication.md)
 * [Writing Handler Middleware](dev/writing-handler-middleware.md)
 
 ***

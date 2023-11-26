@@ -104,8 +104,8 @@ Ideally, these would be defined in a separate file so as to be reusable across c
 
 You may have noticed the redundancy of information between the interface and the schema. While this shouldn't be too much of a problem for small projects, this does open up opportunities for the validation/docs and the build time assertions to get out of sync. There are a variety of ways to synchronize these two constructs, which are discussed in more detail here:
 
-{% content-ref url="reducing-interface-and-schema-duplication-with-zod.md" %}
-[reducing-interface-and-schema-duplication-with-zod.md](reducing-interface-and-schema-duplication-with-zod.md)
+{% content-ref url="reducing-interface-and-schema-duplication.md" %}
+[reducing-interface-and-schema-duplication.md](reducing-interface-and-schema-duplication.md)
 {% endcontent-ref %}
 
 Once you have your schema ready, we can then add it to our method with the `JsonResponse` decorator
