@@ -102,7 +102,11 @@ export const widgetSchema: SchemaObject = {
 
 Ideally, these would be defined in a separate file so as to be reusable across controllers and services.
 
-You may have noticed the redundancy of information between the interface and the schema. While this shouldn't be too much of a problem for small projects, this does open up opportunities for the validation/docs and the build time assertions to get out of sync. To solve this, you may consider using the [Zod Library](reducing-interface-and-schema-duplication-with-zod.md) to produce both interface and schema from a single declaration.
+You may have noticed the redundancy of information between the interface and the schema. While this shouldn't be too much of a problem for small projects, this does open up opportunities for the validation/docs and the build time assertions to get out of sync. There are a variety of ways to synchronize these two constructs, which are discussed in more detail here:
+
+{% content-ref url="reducing-interface-and-schema-duplication-with-zod.md" %}
+[reducing-interface-and-schema-duplication-with-zod.md](reducing-interface-and-schema-duplication-with-zod.md)
+{% endcontent-ref %}
 
 Once you have your schema ready, we can then add it to our method with the `JsonResponse` decorator
 

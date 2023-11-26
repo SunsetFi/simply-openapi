@@ -1,4 +1,6 @@
-# Reducing interface and schema duplication with Zod
+# Reducing interface and schema duplication
+
+## Zod Schemas
 
 [Zod](https://zod.dev/) and its ecosystem is an excellent library that can allow you to produce both typescript typings and openapi schema objects from a single schema declaration. Schemas can be defined with its fluent declaration API, and it can then be induced to produce typescript typings from this. Then, the [Zod to Json Schema](https://github.com/StefanTerdell/zod-to-json-schema) library can produce our schema objects.
 
