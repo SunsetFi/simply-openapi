@@ -32,13 +32,19 @@ class MyAuthenticator implements AuthenticationController {
   async authenticate(value: string, scopes: string[], ctx: RequestContext) {
     const user = await decodeBearerToken(value);
     if (!user) {
+      // Returning false is the equivalent of throwing an Unauthorized http-error with the default message.
       return false;
     }
 
-    if (!user.active) {
-      throw new Unauthorized("User is inactive");
+    // It is your responsibility to check the scopes in the authentication request.
+    if (!scopes.every((cope) => user.scopes.includes(scope))) {
+      // Thrown errors will be recorded.  If all authentication options reject the request,
+      // the last thrown http-error will be used.
+      throw new Unauthorized("Insufficient permissions");
     }
 
+    // If authentication succeeds, you can return a value that will be passed to handler method arguments decorated to recieve
+    // the authenticated user.  Any Non-falsy value will be interpreted as a successful auth.
     return user;
   }
 }
@@ -93,6 +99,7 @@ import {
 class WidgetAuthenticator implements AuthenticationController {
   async authenticate(value: string, scopes: string[], ctx: RequestContext) {
     const user = await decodeJwt(value);
+
     if (!scopes.every((scope) => user.scopes.includes(scope))) {
       return false;
     }
@@ -104,6 +111,7 @@ class WidgetAuthenticator implements AuthenticationController {
 @Controller()
 class WidgetController {
   @Get("/authenticated")
+  // Passing an authenticator controller constructor is the equivalent of passing the scheme name specified in the @Authenticator decorator of that controller.
   @RequireAuthentication(WidgetAuthenticator, ["my-scope"])
   getAuthenticated() {
     return "OK";
