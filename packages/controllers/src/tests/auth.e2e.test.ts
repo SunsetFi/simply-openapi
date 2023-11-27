@@ -435,4 +435,68 @@ describe("E2E: Auth", function () {
       }, 10);
     });
   });
+
+  describe("controller level", function () {
+    const auth: SecuritySchemeObject = {
+      type: "apiKey",
+      in: "header",
+      name: "X-API-Key",
+    };
+
+    @Authenticator("widgetAuth", auth)
+    class WidgetAuthenticator implements AuthenticationController {
+      authenticate(value: string, scopes: string[], ctx: RequestContext) {
+        return true;
+      }
+    }
+
+    @Controller()
+    @RequireAuthentication(WidgetAuthenticator, ["scope"])
+    class WidgetController {
+      @Get("/")
+      getAuthenticated() {
+        return "OK";
+      }
+    }
+
+    const controllers = [new WidgetAuthenticator(), new WidgetController()];
+
+    let spec: OpenAPIObject;
+    let router: Router;
+
+    beforeAll(() => {
+      spec = createOpenAPIFromControllers(
+        { title: "My API", version: "1.0.0" },
+        controllers,
+      );
+
+      router = createRouterFromSpec(spec);
+    });
+
+    it("should generate the correct schema", function () {
+      const spec = createOpenAPIFromControllers(
+        { title: "My API", version: "1.0.0" },
+        controllers,
+      );
+
+      expect(spec).toMatchObject({
+        paths: {
+          "/": {
+            get: {
+              security: [
+                {
+                  widgetAuth: ["scope"],
+                },
+              ],
+            },
+          },
+        },
+        components: {
+          securitySchemes: {
+            widgetAuth: auth,
+          },
+        },
+      });
+    });
+  });
 });

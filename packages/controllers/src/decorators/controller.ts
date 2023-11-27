@@ -20,7 +20,9 @@ export function Controller(path?: string, opts?: ControllerOptions) {
     mergeSOCControllerMetadata(target, {
       type: "custom",
       path,
-      tags: opts?.tags,
+      sharedOperationFragment: {
+        tags: opts?.tags,
+      },
     });
   };
 }

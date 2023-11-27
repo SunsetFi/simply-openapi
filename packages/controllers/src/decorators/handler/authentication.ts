@@ -1,5 +1,9 @@
+import { PartialDeep } from "type-fest";
+import { OperationObject } from "openapi3-ts/oas31";
+
 import {
   getSOCAuthenticatorMetadata,
+  mergeSOCControllerMetadata,
   mergeSOCControllerMethodMetadata,
 } from "../../metadata";
 
@@ -19,21 +23,27 @@ export function RequireAuthentication(
     schemeName = metadata.name;
   }
 
-  return function (target: any, propertyKey: string) {
-    // TODO: Allow targeting controllers.  This will have to store a per-method openapi fragment that needs to be merged into all containing methods,
-    // as controllers as a concept do not exist in OpenAPI.
-    mergeSOCControllerMethodMetadata(
-      target,
-      {
-        operationFragment: {
-          security: [
-            {
-              [schemeName]: scopes ?? [],
-            },
-          ],
+  return function (target: any, propertyKey?: string) {
+    const operationFragment: PartialDeep<OperationObject> = {
+      security: [
+        {
+          [schemeName]: scopes ?? [],
         },
-      },
-      propertyKey,
-    );
+      ],
+    };
+
+    if (propertyKey) {
+      mergeSOCControllerMethodMetadata(
+        target,
+        {
+          operationFragment,
+        },
+        propertyKey,
+      );
+    } else {
+      mergeSOCControllerMetadata(target, {
+        sharedOperationFragment: operationFragment,
+      });
+    }
   };
 }

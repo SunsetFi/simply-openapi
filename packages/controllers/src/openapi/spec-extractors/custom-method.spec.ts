@@ -176,7 +176,9 @@ describe("extractSOCCustomMethodSpec", function () {
         },
         {
           type: "custom",
-          tags,
+          sharedOperationFragment: {
+            tags,
+          },
         },
       );
 
@@ -210,7 +212,9 @@ describe("extractSOCCustomMethodSpec", function () {
         },
         {
           type: "custom",
-          tags: controllerTags,
+          sharedOperationFragment: {
+            tags: controllerTags,
+          },
         },
       );
 
@@ -361,8 +365,6 @@ describe("extractSOCCustomMethodSpec", function () {
       });
     });
   });
-
-  test.todo("post express middleware");
 
   describe("handler middleware", function () {
     it("configures controller middleware", function () {

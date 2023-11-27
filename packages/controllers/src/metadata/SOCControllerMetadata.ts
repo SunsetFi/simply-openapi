@@ -1,22 +1,22 @@
-import { OpenAPIObject } from "openapi3-ts/oas31";
+import { OpenAPIObject, OperationObject } from "openapi3-ts/oas31";
 import { PartialDeep } from "type-fest";
 
 import { ControllerObject, Middleware } from "../types";
 import { OperationHandlerMiddleware } from "../handlers";
+import { mergeCombineArrays } from "../utils";
 
 import { defineConstructorMetadata, getConstructorMetadata } from "./reflect";
-import { mergeCombineArrays } from "../utils";
 
 const SOCControllerMetadataKey = "soc:controller";
 
 export interface SOCSharedControllerMetadata {
   /**
-   * Middleware for transforming the arguments or response of the handler.
+   * Handler middleware for every operation in this controller.
    */
   handlerMiddleware?: OperationHandlerMiddleware[];
 
   /**
-   * Express middleware to run before the handler.
+   * Express middleware for every operation in this controller.
    */
   preExpressMiddleware?: Middleware[];
 }
@@ -42,9 +42,9 @@ export interface SOCCustomControllerMetadata
   path?: string;
 
   /**
-   * Common tags for this controller.  All methods will inherit these tags.
+   * Operation data that will be applied to every operation in this controller.
    */
-  tags?: string[];
+  sharedOperationFragment?: PartialDeep<OperationObject>;
 
   /**
    * A partial fragment of an OpenAPI operation object this controller contributes.

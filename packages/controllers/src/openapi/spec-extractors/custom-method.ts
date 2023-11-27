@@ -76,13 +76,9 @@ export const extractSOCCustomMethodSpec: OpenAPIObjectExtractor = (
       ...mergeCombineArrays(
         {},
         get(spec, ["paths", path, metadata.method], {}),
+        (controllerMetadata as any)?.sharedOperationFragment as OperationObject,
         metadata.operationFragment as OperationObject,
       ),
-      tags: [
-        ...get(spec, ["paths", path, metadata.method, "tags"], []),
-        ...((controllerMetadata as any)?.tags ?? []),
-        ...(metadata.operationFragment.tags ?? []),
-      ],
       [SOCControllerMethodExtensionName]: extension,
     };
     return set(["paths", path, metadata.method], op, spec);
