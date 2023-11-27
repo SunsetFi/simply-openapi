@@ -1,4 +1,4 @@
-import { OpenAPIObject } from "openapi3-ts/dist/oas31";
+import { OpenAPIObject } from "openapi3-ts/oas31";
 
 export function stripSOCExtensions(schema: OpenAPIObject): OpenAPIObject {
   return stripSOCExtensionsDeep(schema);
