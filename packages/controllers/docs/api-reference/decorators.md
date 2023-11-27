@@ -34,6 +34,37 @@ class MyAuthentication implements AuthenticationController {
 }
 ```
 
+### @RequireAuthentication
+
+Specify that the user must be authorized with a given security scheme in order to make use of any endpoint defined in this controller.
+
+The first argument takes a name of a security scheme, or a constructor of an authorization controller (a controller decorated with `@Authorization`). The second argument takes an array of scopes that must be met for this method to be used.
+
+The generated router will authenticate the user against this authentication scheme, and only invoke the handler if the user is authorized. If the user is unauthorized, a 401 will be returned (or any other http-error thrown by the authenticator).
+
+This decorator can be used either on a controller, or on individual methods within the controller.
+If the decorator is defined both on the controller and on a method:
+
+- Decorators describing the same security schemes will have their scopes combined to require the scopes of all decorators.
+- Decorators describing different security schemes will check both schemes, and be usable if any of them match.
+
+```typescript
+import { Get, RequireAuthentication } from "@simply-openapi/controllers"
+
+@RequireAuthentication("MyAuthentication", ["widgets"])
+class WidgetsController {
+  @Get("/")
+  getWidgets() {
+    ...
+  }
+
+  @Post("/")
+  createWidget() {
+    ...
+  }
+}
+```
+
 ### @BoundController
 
 Marks a controller as being for "bound" methods. That is, methods that target existing OpenAPI spec as opposed to generating their own.
@@ -104,9 +135,35 @@ class WidgetsController {
 }
 ```
 
+### OpenAPIOperation
+
+Applies a fragment of an OpenAPI operation to every operation defined by this controller.
+
+This is useful to describe common data across all controller methods. Note that as OpenAPI does not have any provisions for controller-level data, the specification defined by this decorator will be repeated in every method.
+To save on redundancy, this decorator can be used with refs and mixed with `@OpenAPI`-defined components.
+
+```typescript
+@Controller("/widgets/{widgetType}")
+@OpenAPIOperation({
+  parameters: [
+    {
+      name: "widgetType",
+      in: "path",
+      schema: {
+        type: "string"
+        enum: ["foo", "bar"]
+      }
+    }
+  ]
+})
+class WidgetsByTypeController {
+  ...
+}
+```
+
 ### @UseHandlerMiddleware
 
-Defines a handler middleware to be used for a controller.
+Defines a handler middleware to be used for all methods in a controller.
 
 Handler middleware is similar to express middleware, but is invoked wrapping your method handler calls, and can be used to reinterpret responses from handlers. It is useful for adding conditional
 execution logic, or reinterpreting responses based on http concerns such as Accept headers.
@@ -219,7 +276,13 @@ Specify that the user must be authorized with a given security scheme in order t
 
 The first argument takes a name of a security scheme, or a constructor of an authorization controller (a controller decorated with `@Authorization`). The second argument takes an array of scopes that must be met for this method to be used.
 
-The generated router will authenticate the user against this authentication scheme, and only invoke the handler if the user is authorized. If the user is unauthorized, a 401 will be returned (or any other http-error thrown by the authenticator.)
+The generated router will authenticate the user against this authentication scheme, and only invoke the handler if the user is authorized. If the user is unauthorized, a 401 will be returned (or any other http-error thrown by the authenticator).
+
+This decorator can be used either on a controller, or on individual methods within the controller.
+If the decorator is defined both on the controller and on a method:
+
+- Decorators describing the same security schemes will have their scopes combined to require the scopes of all decorators.
+- Decorators describing different security schemes will check both schemes, and be usable if any of them match.
 
 ```typescript
 import { Get, RequireAuthentication } from "@simply-openapi/controllers"
@@ -322,6 +385,18 @@ class WidgetsController {
   }
 }
 ```
+
+### @UseHandlerMiddleware
+
+Defines a handler middleware to be used for a single method.
+
+Handler middleware is similar to express middleware, but is invoked wrapping your method handler calls, and can be used to reinterpret responses from handlers. It is useful for adding conditional
+execution logic, or reinterpreting responses based on http concerns such as Accept headers.
+
+Using this decorator on a controller will apply the middleware to all methods in that controller.
+This decorator can also be applied to individual methods, to restrict the middleware to only those methods.
+
+For more information, see [Writing Handler Middleware](../dev/writing-handler-middleware.md).
 
 ## Handler argument decorators
 
