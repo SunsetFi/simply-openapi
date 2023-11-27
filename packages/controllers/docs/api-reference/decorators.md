@@ -407,6 +407,38 @@ The third optional parameter takes additional OpenAPI parameter spec properties.
 
 This decorator is a shortcut for creating a required cookie param. `@RequiredCookieParam(name, schema)` is equivalent to `@CookieParam(name, schema, { required: true })`.
 
+### BindParam
+
+Binds the handler method argument to an existing OpenAPI parameter on the target operation.
+
+This can be used both for @BindOperation handlers, as well as custom method handlers when targeting parameters defined elsewhere.
+
+```typescript
+@Controller("/widgets/{widgetType}")
+@OpenAPIOperation({
+  parameters: [
+    {
+      name: "widgetType",
+      in: "path",
+      schema: {
+        type: "string"
+        enum: ["foo", "bar"]
+      }
+    }
+  ]
+})
+class WidgetsByTypeController {
+  @Get("/")
+  getWidgetsByType(
+    @BindParam("widgetType")
+    widgetType: "foo" | "bar"
+  ) {
+    ...
+  }
+}
+
+```
+
 ### Body
 
 This decorator configures a specific media type body for the request response, and binds the handler argument to recieve the body.
