@@ -322,3 +322,154 @@ class WidgetsController {
   }
 }
 ```
+
+## Handler argument decorators
+
+### PathParam
+
+Declares a path parameter and binds the handler argument to receive the param.
+
+The first argument takes the parameter name.
+
+The second argument takes either an OpenAPI schema object type name, or a schema object.
+
+The third optional parameter takes additional OpenAPI parameter spec properties.
+
+The specified path parameter must be provided in the operation path. This can be in the method decorator, the controller decorator, or even in the express route. Parameters declared in method or controller decorators may be declared in either the expressjs or OpenAPI parameter notation.
+
+```typescript
+class WidgetsController {
+  @Get("/{widgetId}")
+  getWidget(
+    @PathParam("widgetId", { type: "integer" }, { description: "The ID of the widget to get" })
+    widgetId: number
+  ): {
+    ...
+  }
+}
+```
+
+For brevity, you may specify the schema type as a string. `@PathParam(name, "integer")` is equal to `@PathParam(name, { type: "integer" })`.
+
+### QueryParam
+
+Declares a query parameter and binds the handler argument to receive the param.
+
+The first argument takes the query parameter name.
+
+The second argument takes either an OpenAPI schema object type name, or a schema object.
+
+The third optional parameter takes additional OpenAPI parameter spec properties.
+
+```typescript
+class WidgetsController {
+  @Get("/")
+  getWidgets(
+    @QueryParam("limit", { type: "integer" }, { description: "The number of widgets to return" })
+    limit: number
+  ): {
+    ...
+  }
+}
+```
+
+For brevity, you may specify the schema type as a string. `@QueryParam(name, "integer")` is equal to `@QueryParam(name, { type: "integer" })`.
+
+### RequiredQueryParam
+
+This decorator is a shortcut for creating a required query param. `@RequiredQueryParam(name, schema)` is equivalent to `@QueryParam(name, schema, { required: true })`.
+
+### HeaderParam
+
+Declares a header parameter and binds the handler argument to receive the param.
+
+The first argument takes the header name.
+
+The second argument takes either an OpenAPI schema object type name, or a schema object.
+
+The third optional parameter takes additional OpenAPI parameter spec properties.
+
+### RequiredHeaderParam
+
+This decorator is a shortcut for creating a required header param. `@RequiredHeaderParam(name, schema)` is equivalent to `@HeaderParam(name, schema, { required: true })`.
+
+### CookieParam
+
+Declares a cookie parameter and binds the handler argument to receive the param.
+
+The first argument takes the cookie name.
+
+The second argument takes either an OpenAPI schema object type name, or a schema object.
+
+The third optional parameter takes additional OpenAPI parameter spec properties.
+
+### RequiredCookieParam
+
+This decorator is a shortcut for creating a required cookie param. `@RequiredCookieParam(name, schema)` is equivalent to `@CookieParam(name, schema, { required: true })`.
+
+### Body
+
+This decorator configures a specific media type body for the request response, and binds the handler argument to recieve the body.
+
+The first argument is the media type to describe.
+
+The second argument is the SchemaObject describing the body.
+
+The optional third argument is additional OpenAPI options for the request body. This will be shared by all media types.
+
+The optional fourth argument is additional OpenAPI options for this media type.
+
+```typescript
+class WidgetsController {
+  @Post("/")
+  createWidget(
+    @Body(
+      "application/json",
+      { type: "object" },
+      {
+        description: "The properties of the widget to create",
+        required: true
+      }
+      { encoding: "utf-u" },
+    )
+    widget: object
+  ) {
+    ...
+  }
+}
+```
+
+### @RequiredJsonBody
+
+This decorator is a shortcut for creating a required body that accepts the "application/json" content type.
+
+The first argument is the SchemaObject describing the body.
+
+The optional second argument is additional OpenAPI options for the request body. This will be shared by all media types.
+
+The optional third argument is additional OpenAPI options for this media type.
+
+```typescript
+class WidgetsController {
+  @Post("/")
+  createWidget(
+    @RequiredJsonBody(
+      { type: "object" },
+      { description: "The properties of the widget to create" }
+    )
+    widget: object
+  ) {
+    ...
+  }
+}
+```
+
+### @OptionalJsonBody
+
+This decorator is a shortcut for creating an optional body that accepts the "application/json" content type.
+
+The first argument is the SchemaObject describing the body.
+
+The optional second argument is additional OpenAPI options for the request body. This will be shared by all media types.
+
+The optional third argument is additional OpenAPI options for this media type.

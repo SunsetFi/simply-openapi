@@ -17,8 +17,8 @@ import { setMethodParameterType } from "./utils";
 export function Body(
   mediaType: string,
   schema: SchemaObject,
-  opts?: Omit<MediaTypeObject, "schema">,
   request?: Partial<RequestBodyObject>,
+  opts?: Omit<MediaTypeObject, "schema">,
 ): ParameterDecorator {
   return (
     target: any,
