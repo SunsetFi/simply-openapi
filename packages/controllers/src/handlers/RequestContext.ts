@@ -51,6 +51,10 @@ export class RequestContext extends MethodHandlerContext {
     return this._res;
   }
 
+  getPathParam(name: string) {
+    return this.req.params[name];
+  }
+
   getHeader(name: string) {
     return this.req.headers[name.toLowerCase()];
   }

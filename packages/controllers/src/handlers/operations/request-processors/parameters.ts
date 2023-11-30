@@ -53,13 +53,13 @@ export const parametersRequestProcessorFactory: RequestProcessorFactory = (
     const getValue = (param: ParameterObject) => {
       switch (param.in) {
         case "path":
-          return reqCtx.req.params[param.name];
+          return reqCtx.getPathParam(param.name);
         case "query":
-          return reqCtx.req.query[param.name];
+          return reqCtx.getQuery(param.name);
         case "cookie":
-          return reqCtx.req.cookies[param.name];
+          return reqCtx.getCookie(param.name);
         case "header":
-          return reqCtx.req.headers[param.name];
+          return reqCtx.getHeader(param.name);
         default:
           throw new Error(`Unsupported parameter location: ${param.in}`);
       }

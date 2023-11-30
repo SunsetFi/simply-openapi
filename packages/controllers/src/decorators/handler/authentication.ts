@@ -35,6 +35,7 @@ export function RequireAuthentication(
     if (propertyKey) {
       mergeSOCControllerMethodMetadata(
         target,
+
         {
           operationFragment,
         },

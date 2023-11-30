@@ -192,6 +192,28 @@ describe("E2E: Header Param", function () {
   });
 
   describe("required", function () {
+    it("sets the param", function (done) {
+      const req = getMockReq("GET", "/req", {
+        headers: { foo: "12" },
+      });
+      const { res, next } = getMockRes();
+
+      router(req, res, next);
+
+      // Even with sync functions, we await promises, which trampolines us out
+      setTimeout(() => {
+        try {
+          expect(next).not.toHaveBeenCalled();
+
+          expect(handler).toHaveBeenCalledWith(12);
+
+          done();
+        } catch (e) {
+          done(e);
+        }
+      }, 10);
+    });
+
     it("returns bad request for an unpassed param", function (done) {
       const req = getMockReq("GET", "/req", {
         headers: {},

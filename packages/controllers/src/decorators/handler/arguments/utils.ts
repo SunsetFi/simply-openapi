@@ -26,12 +26,14 @@ export function createParameterDecorator(
         // We cannot ensure the type as param decorators are resolved before method decorators.
         // If this is a bound method, we might be writing totally useless operationFragments.
         const metadata = previous as SOCCustomControllerMethodMetadata;
-        const parameters = [...(metadata.operationFragment?.parameters ?? [])];
-        parameters[parameterIndex] = {
-          in: paramIn,
-          name,
-          ...paramObject,
-        };
+        const parameters = [
+          ...(metadata.operationFragment?.parameters ?? []),
+          {
+            in: paramIn,
+            name,
+            ...paramObject,
+          },
+        ];
         return {
           ...previous,
           operationFragment: {
