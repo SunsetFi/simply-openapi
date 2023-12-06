@@ -53,6 +53,15 @@ describe("E2E: Auth", function () {
         return "OK";
       }
 
+      @Get("/authenticated-get-user")
+      getAuthenticatedWithUser(
+        @RequireAuthentication(WidgetAuthenticator, ["scope"])
+        user: any,
+      ) {
+        authenticatedFn(user);
+        return "OK";
+      }
+
       @Get("/unauthenticated")
       getUnauthenticated() {
         unauthenticatedFn();
@@ -83,6 +92,15 @@ describe("E2E: Auth", function () {
       expect(spec).toMatchObject({
         paths: {
           "/authenticated": {
+            get: {
+              security: [
+                {
+                  widgetAuth: ["scope"],
+                },
+              ],
+            },
+          },
+          "/authenticated-get-user": {
             get: {
               security: [
                 {
@@ -204,6 +222,39 @@ describe("E2E: Auth", function () {
           expect(authenticatedFn).not.toHaveBeenCalled();
 
           expectNextCalledWithError(next, Unauthorized);
+
+          done();
+        } catch (e) {
+          done(e);
+        }
+      }, 10);
+    });
+
+    it("passes the authentication result when used on a parameter", function (done) {
+      const req = getMockReq("GET", "/authenticated-get-user", {
+        headers: {
+          "x-api-key": "foo",
+        },
+      });
+      const { res, next } = getMockRes();
+
+      const userObj = { id: 1 };
+
+      authenticatorFn.mockImplementation(() => userObj);
+
+      router(req, res, next);
+
+      // Even with sync functions, we await promises, which trampolines us out
+      setTimeout(() => {
+        try {
+          expect(next).not.toHaveBeenCalled();
+
+          expect(authenticatorFn).toHaveBeenCalledWith(
+            "foo",
+            ["scope"],
+            expect.anything(),
+          );
+          expect(authenticatedFn).toHaveBeenCalledWith(userObj);
 
           done();
         } catch (e) {

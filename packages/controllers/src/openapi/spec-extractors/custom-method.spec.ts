@@ -84,7 +84,7 @@ describe("extractSOCCustomMethodSpec", function () {
   it("no-ops when a bound method metadata is present", function () {
     const metadata: SOCControllerMethodMetadata = {
       operationId: "foobar",
-      args: [],
+      handlerArgs: [],
     };
 
     expect(invoke(metadata)[0]).toBeUndefined();
@@ -96,7 +96,7 @@ describe("extractSOCCustomMethodSpec", function () {
         {
           method: "get",
           path: "/foo",
-          args: [],
+          handlerArgs: [],
           operationFragment: {},
         },
         {
@@ -114,7 +114,7 @@ describe("extractSOCCustomMethodSpec", function () {
     const [result, controller, methodName] = invoke({
       method,
       path,
-      args: [],
+      handlerArgs: [],
       operationFragment: {},
     });
 
@@ -144,7 +144,7 @@ describe("extractSOCCustomMethodSpec", function () {
     const [result] = invoke({
       method,
       path,
-      args: [],
+      handlerArgs: [],
       operationFragment,
     });
 
@@ -171,7 +171,7 @@ describe("extractSOCCustomMethodSpec", function () {
         {
           method,
           path,
-          args: [],
+          handlerArgs: [],
           operationFragment,
         },
         {
@@ -207,7 +207,7 @@ describe("extractSOCCustomMethodSpec", function () {
         {
           method,
           path,
-          args: [],
+          handlerArgs: [],
           operationFragment,
         },
         {
@@ -242,7 +242,7 @@ describe("extractSOCCustomMethodSpec", function () {
         {
           method: "get",
           path: "/foo",
-          args: [],
+          handlerArgs: [],
           operationFragment: {},
         },
         {
@@ -285,7 +285,7 @@ describe("extractSOCCustomMethodSpec", function () {
         {
           method: "get",
           path: "/foo",
-          args: [],
+          handlerArgs: [],
           operationFragment: {},
           preExpressMiddleware: [middleware],
         },
@@ -332,7 +332,7 @@ describe("extractSOCCustomMethodSpec", function () {
         {
           method: "get",
           path: "/foo",
-          args: [],
+          handlerArgs: [],
           operationFragment: {},
           preExpressMiddleware: [methodMiddleware],
         },
@@ -378,7 +378,7 @@ describe("extractSOCCustomMethodSpec", function () {
         {
           method: "get",
           path: "/foo",
-          args: [],
+          handlerArgs: [],
           operationFragment: {},
         },
         {
@@ -421,7 +421,7 @@ describe("extractSOCCustomMethodSpec", function () {
         {
           method: "get",
           path: "/foo",
-          args: [],
+          handlerArgs: [],
           operationFragment: {},
           handlerMiddleware: [middleware],
         },
@@ -466,7 +466,7 @@ describe("extractSOCCustomMethodSpec", function () {
         {
           method: "get",
           path: "/foo",
-          args: [],
+          handlerArgs: [],
           operationFragment: {},
           handlerMiddleware: [methodMiddleware],
         },

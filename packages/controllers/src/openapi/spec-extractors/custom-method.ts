@@ -58,7 +58,7 @@ export const extractSOCCustomMethodSpec: OpenAPIObjectExtractor = (
   const extension: SOCControllerMethodExtensionData = {
     controller,
     handler: methodName,
-    handlerArgs: metadata.args ?? [],
+    handlerArgs: metadata.handlerArgs ?? [],
   };
 
   if (preExpressMiddleware.length > 0) {

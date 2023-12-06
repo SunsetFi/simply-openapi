@@ -41,7 +41,7 @@ export const extractSOCBoundMethodSpec: OpenAPIObjectExtractor = (
 
     const [path, method, operation] = opData;
 
-    for (const arg of metadata.args ?? []) {
+    for (const arg of metadata.handlerArgs ?? []) {
       if (!arg || arg.type !== "openapi-parameter") {
         continue;
       }
@@ -64,7 +64,7 @@ export const extractSOCBoundMethodSpec: OpenAPIObjectExtractor = (
     const extension: SOCControllerMethodExtensionData = {
       controller,
       handler: methodName,
-      handlerArgs: metadata.args,
+      handlerArgs: metadata.handlerArgs,
       // controller middleware should run before operation middleware
       preExpressMiddleware: [
         ...(controllerMetadata?.preExpressMiddleware ?? ([] as any)),

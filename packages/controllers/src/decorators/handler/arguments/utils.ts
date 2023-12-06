@@ -60,7 +60,7 @@ export function setMethodParameterType(
   mergeSOCControllerMethodMetadata(
     target,
     (previous) => {
-      const args = [...(previous.args ?? [])];
+      const args = [...(previous.handlerArgs ?? [])];
       if (args[parameterIndex]?.type) {
         throw new Error(
           `Method handler ${String(
@@ -72,7 +72,7 @@ export function setMethodParameterType(
       args[parameterIndex] = arg;
       return {
         ...previous,
-        args,
+        handlerArgs: args,
       };
     },
     propertyKey,

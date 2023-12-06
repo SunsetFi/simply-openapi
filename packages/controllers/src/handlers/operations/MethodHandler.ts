@@ -132,6 +132,9 @@ export class MethodHandler {
       }
 
       switch (arg.type) {
+        case "openapi-security":
+          // It should be safe to return undefined here, as the processor should have thrown if no scheme matched.
+          return requestData.security[arg.schemeName];
         case "openapi-parameter":
           // It should be safe to return undefined here, as the processor should have thrown for required parameters.
           return requestData.parameters[arg.parameterName];

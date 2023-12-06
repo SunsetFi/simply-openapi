@@ -6,6 +6,33 @@ import { Middleware } from "../../types";
 import { OperationHandlerMiddleware } from "../../handlers";
 
 /**
+ * Describes an argument that pulls data from an authenticator.
+ */
+export interface SOCControllerMethodHandlerAuthenticationArg {
+  type: "openapi-security";
+
+  /**
+   * The name of the authentication scheme result to insert into this argument.
+   */
+  schemeName: string;
+}
+
+export const socControllerMethodHandlerAuthenticationArgSchema: JSONSchema6 = {
+  type: "object",
+  properties: {
+    type: {
+      type: "string",
+      enum: ["openapi-security"],
+    },
+    schemeName: {
+      type: "string",
+      minLength: 1,
+    },
+  },
+  required: ["type", "schemeName"],
+};
+
+/**
  * Describes an argument that pulls data from an OpenAPI parameter.
  */
 export interface SOCControllerMethodHandlerParameterArg {
@@ -107,6 +134,7 @@ export const socControllerMethodHandlerExtensionArgSchema: JSONSchema6 = {
  * Metadata about the argument of a controller method handler function.
  */
 export type SOCControllerMethodHandlerArg =
+  | SOCControllerMethodHandlerAuthenticationArg
   | SOCControllerMethodHandlerParameterArg
   | SOCControllerMethodHandlerBodyArg
   | SOCControllerMethodHandlerRequestArg
@@ -115,6 +143,7 @@ export type SOCControllerMethodHandlerArg =
 
 export const socControllerMethodHandlerArgSchema: JSONSchema6 = {
   oneOf: [
+    socControllerMethodHandlerAuthenticationArgSchema,
     socControllerMethodHandlerParameterArgSchema,
     socControllerMethodHandlerBodyArgSchema,
     socControllerMethodHandlerRequestArgSchema,

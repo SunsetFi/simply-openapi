@@ -58,7 +58,7 @@ describe("createOpenAPIFromControllers", function () {
       {
         method,
         path,
-        args: [],
+        handlerArgs: [],
         operationFragment: {},
       },
       methodName,
@@ -174,7 +174,7 @@ describe("createOpenAPIFromControllers", function () {
         {
           method,
           path,
-          args: [],
+          handlerArgs: [],
           operationFragment: {},
         },
         methodName,
@@ -221,7 +221,7 @@ describe("createOpenAPIFromControllers", function () {
         {
           method,
           path,
-          args: [],
+          handlerArgs: [],
           operationFragment: {},
         },
         methodName,
@@ -268,7 +268,7 @@ describe("createOpenAPIFromControllers", function () {
         {
           method,
           path,
-          args: [],
+          handlerArgs: [],
           operationFragment: {},
         },
         methodName,

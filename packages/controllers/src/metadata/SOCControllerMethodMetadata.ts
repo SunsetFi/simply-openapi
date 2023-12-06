@@ -20,12 +20,13 @@ export interface SOCControllerMethodCommonMetadata {
    * Express middleware to run around the handler.
    */
   preExpressMiddleware?: Middleware[];
+
+  handlerArgs?: (SOCControllerMethodHandlerArg | undefined)[];
 }
 
 export interface SOCBoundControllerMethodMetadata
   extends SOCControllerMethodCommonMetadata {
   operationId?: string;
-  args?: (SOCControllerMethodHandlerArg | undefined)[];
 }
 export type ResolvedSOCBoundControllerMethodMetadata =
   SOCBoundControllerMethodMetadata & {
@@ -41,7 +42,6 @@ export interface SOCCustomControllerMethodMetadata
   extends SOCControllerMethodCommonMetadata {
   path?: string;
   method?: RequestMethod;
-  args?: (SOCControllerMethodHandlerArg | undefined)[];
   operationFragment?: PartialDeep<OperationObject>;
 }
 export type ResolvedSOCCustomControllerMethodMetadata =

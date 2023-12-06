@@ -85,7 +85,7 @@ describe("extractSOCBoundMethodSpec", function () {
     const metadata: SOCControllerMethodMetadata = {
       path: "/test",
       method: "get",
-      args: [],
+      handlerArgs: [],
       operationFragment: {},
     };
 
@@ -99,7 +99,7 @@ describe("extractSOCBoundMethodSpec", function () {
       invoke(
         {
           operationId,
-          args: [],
+          handlerArgs: [],
         },
         null,
         {
@@ -123,7 +123,7 @@ describe("extractSOCBoundMethodSpec", function () {
     const [result, controller, methodName] = invoke(
       {
         operationId,
-        args: [],
+        handlerArgs: [],
       },
       null,
       {
@@ -161,7 +161,7 @@ describe("extractSOCBoundMethodSpec", function () {
       const [result, controller, methodName] = invoke(
         {
           operationId,
-          args: [
+          handlerArgs: [
             {
               type: "openapi-parameter",
               parameterName,
@@ -214,7 +214,7 @@ describe("extractSOCBoundMethodSpec", function () {
       const [result, controller, methodName] = invoke(
         {
           operationId,
-          args: [
+          handlerArgs: [
             {
               type: "openapi-parameter",
               parameterName,
@@ -275,7 +275,7 @@ describe("extractSOCBoundMethodSpec", function () {
         invoke(
           {
             operationId,
-            args: [
+            handlerArgs: [
               {
                 type: "openapi-parameter",
                 parameterName,
@@ -317,7 +317,7 @@ describe("extractSOCBoundMethodSpec", function () {
       const [result] = invoke(
         {
           operationId,
-          args: [],
+          handlerArgs: [],
         },
         {
           type: "bound",
@@ -359,7 +359,7 @@ describe("extractSOCBoundMethodSpec", function () {
       const [result] = invoke(
         {
           operationId,
-          args: [],
+          handlerArgs: [],
           preExpressMiddleware: [middleware],
         },
         null,
@@ -404,7 +404,7 @@ describe("extractSOCBoundMethodSpec", function () {
       const [result] = invoke(
         {
           operationId,
-          args: [],
+          handlerArgs: [],
           preExpressMiddleware: [methodMiddleware],
         },
         {
@@ -448,7 +448,7 @@ describe("extractSOCBoundMethodSpec", function () {
       const [result] = invoke(
         {
           operationId,
-          args: [],
+          handlerArgs: [],
         },
         {
           type: "bound",
@@ -489,7 +489,7 @@ describe("extractSOCBoundMethodSpec", function () {
       const [result] = invoke(
         {
           operationId,
-          args: [],
+          handlerArgs: [],
           handlerMiddleware: [middleware],
         },
         null,
@@ -532,7 +532,7 @@ describe("extractSOCBoundMethodSpec", function () {
       const [result] = invoke(
         {
           operationId,
-          args: [],
+          handlerArgs: [],
           handlerMiddleware: [methodMiddleware],
         },
         {
