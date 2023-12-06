@@ -281,7 +281,7 @@ class WidgetController {
         secondAuthUser.id,
       );
     } else {
-      // This branch will never be hit, as your method will not be called if none of the provided authentication requirements are met.
+      // This branch will theoretically never be hit, as your method will not be called if none of the provided authentication requirements are met.
       // However, it is best practice to include this anyway.
       throw new Unauthorized();
     }
@@ -293,10 +293,61 @@ class WidgetController {
 
 ## HTTP Basic authentication
 
+The [HTTP Basic](https://swagger.io/docs/specification/authentication/basic-authentication/) authentication scheme takes an encoded (not encrypted) username and password from the `Authorization` header.
+@simply-openapi/controllers will decode the credentials and pass your authenticator an object containing the `username` and `password` properties.
+
+```typescript
+import {
+  Authenticator,
+  AuthenticationController,
+  HttpBasicAuthenticationCredentials,
+  RequestContext,
+  Controller,
+  RequireAuthentication,
+  Get,
+} from "@simply-openapi/controllers";
+
+@Authenticator("widgetAuth", {
+  type: "http",
+  scheme: "basic",
+})
+class WidgetAuthenticator implements AuthenticationController {
+  async authenticate(
+    value: HttpBasicAuthenticationCredentials,
+    scopes: string[],
+    ctx: RequestContext,
+  ) {
+    const user = await getUserByUsername(value.username);
+    if (!checkPassword(value.password, user.hashedPassword)) {
+      return false;
+    }
+
+    if (!scopes.every((scope) => user.scopes.includes(scope))) {
+      return false;
+    }
+
+    return user;
+  }
+}
+
+@Controller()
+class WidgetController {
+  @Get("/authenticated")
+  getAuthenticated(
+    @RequireAuthentication(WidgetAuthenticator, ["my-scope"])
+    user: MyUser,
+  ) {
+    return "OK";
+  }
+}
+```
+
 ## HTTP Bearer authentication
 
 The [HTTP Bearer](https://swagger.io/docs/specification/authentication/bearer-authentication/) authentication scheme expects authentication in an `Authorization` header, prefixed with `Bearer `.
 @simply-openapi/controllers will validate the presense of this header and the Bearer prefix, before extracting the payload (everything after `Bearer `) and passing it as the value to your authentication method.
+
+Note that the `bearerFormat` OpenAPI property is descriptive only; the value indicates no special processing instructions for OpenAPI and is not interpreted by this library.
 
 ```typescript
 import {
