@@ -340,3 +340,31 @@ class WidgetController {
   }
 }
 ```
+
+Alternatively, you can use the `@BindSecurity` decorator to retrieve the resolved security scheme value. This is useful in a few cases:
+
+- Security schemes defined in OpenAPI for bound methods
+- Security schemes defined in OpenAPI at the root level
+- Security schemes defined by `@RequireAuthentication` at the class level
+
+```typescript
+import {
+  Controller,
+  RequireAuthentication,
+  Get,
+  BindSecurity
+} from "@simply-openapi/controllers";
+
+@Controller("/widgets")
+@RequireAuthentication("myAuth", ["widgets.read"])
+class WidgetsController {
+  @Get("/{widget_id}")
+  getWidget(
+    @BindSecurity("myAuth")
+    user: MyAuthUser
+  ) {
+    console.log("Request from user", user.username);
+    ...
+  }
+}
+```
