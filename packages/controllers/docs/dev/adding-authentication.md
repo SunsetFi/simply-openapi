@@ -281,34 +281,10 @@ The OpenAPI specification indicates that multiple items in the `security` array 
 
 ```typescript
 import {
-  Authenticator,
-  AuthenticationController,
-  HTTPBasicAuthenticationCredentials,
-  RequestContext,
   Controller,
   RequireAuthentication,
   Get,
 } from "@simply-openapi/controllers";
-
-@Authenticator("BasicAuth", {
-  type: "http",
-  scheme: "basic",
-})
-class MyAuthenticator implements AuthenticationController {
-  async authenticate(
-    value: HTTPBasicAuthenticationCredentials,
-    scopes: string[],
-    ctx: RequestContext,
-  ) {
-    if (!validatePassword(value.username, value.password)) {
-      return false;
-    }
-
-    const userData = await getUserData(value.username);
-
-    return { username: value.username, ...userData };
-  }
-}
 
 @Controller()
 class WidgetController {
