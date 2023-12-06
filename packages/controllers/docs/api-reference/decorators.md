@@ -510,6 +510,42 @@ The third optional parameter takes additional OpenAPI parameter spec properties.
 
 This decorator is a shortcut for creating a required cookie param. `@RequiredCookieParam(name, schema)` is equivalent to `@CookieParam(name, schema, { required: true })`.
 
+### BindSecurity
+
+Binds the handler method argument to the result of the given security scheme authentication controller.
+
+This decorator does **not secure the method**. It only provides the value of an existing security scheme resolution, and that value will only be present if
+the security scheme is defined for this operation (either directly or globally).
+
+To require / validate a security scheme, see [@RequireAuthentication](#requireauthentication-2).
+
+This decorator is useful for two cases:
+
+- Retrieving the security scheme result when using bound controllers and methods [derived from existing OpenAPI](../dev/tutorial-bound-openapi-controllers.md).
+- Retrieving the security scheme result when the [@RequireAuthentication](#requireauthentication) decorator is used on a controller class.
+
+```typescript
+import {
+  Controller,
+  RequireAuthentication,
+  Get,
+  BindSecurity
+} from "@simply-openapi/controllers";
+
+@Controller("/widgets")
+@RequireAuthentication("myAuth", ["widgets.read"])
+class WidgetsController {
+  @Get("/{widget_id}")
+  getWidget(
+    @BindSecurity("myAuth")
+    user: MyAuthUser
+  ) {
+    ...
+  }
+}
+
+```
+
 ### BindParam
 
 Binds the handler method argument to an existing OpenAPI parameter on the target operation.
