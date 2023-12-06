@@ -1,19 +1,19 @@
 import { mapValues } from "lodash";
 import { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
-import { Request } from "express";
 import { BadRequest } from "http-errors";
 import { ValidationError } from "ajv";
 
 import { pickContentType, resolveReference } from "../../../schema-utils";
 import { errorToMessage } from "../../../ajv";
 
+import { nameOperationFromContext } from "../utils";
+import { RequestContext } from "../handler-middleware";
+
 import {
   RequestProcessor,
   RequestProcessorFactory,
   ValueProcessorFunction,
 } from "./types";
-import { nameOperationFromContext } from "../utils";
-import { RequestContext } from "../handler-middleware";
 
 const defaultRequestProcessor: RequestProcessor = (ctx) => ({
   body: ctx.req.body,
@@ -69,19 +69,19 @@ export const bodyRequestProcessorFactory: RequestProcessorFactory = (ctx) => {
       };
     }
 
+    if (Object.keys(requestBody.content ?? {}).length === 0) {
+      // no content types defined, so we can't do anything.
+      // Required was already taken care of, so just
+      // return whatever we have.
+      return {
+        body: reqCtx.req.body,
+      };
+    }
+
     const contentType = reqCtx.req.headers["content-type"] ?? "";
 
     const processor = pickContentType(contentType, processors);
     if (!processor) {
-      if (Object.keys(requestBody.content ?? {}).length === 0) {
-        // no content types defined, so we can't do anything.
-        // Required was already taken care of, so just
-        // return whatever we have.
-        return {
-          body: reqCtx.req.body,
-        };
-      }
-
       if (contentType === "") {
         throw new BadRequest(`The Content-Type header is required.`);
       }

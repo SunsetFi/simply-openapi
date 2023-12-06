@@ -1,6 +1,8 @@
 - Review all places in the spec where $ref may be used; implement and test it.
   - Missing path items!
   - See predefined locations for #/components
+- Support serialization: https://swagger.io/docs/specification/serialization/
+  - Infer settings from paths when available.
 - Support custom parameter types similar to SEC1
   - We are nearly there, but the logic may be spread out between custom schema extractors and custom request processors
     - If we continue this direction, have a function that returns both the createOpenAPI and createRouter functions from bundles of both, as a plugin system
