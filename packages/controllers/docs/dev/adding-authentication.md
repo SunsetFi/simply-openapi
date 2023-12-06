@@ -21,6 +21,7 @@ import {
   Authenticator,
   AuthenticationController,
   RequestContext,
+  HTTPBearerAuthenticationCredentials,
 } from "@simply-openapi/controllers";
 import { Unauthorized } from "http-errors";
 
@@ -29,7 +30,11 @@ import { Unauthorized } from "http-errors";
   scheme: "bearer",
 })
 class MyAuthenticator implements AuthenticationController {
-  async authenticate(value: string, scopes: string[], ctx: RequestContext) {
+  async authenticate(
+    value: HTTPBearerAuthenticationCredentials,
+    scopes: string[],
+    ctx: RequestContext,
+  ) {
     const user = await decodeBearerToken(value);
     if (!user) {
       // Returning false is the equivalent of throwing an Unauthorized http-error with the default message.
@@ -48,11 +53,128 @@ class MyAuthenticator implements AuthenticationController {
     return user;
   }
 }
+
+// When creating the spec, pass the authenticator to the list of controllers.
+const openApiSpec = createOpenAPIFromControllers(
+  { title: "My App", version: "1.0.0" },
+  [MyAuthenticator, ...controllers],
+);
 ```
 
 ## Requiring Authentication
 
-Authentication is specified on a per-method level using the `@RequireAuthentication` decorator, which specifies the security scheme and any scopes that should be required.
+Authentication can be specified in 3 locations:
+
+- At the top level of your OpenAPI schema, to get applied to every endpoint
+- Per controller with the @RequireAuthentication decorator, to be applied only to methods in that controller
+- Per method with the @RequireAuthentication decorator, to be applied only to that method
+
+### Requiring authentication for all endpoints
+
+The OpenAPI specification provides the `security` top level property, which specifies default security settings for all methods that do not themselves specify a security property.
+
+This property is obeyed by the library, so setting it in your specification will appropriately gate all methods behind it, exception methods that override it.
+
+To pass in this property, use the `addendOpenAPIFromControllers` method to generate the final OpenAPI schema given your starting fragment.
+
+```typescript
+import { OpenAPI } from "openapi3-ts/oai31";
+import {
+  Authenticator,
+  AuthenticationController,
+  HttpBearerAuthenticationCredentials,
+  RequestContext,
+  addendOpenAPIFromControllers,
+  createRouterFromSpec
+} from "@simply-openapi/controllers";
+
+// Source the rest of your controllers that contain your endpoints.
+import controllers from "./controllers";
+
+// Define and implement a security strategy.
+// This security scheme will be injected into the produced OpenAPI.
+@Authenticator("myAuth", {
+  type: "http",
+  scheme: "bearer",
+})
+class MyAuthenticator implements AuthenticationController {
+  async authenticate(value: HttpBearerAuthenticationCredentials, scopes: string[], ctx: RequestContext) {
+    ...
+  }
+}
+
+const mySpecFragment: OpenAPI = {
+  info: {
+    title: "My App",
+    version: "1.0.0"
+  },
+  security: [
+    {
+      myAuth: ["myScope"]
+    }
+  ]
+}
+
+const openApiSpec = addendOpenAPIFromControllers(mySpecFragment, [MyAuthenticator, ...controllers]);
+const router = createRouterFromSpec(openApiSpec);
+```
+
+### Requiring authentication on all methods of a controller
+
+You can use the `@RequireAuthentication` decorator on a controller to annotate that all methods in that controller are gated behind the specified authentication scheme.
+
+The first argument to `@RequireAuthentication` takes either a string name of the authentication scheme, or it can take a constructor for an AuthenticationController decorated with `@Authenticator`.
+
+The second argument to `@RequireAuthentication` takes an array of scopes, all of which will be required to access the methods. Note that this is not handled automatically; your AuthenticationController must implement
+its own logic to check the given scopes against the decoded credentials.
+
+Since OpenAPI has no concept of a controller to group the methods by, the security specification will be repeated on every method in the controller.
+
+```typescript
+import { Controller, RequireAuthentication } from "@simply-openapi/controllers";
+
+@Controller("/widgets")
+@RequireAuthentication("myAuth", ["widgets.read"])
+class WidgetsController {
+  ...
+}
+```
+
+For convienence and to reduce duplication, `@RequireAuthentication` can be given the class constructor of an existing `@Authenticator`-marked authentication controller. This is the equivalent of passing the scheme name defined in that decorator.
+
+You must still pass the `@Authenticator`-decorated authentication controller to the list of controllers in `createOpenAPIFromControllers` or `addendOpenAPIFromControllers` in this case.
+
+```typescript
+import {
+  Authenticator,
+  AuthenticationController,
+  HttpBearerAuthenticationCredentials,
+  RequestContext,
+  Controller,
+  RequireAuthentication
+} from "@simply-openapi/controllers";
+
+@Authenticator("myAuth", {
+  type: "http",
+  scheme: "bearer",
+})
+class MyAuthenticator implements AuthenticationController {
+  async authenticate(value: HttpBearerAuthenticationCredentials, scopes: string[], ctx: RequestContext) {
+    ...
+  }
+}
+
+@Controller("/widgets")
+// This is the equivalent of `@RequireAuthentication("myAuth", ["widgets.read"])`
+@RequireAuthentication(MyAuthenticator, ["widgets.read"])
+class WidgetsController {
+  ...
+}
+```
+
+### Requiring authentication on a specific method
+
+You can use the `@RequireAuthentication` decorator on a single method to annotate that the method is gated behind the specified authentication scheme.
 
 The first argument to the decorator can either be a string specifying the name of the authenticator, or for convienence it may be the constructor of an authenticator class. In the case of the latter,
 the authenticator class must still be passed as a controller to `createOpenAPIFromControllers`, or an error will be thrown when building the spec.
@@ -74,7 +196,102 @@ class WidgetController {
 }
 ```
 
-If multiple authentication methods are allowed, the `@RequireAuthentication` decorator may be used multiple times. Per the OpenAPI specification definition, the method is invoked if any of the multiple authenticators allow the request.
+The OpenAPI specification indicates that multiple items in the `security` array act as an `any-of` fashion; if any entry in the list matches, the request is allowed. In support of this, you may specify `@RequireAuthentication` multiple times.
+
+- If multiple `@RequireAuthentication` decorators specify the same security scheme, the scopes will be concatenated
+- If multiple `@RequireAuthentication` decorators specify different security schemes, then **any** passing security scheme will allow access. Security schemes will be checked in-order, and the first passing one will be used.
+
+### Retrieving the authentication result
+
+`@RequireAuthentication` can be placed directly on method arguments. This will both ensure the user is authenticated, and provide the result of the authenticator to the decorated argument.
+
+```typescript
+import {
+  Authenticator,
+  AuthenticationController,
+  HTTPBasicAuthenticationCredentials,
+  RequestContext,
+  Controller,
+  RequireAuthentication,
+  Get,
+} from "@simply-openapi/controllers";
+
+@Authenticator("BasicAuth", {
+  type: "http",
+  scheme: "basic",
+})
+class MyAuthenticator implements AuthenticationController {
+  async authenticate(
+    value: HTTPBasicAuthenticationCredentials,
+    scopes: string[],
+    ctx: RequestContext,
+  ) {
+    if (!validatePassword(value.username, value.password)) {
+      return false;
+    }
+
+    const userData = await getUserData(value.username);
+
+    return { username: value.username, ...userData };
+  }
+}
+
+@Controller()
+class WidgetController {
+  @Get("/authenticated")
+  getAuthenticated(
+    @RequireAuthentication("myAuth", ["my-scope"])
+    user: MyAuthUserType,
+  ) {
+    console.log("Got request from", user.username);
+    return "OK";
+  }
+}
+```
+
+In the case of multiple security schemes, multiple parameters can be decorated.
+
+Keep in mind that security schemes are tried in order of definition, and the library will stop at the first one to return a value. Due to this, you should only ever expect exactly one argument to be provided. All authentication decorators that were not used will have a value of `undefined`.
+
+```typescript
+import {
+  Controller,
+  RequireAuthentication,
+  Get,
+} from "@simply-openapi/controllers";
+import { Unauthorized } from "http-errors";
+
+@Controller()
+class WidgetController {
+  @Get("/authenticated")
+  getAuthenticated(
+    @RequireAuthentication("myFirstAuth", [])
+    firstAuthUser: FirstAuthUserType | undefined,
+    @RequireAuthentication("mySecondAuth", [])
+    secondAuthUser: SecondAuthUserType | undefined,
+  ) {
+    if (firstAuthUser) {
+      console.log(
+        "Got a request covered by the first authentication:",
+        firstAuthUser.id,
+      );
+    } else if (secondAuthUser) {
+      console.log(
+        "Got a request covered by the second authentication:",
+        secondAuthUser.id,
+      );
+    } else {
+      // This branch will never be hit, as your method will not be called if none of the provided authentication requirements are met.
+      // However, it is best practice to include this anyway.
+      throw new Unauthorized();
+    }
+
+    return "OK";
+  }
+}
+```
+
+## HTTP Basic authentication
 
 ## HTTP Bearer authentication
 
@@ -85,6 +302,7 @@ The [HTTP Bearer](https://swagger.io/docs/specification/authentication/bearer-au
 import {
   Authenticator,
   AuthenticationController,
+  HttpBearerAuthenticationCredentials,
   RequestContext,
   Controller,
   RequireAuthentication,
@@ -97,7 +315,11 @@ import {
   bearerFormat: "JWT",
 })
 class WidgetAuthenticator implements AuthenticationController {
-  async authenticate(value: string, scopes: string[], ctx: RequestContext) {
+  async authenticate(
+    value: HttpBearerAuthenticationCredentials,
+    scopes: string[],
+    ctx: RequestContext,
+  ) {
     const user = await decodeJwt(value);
 
     if (!scopes.every((scope) => user.scopes.includes(scope))) {
@@ -111,9 +333,10 @@ class WidgetAuthenticator implements AuthenticationController {
 @Controller()
 class WidgetController {
   @Get("/authenticated")
-  // Passing an authenticator controller constructor is the equivalent of passing the scheme name specified in the @Authenticator decorator of that controller.
-  @RequireAuthentication(WidgetAuthenticator, ["my-scope"])
-  getAuthenticated() {
+  getAuthenticated(
+    @RequireAuthentication(WidgetAuthenticator, ["my-scope"])
+    user: Jwt,
+  ) {
     return "OK";
   }
 }

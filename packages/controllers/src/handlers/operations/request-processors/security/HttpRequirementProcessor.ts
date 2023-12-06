@@ -5,6 +5,13 @@ import { RequestContext } from "../../handler-middleware";
 
 import { SecurityRequirementProcessor } from "./SecurityRequirementProcessor";
 
+export interface HTTPBasicAuthenticationCredentials {
+  username: string;
+  password: string;
+}
+
+export type HTTPBearerAuthenticationCredentials = string;
+
 export class HttpRequirementProcessor extends SecurityRequirementProcessor {
   constructor(
     schemeKey: string,
@@ -52,7 +59,7 @@ export class HttpRequirementProcessor extends SecurityRequirementProcessor {
       return {
         username: data.slice(0, index),
         password: data.slice(index + 1),
-      };
+      } satisfies HTTPBasicAuthenticationCredentials;
     }
 
     if (this.scheme.scheme === "bearer") {
@@ -62,7 +69,7 @@ export class HttpRequirementProcessor extends SecurityRequirementProcessor {
         );
       }
 
-      return value.slice(7);
+      return value.slice(7) satisfies HTTPBearerAuthenticationCredentials;
     }
 
     return undefined;
