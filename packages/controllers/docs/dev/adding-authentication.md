@@ -5,7 +5,7 @@ OpenAPI provides the ability to specify authentication in a few forms, which can
 ## Defining Authenticators
 
 Authenticator controllers are created with the `@Authenticator` decorator on a class that is passed as a controller along with your other controllers.
-This decorator takes the name of your authentication scheme, as well as the OpenAPI specification of the scheme.
+This decorator takes the name of your security scheme, as well as the OpenAPI specification of the scheme.
 
 This class should implement the `AuthenticationController` interface, providing an `authenticate` function to process the request for authentication requirements.
 This function will get called with the value of the authentication request, the scopes the endpoint requires, and a context providing the request, response, and detailed information
@@ -63,7 +63,7 @@ const openApiSpec = createOpenAPIFromControllers(
 
 ### HTTP Basic authentication
 
-The [HTTP Basic](https://swagger.io/docs/specification/authentication/basic-authentication/) authentication scheme takes an encoded (not encrypted) username and password from the `Authorization` header.
+The [HTTP Basic](https://swagger.io/docs/specification/authentication/basic-authentication/) security scheme takes an encoded (not encrypted) username and password from the `Authorization` header.
 @simply-openapi/controllers will decode the credentials and pass your authenticator an object containing the `username` and `password` properties.
 
 ```typescript
@@ -100,7 +100,7 @@ class MyAuthenticator implements AuthenticationController {
 
 ### HTTP Bearer authentication
 
-The [HTTP Bearer](https://swagger.io/docs/specification/authentication/bearer-authentication/) authentication scheme expects authentication in an `Authorization` header, prefixed with `Bearer `.
+The [HTTP Bearer](https://swagger.io/docs/specification/authentication/bearer-authentication/) security scheme expects authentication in an `Authorization` header, prefixed with `Bearer `.
 @simply-openapi/controllers will validate the presense of this header and the Bearer prefix, before extracting the payload (everything after `Bearer `) and passing it as the value to your authentication method.
 
 Note that the `bearerFormat` OpenAPI property is descriptive only; the value indicates no special processing instructions for OpenAPI and is not interpreted by this library.
@@ -147,7 +147,7 @@ Authentication can be specified in 3 locations:
 
 The OpenAPI specification provides the `security` top level property, which specifies default security settings for all methods that do not themselves specify a security property.
 
-This property is obeyed by the library, so setting it in your specification will appropriately gate all methods behind it, exception methods that override it.
+This property is obeyed by the library, so setting it in your specification will appropriately gate all methods behind it, excepting methods that override it.
 
 To pass in this property, use the `addendOpenAPIFromControllers` method to generate the final OpenAPI schema given your starting fragment.
 
@@ -195,9 +195,9 @@ const router = createRouterFromSpec(openApiSpec);
 
 ### Requiring authentication on all methods of a controller
 
-You can use the `@RequireAuthentication` decorator on a controller to annotate that all methods in that controller are gated behind the specified authentication scheme.
+You can use the `@RequireAuthentication` decorator on a controller to annotate that all methods in that controller are gated behind the specified security scheme.
 
-The first argument to `@RequireAuthentication` takes either a string name of the authentication scheme, or it can take a constructor for an AuthenticationController decorated with `@Authenticator`.
+The first argument to `@RequireAuthentication` takes either a string name of the security scheme, or it can take a constructor for an AuthenticationController decorated with `@Authenticator`.
 
 The second argument to `@RequireAuthentication` takes an array of scopes, all of which will be required to access the methods. Note that this is not handled automatically; your AuthenticationController must implement
 its own logic to check the given scopes against the decoded credentials.
@@ -248,7 +248,7 @@ class WidgetsController {
 
 ### Requiring authentication on a specific method
 
-You can use the `@RequireAuthentication` decorator on a single method to annotate that the method is gated behind the specified authentication scheme.
+You can use the `@RequireAuthentication` decorator on a single method to annotate that the method is gated behind the specified security scheme.
 
 The first argument to the decorator can either be a string specifying the name of the authenticator, or for convienence it may be the constructor of an authenticator class. In the case of the latter,
 the authenticator class must still be passed as a controller to `createOpenAPIFromControllers`, or an error will be thrown when building the spec.
