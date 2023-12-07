@@ -15,7 +15,11 @@ export interface AuthenticatedUser {
   in: "header",
 })
 export class WidgetAuthenticator implements AuthenticationController {
-  authenticate(value: any, scopes: string[], ctx: RequestContext) {
+  async authenticate(
+    value: any,
+    scopes: string[],
+    ctx: RequestContext
+  ): Promise<false | AuthenticatedUser> {
     if (value !== "swordfish" && value !== "marlin") {
       // Returning false indicates that the authentication has failed.
       return false;
@@ -26,6 +30,6 @@ export class WidgetAuthenticator implements AuthenticationController {
       throw new Unauthorized("Insufficient permissions");
     }
 
-    return { apiKey: value } satisfies AuthenticatedUser;
+    return { apiKey: value };
   }
 }
