@@ -97,20 +97,19 @@ export class OperationContext {
     return this._securitySchemes;
   }
 
-  private _securities: SecurityRequirementObject[] | undefined;
-
   /**
    * The resolved security requirements for this operation.
    */
   get securities(): SecurityRequirementObject[] {
-    if (!this._securities) {
-      this._securities = [
-        ...(this.spec.security ?? []),
-        ...(this.operation.security ?? []),
-      ];
+    if (this.operation.security) {
+      return this.operation.security;
     }
 
-    return this._securities;
+    if (this.spec.security) {
+      return this.spec.security;
+    }
+
+    return [];
   }
 
   private _parameters: ParameterObject[] | undefined;

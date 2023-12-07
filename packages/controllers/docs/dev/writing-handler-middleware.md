@@ -67,24 +67,10 @@ The first argument to the middleware, its context, contains all the information 
 - `method` - The request / operation method.
 - `path` - The request / operation path (as it exists in the OpenAPI spec).
 - `operation` - The OpenAPI [Operation Object](https://swagger.io/specification/#operation-object) for the method of this request.
-- `getRequestData` - A method to get data registered for use with method decorators.
-- `setRequestData` - A method to set data registerd for use with method decorators.
+- `getRequestData` - A method to get data extracted from the request. See [Request Data](./request-data.md).
+- `setRequestData` - A method to set data extracted from the request. See [Request Data](./request-data.md).
 
 Many more properties and methods are available to further simplify interacting with the request. For a full list, see docuemntation for the [RequestContext](../api-reference/contexts.md#requestcontext).
-
-### Request Data
-
-A fundimental part of @simply-openapi/controllers is that method handlers should operate on the preprocessed extracted data of a request, and be isolated from the nuances of the nature of web requests. This is accomplished by having middleware extract "request data" from the request object, and register it with the execution context for use in the controller method via decorators on the arguments.
-
-Request data is registered with the request context using the `setRequestData` method, and can take any value. They are keyed by string values following a specific format.
-
-The default request data keys supported by this library are:
-
-- `openapi-security-{schemeName}` - Stores the result of an [Authenticator](./adding-authentication.md#defining-authenticators), and is accessed by `@RequireAuthentication` and `@BindSecurity`.
-- `openapi-parameter-{paramName}` - Stores the validated and coerced value of a parameter declared in the OpenAPI spec. It is accessed by `@BindParam`, `@QueryParam`, `@PathParam`, `@HeaderParam`, and `@CookieParam`
-- `openapi-body` - Stores the validated and coersed body of the request. Accessed by `@Body` and variants.
-
-Additionaly, you may make your own request data keys by prefixing a key with `x-`, and access them with `@BindRequestData`. This allows you to implement your own domain logic for deriving and providing arguments to method handlers.
 
 ## Middleware factories
 
@@ -101,6 +87,6 @@ All of the default behavior of @simply-openapi/controllers is implemented throug
 
 - Processes the global and operation-specific `security` OpenAPI directives. Improper requests are denied, and proper requests have their authentication result registered as request data for the `@RequireAuthentication` and `@BindSecurity` decorators.
 - Processes the path and operation `parameters` OpenAPI directives. Invalid requests are rejected, and values are coerced and registered for the various parameter-centric decorators (`@QueryParam`, `@PathParam`, and similar).
-- Process the `requestBody` OpenAPI directive. Data is validated and coersed according to its media type, and registered for the `@Body` decorator and its variants.
+- Process the `requestBody` OpenAPI directive. Data is validated and coerced according to its media type, and registered for the `@Body` decorator and its variants.
 - If no further middleware has processed the handler result, the handler result is checked to see if it is a JSON object. If so, it is sent as the response body and the Content-Type header is set to `application/json` .
 - If no further middleware has processed the handler result, and the handler result is an instance of the `HandlerResult` class, handling of the result is delegated to that class.

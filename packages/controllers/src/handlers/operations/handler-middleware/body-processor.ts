@@ -24,7 +24,7 @@ import { OperationMiddlewareFactoryContext } from "./OperationMiddlewareFactoryC
 
 const defaultBodyHandlerMiddleware: OperationHandlerMiddleware = (
   ctx,
-  next: OperationHandlerMiddlewareNextFunction,
+  next,
 ) => {
   ctx.setRequestData("openapi-body", ctx.req.body);
   return next();
