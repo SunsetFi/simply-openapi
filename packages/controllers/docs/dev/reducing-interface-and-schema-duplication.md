@@ -1,12 +1,47 @@
 # Reducing interface and schema duplication
 
-## Zod Schemas
+While the most obvious way to use this library is to write JSON Schema by hand, this leaves you either without interfaces to describe your types, or requires you to keep your JSON Schema and interfaces in sync.
 
-[Zod](https://zod.dev/) and its ecosystem is an excellent library that can allow you to produce both typescript typings and openapi schema objects from a single schema declaration. Schemas can be defined with its fluent declaration API, and it can then be induced to produce typescript typings from this. Then, the [Zod to Json Schema](https://github.com/StefanTerdell/zod-to-json-schema) library can produce our schema objects.
+This is less than ideal, and breaks away from the single source of truth principle this library was built on. Thankfully, there are a multitude of third party libraries that let you write your types once and derive both the schema and interfaces from them.
+
+## @sinclair/typebox
+
+Typebox provides an elegant way to produce both interfaces and JSON Schema from a single source. As it allows you to pass custom JSON Schema at each level, it allows for a full description of your types using JSON Schema and OpenAPI Schema directives that might not be natively available in other schema generators.
+
+```typescript
+import { Type, Static } from '@sinclair/typebox'
+
+const widgetIdSchema = Type.Integer({ minimum: 0, description: "The ID of the widget" });
+type WidgetId = Static<typeof widgetIdSchema>;
+
+const widgetSchema = Type.Object({
+  id: widgetIdSchema,
+  name: Type.String({ minLength: 1, description: "The name of the widget" }),
+});
+type Widget = Static<typeof widgetSchema>;
+
+class WidgetsController {
+  @Get("/{widget_id}", , { description: "Gets a widget by ID" })
+  @JsonResponse(200, widgetSchema)
+  getWidget(
+    @PathParam("widget_id", widgetIdSchema, { description: "The ID of the widget to get" })
+    widgetId: WidgetId
+  ): Promise<Widget> {
+    ...
+  }
+}
+
+```
+
+## Zod
+
+[Zod](https://zod.dev/) also provides a means of producing types and schemas, when paired with the [Zod to Json Schema](https://github.com/StefanTerdell/zod-to-JSON Schema) library.
+
+A benefit of using Zod over Typebox is that Zod is first and formost a validation system. While @simply-openapi/controllers already validates against the JSON Schema defined in the OpenAPI spec, you may wish to retain your own validators for use elsewhere. In this case, zod is a good choice. However, as you cannot specify custom JSON Schema directives, you are limited to those validation rules that `zod-to-JSON Schema` supports.
 
 ```typescript
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { zodToJsonSchema } from "zod-to-JSON Schema";
 
 export const Widget = z.object({
   id: z.number().int().positive(),
@@ -16,9 +51,3 @@ export const Widget = z.object({
 export type Widget = z.infer<Widget>();
 export const widgetSchema = zodToJsonSchema(Widget);
 ```
-
-Note: JSON-Schema, while very close to the OpenAPI SchemaObject spec, is not identical to it. While this is not a problem for @simply-openapi/controllers, whose validator supports both, this may be a problem with the documentation integrity and third party consumption of your OpenAPI specification.
-
-Care should be taken that the json-schema produced by zod is compatible with the [OpenAPI spec](https://swagger.io/docs/specification/data-models/).
-
-The conversion of json-schema to OpenAPI is a candidate to a further library in the @simply-openapi family of packages.

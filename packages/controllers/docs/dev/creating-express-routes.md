@@ -18,7 +18,7 @@ app.use(router);
 app.listen(8080);
 ```
 
-If you have been following the tutorials, this is the minimum required to produce a fully functional router. This router is now ready to be used directly with express. That's all there is too it, enjoy!
+If you have been following the docs in order, this is the minimum required to produce a fully functional router. This router is now ready to be used directly with express. That's all there is too it, enjoy!
 
 ## Error handling and Validation
 
@@ -26,25 +26,9 @@ If you have been following the tutorials, this is the minimum required to produc
 
 @simply-openapi/controllers performs validation and emits errors by throwing http-error derived errors through the express middleware stack. Express will deal with these errors in a sensible way out of the box, but custom logic can be implemented if desired to handle these by providing an error handler middleware in your express app, or catching the error in a [handler middleware](./writing-handler-middleware.md).
 
-### Orphaned requests
+### Handling 4xx errors
 
-In @simply-openapi/controllers, `undefined` is carries special meaning when returned by a controller method or a handler middleware function. It indicates that the response has been handled and no further processing is needed. If your handler returns undefined (or a promise to undefined), and you haven't otherwise sent a resopnse, no processing will be performed and the request will be left unanswered.
-
-In order to prevent this from happening accidentally, @simply-openapi/controllers provides a fallback handler middleware which will throw an internal server error if it is reached and the result still has not been sent. If you wish to disable this behavior, you can pass `ensureResponsesHandled: false` as an option to `createRouterFromSpec`.
-
-## Providing global middleware
-
-The createRouterFromSpec function accepts options for additional middleware to apply to all routes.
-
-Note that middleware can also be provided at a per-controller and per-method level as well. In relation to those, global middleware will run first, then controller, then method.
-
-### Handler Middleware
-
-Handler middleware is invoked in the context of the controller library and provides the pipeline with which controller method handler functions are called. They can be used to provide preconditions to execution as well as to reinterpret method results.
-
-As handlers can be asynchronous, all handler middleware must support asynchronous operation.
-
-For example, we can make a middleware that interprets `null` responses as a `201 No Content` response
+@simply-openapi/controllers uses the `http-errors` library to produce thrown errors describing 4xx status codes. These can be captured with [handler middleware](./writing-handler-middleware.md), or by adding an express error handling middleware to the produced route.
 
 ```typescript
 import {
@@ -52,6 +36,7 @@ import {
   createRouterFromSpec
 } from "@simply-openapi/controllers";
 import express from "express";
+import { isHttpError } from "http-errors";
 
 import { WidgetsController } from "./widgets";
 
@@ -61,22 +46,20 @@ const controllers = [
 
 const mySpec = createOpenAPIFromControllers(..., controllers);
 
-const router = createRouterFromSpec(mySpec, {
-  handlerMiddleware: [
-    async (ctx, next) => {
-      const handlerResult = await next();
-      if (handlerResult === null) {
-        ctx.res.status(201).end();
-        // By convention, returning undefined to the next middleware indicates
-        // that the response was handled and no further action is needed on the part
-        // of the web request.
-        return undefined;
-      }
 
-      // Pass the result on for other middlewares to handle.
-      return handlerResult;
-    }
-  ]
+const router = createRouterFromSpec(mySpec);
+
+// Error handler middleware should be added to the router directly.
+// Note that @simply-openapi/controllers uses thrown errors from `http-errors` to indicate 4xx response codes,
+// which will be picked up by such middleware.  Express will properly handle such errors by default.
+router.use((err, req, res, next) => {
+  console.error("Error handling request", err);
+  if (isHttpError(err)) {
+    res.status(err.statusCode).send(err.message);
+  }
+  else {
+    res.status(500).end();
+  }
 });
 
 const app = express();
@@ -84,11 +67,27 @@ app.use(router);
 app.listen(8080);
 ```
 
-For more information, see [Writing Handler Middleware](writing-handler-middleware.md).
+### Orphaned requests
+
+In @simply-openapi/controllers, `undefined` is carries special meaning when returned by a controller method or a handler middleware function. It indicates that the response has been handled and no further processing is needed. If your handler returns undefined (or a promise to undefined), and you haven't otherwise sent a resopnse, no processing will be performed and the request will be left unanswered.
+
+In order to prevent this from happening accidentally, @simply-openapi/controllers provides a fallback handler middleware which will throw an internal server error if it is reached and the result still has not been sent. If you wish to disable this behavior, you can pass `ensureResponsesHandled: false` as an option to `createRouterFromSpec`.
+
+## Providing global handler middleware
+
+In addition to the controller and method specific `@UseHandlerMiddleware` decorator, the createRouterFromSpec function accepts options for additional middleware to apply to all handlers.
+
+### Handler Middleware
+
+Handler middleware is invoked in the context of the controller library and provides the pipeline with which controller method handler functions are called. They can be used to provide preconditions to execution, validate and transform handler arguments, and reinterpret method results.
+
+{% content-ref url="writing-handler-middleware.md" %}
+[writing-handler-middleware.md](writing-handler-middleware.md)
+{% endcontent-ref %}
 
 ### Express Middleware
 
-Express middleware can be adapted into the @simply-openapi/controllers middleware ecosystem using the `convertExpressMiddleware` function. Note that this only supports standard request middleware; error handling middleware is not supported, and should instead be added to your application or to the returned router, where it will properly trap error responses from this library.
+Express middleware can be adapted into the @simply-openapi/controllers middleware ecosystem using the `convertExpressMiddleware` function. Note that this only supports standard request middleware; error handling middleware is not supported, and should instead be added to your express application or to the returned router.
 
 ```typescript
 import {
@@ -108,26 +107,11 @@ const controllers = [
 
 const mySpec = createOpenAPIFromControllers(..., controllers);
 
-
 const router = createRouterFromSpec(mySpec, {
   handlerMiddleware: [
     // Express middleware can be added using this adapter function
     convertExpressMiddleware(helmet())
   ]
-});
-
-// Error handler middleware should be added to the router directly.
-// Note that @simply-openapi/controllers uses thrown errors from `http-errors` to indicate 4xx response codes,
-// which will be picked up by such middleware.  Express will properly handle such errors
-// by default.
-router.use((err, req, res, next) => {
-  console.error("Error handling request", err);
-  if (isHttpError(err)) {
-    res.status(err.statusCode).send(err.message);
-  }
-  else {
-    res.status(500).end();
-  }
 });
 
 const app = express();

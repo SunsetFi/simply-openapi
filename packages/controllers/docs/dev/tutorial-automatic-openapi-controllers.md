@@ -108,6 +108,8 @@ You may have noticed the redundancy of information between the interface and the
 [reducing-interface-and-schema-duplication.md](reducing-interface-and-schema-duplication.md)
 {% endcontent-ref %}
 
+Long time users of OpenAPI and Swagger will be aware that Swagger and OpenAPI 2/3 use schema objects that are slightly different than traditional JSON Schema, causing compatibility issues. However, @simply-api/controllers is built around [OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.0#schemaObject), which uses [JSON Schema 2020-12](https://tools.ietf.org/html/draft-bhutton-json-schema-00) and is largely compatible with the ecosystem of JSON Schema specific libraries. However, the schema properties of the older OpenAPI versions are still supported, so legacy OpenAPI / Swagger schema objects can be used.
+
 Once you have your schema ready, we can then add it to our method with the `JsonResponse` decorator
 
 ```typescript
@@ -569,6 +571,7 @@ class WidgetController {
     @Res() res: Response
   ) {
       // Your logic here.
+      res.status(201).end();
       return undefined;
   }
 }

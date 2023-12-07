@@ -84,7 +84,7 @@ The default request data keys supported by this library are:
 - `openapi-parameter-{paramName}` - Stores the validated and coerced value of a parameter declared in the OpenAPI spec. It is accessed by `@BindParam`, `@QueryParam`, `@PathParam`, `@HeaderParam`, and `@CookieParam`
 - `openapi-body` - Stores the validated and coersed body of the request. Accessed by `@Body` and variants.
 
-Additionaly, you may make your own request data keys by prefixing a key with `x-`, and access them with `@BindRequestData`.
+Additionaly, you may make your own request data keys by prefixing a key with `x-`, and access them with `@BindRequestData`. This allows you to implement your own domain logic for deriving and providing arguments to method handlers.
 
 ## Middleware factories
 
