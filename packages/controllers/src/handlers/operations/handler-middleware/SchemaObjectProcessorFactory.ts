@@ -3,12 +3,12 @@ import Ajv, { ValidateFunction, ValidationError } from "ajv";
 
 import { sliceAjvError } from "../../../ajv";
 
-import { ValueProcessorFunctionOld } from ".";
+import { ValueProcessorFunction } from "./types";
 
 export class SchemaObjectProcessorFactory {
   constructor(private _ajv: Ajv) {}
 
-  createValueProcessor(schema: SchemaObject): ValueProcessorFunctionOld {
+  createValueProcessor(schema: SchemaObject): ValueProcessorFunction {
     // Wrap the value so that coersion functions properly on non-reference values.
     const wrappedSchema: SchemaObject = {
       type: "object",

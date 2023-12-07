@@ -12,7 +12,7 @@ import { ValidationError } from "ajv";
 import { MockRequest } from "@jest-mock/express/dist/src/request";
 import "jest-extended";
 
-import { RequestContext } from "../handler-middleware";
+import { RequestContext } from "../../RequestContext";
 
 const valueProcessor = jest.fn((value) => value);
 const createValueProcessor = jest.fn((schema: any) => valueProcessor);

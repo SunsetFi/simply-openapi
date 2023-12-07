@@ -5,6 +5,10 @@ import "jest-extended";
 import { Controller, Get, UseHandlerMiddleware } from "../decorators";
 import { createOpenAPIFromControllers } from "../openapi";
 import { createRouterFromSpec } from "../routes";
+import {
+  OperationHandlerMiddlewareNextFunction,
+  RequestContext,
+} from "../handlers";
 
 import { getMockReq, getMockRes } from "./mocks";
 
@@ -21,10 +25,16 @@ describe("E2E: Handler Middleware", function () {
   });
 
   @Controller("/")
-  @UseHandlerMiddleware(controllerMiddleware)
+  @UseHandlerMiddleware(
+    (ctx: RequestContext, next: OperationHandlerMiddlewareNextFunction) =>
+      controllerMiddleware(ctx, next),
+  )
   class WidgetController {
     @Get("/")
-    @UseHandlerMiddleware(methodMiddleware)
+    @UseHandlerMiddleware(
+      (ctx: RequestContext, next: OperationHandlerMiddlewareNextFunction) =>
+        methodMiddleware(ctx, next),
+    )
     handleRequest() {
       return { bar: true };
     }

@@ -7,11 +7,12 @@ import { ValidationError } from "ajv";
 import { resolveReference } from "../../../schema-utils";
 import { errorToMessage } from "../../../ajv";
 
+import { RequestContext } from "../../RequestContext";
+
 import { RequestData } from "../types";
 import { nameOperationFromContext } from "../utils";
 
-import { RequestProcessorFactory, ValueProcessorFunction } from "./types";
-import { RequestContext } from "../handler-middleware";
+import { RequestProcessorFactory, ValueProcessorFunctionOld } from "./types";
 
 export const parametersRequestProcessorFactory: RequestProcessorFactory = (
   ctx,
@@ -46,7 +47,7 @@ export const parametersRequestProcessorFactory: RequestProcessorFactory = (
       acc[param.name] = processor;
       return acc;
     },
-    {} as Record<string, ValueProcessorFunction>,
+    {} as Record<string, ValueProcessorFunctionOld>,
   );
 
   return (reqCtx: RequestContext) => {

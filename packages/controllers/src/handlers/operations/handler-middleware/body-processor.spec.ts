@@ -12,7 +12,7 @@ import { getMockReq, getMockRes } from "@jest-mock/express";
 import { MockRequest } from "@jest-mock/express/dist/src/request";
 import "jest-extended";
 
-import { RequestContext } from "../handler-middleware";
+import { RequestContext } from "../../RequestContext";
 
 const valueProcessor = jest.fn((value) => value);
 const createValueProcessor = jest.fn((schema: any) => valueProcessor);
@@ -35,17 +35,17 @@ jest.mock("./SchemaObjectProcessorFactory", () => {
   };
 });
 
-import { RequestProcessorFactoryContext } from "./RequestProcessorFactoryContext";
+import { OperationMiddlewareFactoryContext } from "./OperationMiddlewareFactoryContext";
 
-import { bodyRequestProcessorFactory } from "./body";
-import { RequestProcessor } from "./types";
+import { bodyProcessorMiddlewareFactory } from "./body-processor";
+import { OperationHandlerMiddleware } from "./types";
 
-describe("bodyRequestProcessorFactory", function () {
-  function createProcessor(
+describe("bodyProcessorMiddlewareFactory", function () {
+  function createSut(
     requestBody: RequestBodyObject | ReferenceObject | undefined,
     path: string = "/",
     additionalSpec?: PartialDeep<OpenAPIObject>,
-  ): (req: MockRequest) => ReturnType<RequestProcessor> {
+  ): [OperationHandlerMiddleware, (req: MockRequest) => RequestContext] {
     const spec = merge(
       {
         openapi: "3.0.0",
@@ -65,7 +65,7 @@ describe("bodyRequestProcessorFactory", function () {
       additionalSpec,
     );
 
-    const ctx = new RequestProcessorFactoryContext(
+    const ctx = new OperationMiddlewareFactoryContext(
       spec,
       path,
       "get",
@@ -87,9 +87,9 @@ describe("bodyRequestProcessorFactory", function () {
         getMockRes().res,
       );
 
-    const processor = bodyRequestProcessorFactory(ctx);
+    const middleware = bodyProcessorMiddlewareFactory(ctx);
 
-    return (req) => processor!(createRequestCtx(req));
+    return [middleware, createRequestCtx];
   }
 
   it("returns the body as-is if no requestBody is present", function () {
@@ -97,21 +97,22 @@ describe("bodyRequestProcessorFactory", function () {
       foo: "bar",
     };
 
-    const processor = createProcessor(undefined);
+    const [middleware, createRequestCtx] = createSut(undefined);
 
-    const result = processor({ body });
+    const ctx = createRequestCtx({ body });
+    const nextResult = {};
+    const next = jest.fn().mockReturnValue(nextResult);
+    const result = middleware(ctx, next);
 
-    expect(result).toEqual({ body });
+    expect(ctx.getRequestData("openapi-body")).toBe(body);
+    expect(next).toHaveBeenCalled();
+    expect(result).toBe(nextResult);
   });
 
   it("resolves request body references", function () {
-    const body = {
-      foo: "bar",
-    };
-
     const schema = { "x-is-schema": true };
 
-    createProcessor(
+    createSut(
       {
         $ref: "#/components/requestBodies/testBody",
       },
@@ -135,7 +136,7 @@ describe("bodyRequestProcessorFactory", function () {
 
   it("throws if the request body is an unknown reference", function () {
     const test = () =>
-      createProcessor({ $ref: "#/components/requestBodies/testBody" });
+      createSut({ $ref: "#/components/requestBodies/testBody" });
 
     expect(test).toThrowWithMessage(Error, /Could not resolve requestBody/);
   });
@@ -145,25 +146,35 @@ describe("bodyRequestProcessorFactory", function () {
       foo: "bar",
     };
 
-    const result = createProcessor(
+    const [middleware, createRequestCtx] = createSut(
       {
         content: {},
       },
       "/",
-    )({ body });
+    );
 
-    expect(result).toEqual({ body });
+    const ctx = createRequestCtx({ body });
+    const nextResult = {};
+    const next = jest.fn().mockReturnValue(nextResult);
+    const result = middleware(ctx, next);
+
+    expect(ctx.getRequestData("openapi-body")).toBe(body);
+    expect(next).toHaveBeenCalled();
+    expect(result).toBe(nextResult);
   });
 
   it("throws bad request when a required body is not provided", function () {
-    const processor = createProcessor({
+    const [middleware, createRequestCtx] = createSut({
       required: true,
       content: {},
     });
 
-    const test = () => processor({ body: {} });
+    const ctx = createRequestCtx({ body: {} });
+    const next = jest.fn();
+    const test = () => middleware(ctx, next);
 
     expect(test).toThrowWithMessage(BadRequest, /Request body is required/);
+    expect(next).not.toHaveBeenCalled();
   });
 
   it("builds a processor for a given body schema", function () {
@@ -176,7 +187,7 @@ describe("bodyRequestProcessorFactory", function () {
       },
     };
 
-    createProcessor({
+    createSut({
       content: {
         "*/*": {
           schema,
@@ -200,7 +211,7 @@ describe("bodyRequestProcessorFactory", function () {
       },
     };
 
-    const processor = createProcessor({
+    const [middleware, createRequestCtx] = createSut({
       content: {
         "*/*": {
           schema,
@@ -208,9 +219,14 @@ describe("bodyRequestProcessorFactory", function () {
       },
     });
 
-    processor({ body });
+    const ctx = createRequestCtx({ body });
+    const nextResult = {};
+    const next = jest.fn().mockReturnValue(nextResult);
+    const result = middleware(ctx, next);
 
-    expect(valueProcessor).toHaveBeenCalledWith(body);
+    expect(ctx.getRequestData("openapi-body")).toBe(body);
+    expect(next).toHaveBeenCalled();
+    expect(result).toBe(nextResult);
   });
 
   it("calls the correct processor based on content-type", function () {
@@ -257,7 +273,7 @@ describe("bodyRequestProcessorFactory", function () {
       return processor;
     });
 
-    const processor = createProcessor({
+    const [middleware, createRequestCtx] = createSut({
       content: {
         "*/*": {
           schema: schemaAny,
@@ -271,7 +287,17 @@ describe("bodyRequestProcessorFactory", function () {
       },
     });
 
-    processor({ body, headers: { "content-type": contentType } });
+    const ctx = createRequestCtx({
+      body,
+      headers: { "content-type": contentType },
+    });
+    const nextResult = {};
+    const next = jest.fn().mockReturnValue(nextResult);
+    const result = middleware(ctx, next);
+
+    expect(ctx.getRequestData("openapi-body")).toBe(body);
+    expect(next).toHaveBeenCalled();
+    expect(result).toBe(nextResult);
 
     expect(createValueProcessor).toHaveBeenCalledWith(schemaFooBar);
 
@@ -305,7 +331,7 @@ describe("bodyRequestProcessorFactory", function () {
       ]);
     });
 
-    const processor = createProcessor({
+    const [middleware, createRequestCtx] = createSut({
       content: {
         "*/*": {
           schema: {
@@ -320,12 +346,18 @@ describe("bodyRequestProcessorFactory", function () {
       },
     });
 
-    const test = () => processor({ body });
+    const ctx = createRequestCtx({
+      body,
+    });
+    const nextResult = {};
+    const next = jest.fn().mockReturnValue(nextResult);
+    const test = () => middleware(ctx, next);
 
     expect(test).toThrowWithMessage(
       BadRequest,
       /Invalid request body: value should be integer/,
     );
+    expect(next).not.toHaveBeenCalled();
   });
 
   it("resolves schema references", function () {
@@ -338,7 +370,7 @@ describe("bodyRequestProcessorFactory", function () {
       },
     };
 
-    createProcessor(
+    createSut(
       {
         content: {
           "*/*": {
@@ -363,7 +395,7 @@ describe("bodyRequestProcessorFactory", function () {
 
   it("throws an error when the schema reference is unknown", function () {
     const test = () =>
-      createProcessor({
+      createSut({
         content: {
           "*/*": {
             schema: {

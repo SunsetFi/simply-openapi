@@ -1,6 +1,6 @@
 import { SecuritySchemeObject } from "openapi3-ts/oas31";
 
-import { RequestContext } from "../../handler-middleware";
+import { RequestContext } from "../../../RequestContext";
 
 import { SecurityRequirementProcessor } from "./SecurityRequirementProcessor";
 

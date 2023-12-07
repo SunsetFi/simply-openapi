@@ -180,6 +180,7 @@ export function createMethodHandlerFromSpec(
     preExpressMiddleware,
     postExpressMiddleware,
     methodContext,
+    ajv,
   );
 }
 

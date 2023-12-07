@@ -5,7 +5,7 @@ import {
   SOCAuthenticatorExtensionName,
 } from "../../../../openapi";
 
-import { RequestContext } from "../../handler-middleware";
+import { RequestContext } from "../../../RequestContext";
 
 export abstract class SecurityRequirementProcessor {
   private _handlerFn: Function;

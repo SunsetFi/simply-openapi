@@ -1,11 +1,11 @@
 import { MaybePromise } from "../../../types";
+import { RequestContext } from "../../RequestContext";
 
 import { RequestData } from "../types";
-import { RequestContext } from "../handler-middleware";
 
 import { RequestProcessorFactoryContext } from "./RequestProcessorFactoryContext";
 
-export type ValueProcessorFunction = (value: any) => any;
+export type ValueProcessorFunctionOld = (value: any) => any;
 /**
  * Context information for producing a request data processor.
  */

@@ -5,8 +5,11 @@ import { RequestMethod } from "../types";
 
 import { MethodHandlerContext } from "./MethodHandlerContext";
 import { OperationHandlerArgumentDefinitions } from "./operations/types";
+import { RequestDataKey } from "./request-data";
 
 export class RequestContext extends MethodHandlerContext {
+  private readonly _requestData = new Map<string, any>();
+
   static fromMethodHandlerContext(
     context: MethodHandlerContext,
     req: Request,
@@ -49,6 +52,18 @@ export class RequestContext extends MethodHandlerContext {
    */
   get res(): Response {
     return this._res;
+  }
+
+  hasRequestData(key: RequestDataKey) {
+    return this._requestData.has(key);
+  }
+
+  getRequestData(key: RequestDataKey) {
+    return this._requestData.get(key);
+  }
+
+  setRequestData(key: RequestDataKey, value: any) {
+    this._requestData.set(key, value);
   }
 
   getPathParam(name: string) {

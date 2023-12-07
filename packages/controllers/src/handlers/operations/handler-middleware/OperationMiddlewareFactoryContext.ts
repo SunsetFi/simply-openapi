@@ -7,12 +7,12 @@ import { MethodHandlerContext } from "../../MethodHandlerContext";
 
 import { OperationHandlerArgumentDefinitions } from "../types";
 
-import { ValueProcessorFunctionOld } from "./types";
 import { SchemaObjectProcessorFactory } from "./SchemaObjectProcessorFactory";
+import { ValueProcessorFunction } from "./types";
 
-export class RequestProcessorFactoryContext extends MethodHandlerContext {
+export class OperationMiddlewareFactoryContext extends MethodHandlerContext {
   static fromMethodHandlerContext(context: MethodHandlerContext, ajv: Ajv) {
-    return new RequestProcessorFactoryContext(
+    return new OperationMiddlewareFactoryContext(
       context.spec,
       context.path,
       context.method,
@@ -43,7 +43,7 @@ export class RequestProcessorFactoryContext extends MethodHandlerContext {
    * The returned function will validate the value against the schema, and may coerce it depending on user settings.
    * @param schema The schema to produce a validator for.
    */
-  compileSchema(schema: SchemaObject): ValueProcessorFunctionOld {
+  compileSchema(schema: SchemaObject): ValueProcessorFunction {
     return this._schemaObjectProcessorFactory.createValueProcessor(schema);
   }
 }

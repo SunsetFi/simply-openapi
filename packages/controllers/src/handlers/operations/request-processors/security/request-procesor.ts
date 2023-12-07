@@ -1,6 +1,7 @@
 import { Unauthorized, isHttpError } from "http-errors";
 
-import { RequestContext } from "../../handler-middleware";
+import { RequestContext } from "../../../RequestContext";
+
 import { nameOperationFromContext } from "../../utils";
 
 import { RequestProcessorFactoryContext } from "../RequestProcessorFactoryContext";

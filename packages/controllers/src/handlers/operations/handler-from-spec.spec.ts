@@ -76,6 +76,7 @@ describe("createMethodHandlerFromSpec", function () {
           expect.any(Array),
           expect.any(Array),
           expect.any(Object),
+          expect.any(Object),
         );
       });
     });
@@ -115,6 +116,7 @@ describe("createMethodHandlerFromSpec", function () {
           expect.any(Array),
           expect.any(Array),
           expect.any(Array),
+          expect.any(Object),
           expect.any(Object),
         );
       });
@@ -165,6 +167,7 @@ describe("createMethodHandlerFromSpec", function () {
           expect.any(Array),
           expect.any(Array),
           expect.any(Array),
+          expect.any(Object),
           expect.any(Object),
         );
       });
