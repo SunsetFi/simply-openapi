@@ -32,7 +32,10 @@ import {
   getWidgetById,
   getWidgets,
 } from "../services/widgets.service";
-import { WidgetAuthenticator } from "./widgets.authenticator";
+import {
+  AuthenticatedUser,
+  WidgetAuthenticator,
+} from "./widgets.authenticator";
 
 @Controller("widgets", {
   tags: ["widget"],
@@ -98,13 +101,17 @@ export class WidgetsController {
   @EmptyResponse(HttpStatusCodes.BAD_REQUEST, {
     description: "Invalid widget",
   })
-  @RequireAuthentication(WidgetAuthenticator, ["write:widgets"])
   async createWidget(
     @RequiredJsonBody(creatableWidgetSchema, {
       description: "The content of the widget",
     })
-    widget: CreatableWidget
+    widget: CreatableWidget,
+    // Decorating a parameter with @RequireAuthentication gives us the result of the authenticator.
+    @RequireAuthentication(WidgetAuthenticator, ["widgets:write"])
+    user: AuthenticatedUser
   ) {
+    console.log("Got write request from user with api key", user.apiKey);
+
     const created = await addWidget(widget);
     return HandlerResult.status(HttpStatusCodes.CREATED)
       .header("Location", `http://myserver.com/widgets/${created.id}`)
