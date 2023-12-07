@@ -642,3 +642,9 @@ The first argument is the SchemaObject describing the body.
 The optional second argument is additional OpenAPI options for the request body. This will be shared by all media types.
 
 The optional third argument is additional OpenAPI options for this media type.
+
+### @BindRequestData
+
+This decorator is a catch-all for binding method parameters to request data accumulated by middleware. In general, this should only be used for custom request data extensions.
+
+For more information, see [Request Data](../dev/request-data.md).
