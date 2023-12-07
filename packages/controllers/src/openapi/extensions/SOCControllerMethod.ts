@@ -3,7 +3,38 @@ import { JSONSchema6 } from "json-schema";
 
 import ajv from "../../ajv";
 import { Middleware } from "../../types";
-import { OperationHandlerMiddleware } from "../../handlers";
+import {
+  OperationHandlerMiddleware,
+  RequestDataKey,
+  requestDataKeyPattern,
+} from "../../handlers";
+
+// Note: We track specific argument types here even though it appears redundant with "request-data".
+// This is because we want to analyze the arguments against the OpenAPI spec to confirm that they are valid.
+// This is mostly a concern for @BindParam and friends, which should throw if their targets do not exist.
+
+/**
+ * Describes an argument that pulls request data.
+ */
+export interface SOCControllerMethodHandlerRequestDataArg {
+  type: "request-data";
+  requestDataKey: RequestDataKey;
+}
+
+export const socControllerMethodHandlerRequestDataArgSchema: JSONSchema6 = {
+  type: "object",
+  properties: {
+    type: {
+      type: "string",
+      enum: ["request-data"],
+    },
+    requestDataKey: {
+      type: "string",
+      pattern: requestDataKeyPattern,
+    },
+  },
+  required: ["type", "requestDataKey"],
+};
 
 /**
  * Describes an argument that pulls data from an authenticator.
@@ -113,42 +144,25 @@ export const socControllerMethodHandlerResponseArgSchema: JSONSchema6 = {
   required: ["type"],
 };
 
-export type SOCControllerMethodHandlerExtensionArgName = `x-${string}`;
-export interface SOCControllerMethodHandlerExtensionArg {
-  type: SOCControllerMethodHandlerExtensionArgName;
-  [key: string | symbol]: any;
-}
-
-export const socControllerMethodHandlerExtensionArgSchema: JSONSchema6 = {
-  type: "object",
-  properties: {
-    type: {
-      type: "string",
-      pattern: "^x-",
-    },
-  },
-  required: ["type"],
-};
-
 /**
  * Metadata about the argument of a controller method handler function.
  */
 export type SOCControllerMethodHandlerArg =
+  | SOCControllerMethodHandlerRequestDataArg
   | SOCControllerMethodHandlerAuthenticationArg
   | SOCControllerMethodHandlerParameterArg
   | SOCControllerMethodHandlerBodyArg
   | SOCControllerMethodHandlerRequestArg
-  | SOCControllerMethodHandlerResponseArg
-  | SOCControllerMethodHandlerExtensionArg;
+  | SOCControllerMethodHandlerResponseArg;
 
 export const socControllerMethodHandlerArgSchema: JSONSchema6 = {
   oneOf: [
+    socControllerMethodHandlerRequestDataArgSchema,
     socControllerMethodHandlerAuthenticationArgSchema,
     socControllerMethodHandlerParameterArgSchema,
     socControllerMethodHandlerBodyArgSchema,
     socControllerMethodHandlerRequestArgSchema,
     socControllerMethodHandlerResponseArgSchema,
-    socControllerMethodHandlerExtensionArgSchema,
   ],
 };
 
@@ -178,7 +192,8 @@ export interface SOCControllerMethodExtensionData {
 
   /**
    * An array of objects describing the purpose of each argument to the handler function.
-   * The order if this array should match the order of the parameters in the function that they pertain to.
+   * The order of this array should match the order of the arguments in the function that they pertain to.
+   * Where an argument should be ignored, its value at the index should be undefined.
    */
   handlerArgs?: (SOCControllerMethodHandlerArg | undefined)[];
 

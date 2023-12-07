@@ -1,5 +1,4 @@
 import { NextFunction, Request, Response, Router } from "express";
-import { merge } from "lodash";
 import Ajv from "ajv";
 
 import { SOCControllerMethodHandlerArg } from "../../openapi";
@@ -9,8 +8,6 @@ import { ControllerInstance, Middleware } from "../../types";
 import { MethodHandlerContext } from "../MethodHandlerContext";
 import { RequestContext } from "../RequestContext";
 
-import { RequestData, isExtractedRequestExtensionName } from "./types";
-
 import {
   OperationHandlerMiddleware,
   OperationHandlerMiddlewareNextFunction,
@@ -19,6 +16,7 @@ import {
   isOperationHandlerMiddleware,
 } from "./handler-middleware";
 import { OperationMiddlewareFactoryContext } from "./handler-middleware";
+import { nameOperationFromContext } from "./utils";
 
 export class MethodHandler {
   private _selfRoute = Router({ mergeParams: true });
@@ -122,11 +120,15 @@ export class MethodHandler {
         return undefined;
       }
 
-      if (isExtractedRequestExtensionName(arg.type)) {
-        context.getRequestData(arg.type);
-      }
-
       switch (arg.type) {
+        case "request-data":
+          return context.getRequestData(arg.requestDataKey);
+        case "request-raw":
+          return context.req;
+        case "response-raw":
+          return context.res;
+        // Note: The rest of these are variations of request-data, but they exist independently
+        // so that the spec extractor can validate against them.
         case "openapi-security":
           // It should be safe to return undefined here, as the processor should have thrown if no scheme matched.
           return context.getRequestData(`openapi-security-${arg.schemeName}`);
@@ -138,13 +140,11 @@ export class MethodHandler {
         case "openapi-requestbody":
           // It should be safe to return undefined here, as the processor should have thrown for required bodies.
           return context.getRequestData("openapi-body");
-        case "request-raw":
-          return context.req;
-        case "response-raw":
-          return context.res;
         default:
           throw new Error(
-            `Unknown handler argument type ${arg.type} for operation ${this._context.operation.operationId}.`,
+            `Unknown handler argument type ${
+              (arg as any).type
+            } for operation ${nameOperationFromContext(context)}.`,
           );
       }
     });

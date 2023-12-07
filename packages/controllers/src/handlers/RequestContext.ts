@@ -5,7 +5,7 @@ import { RequestMethod } from "../types";
 
 import { MethodHandlerContext } from "./MethodHandlerContext";
 import { OperationHandlerArgumentDefinitions } from "./operations/types";
-import { RequestDataKey } from "./request-data";
+import { RequestDataKey, isValidRequestDataKey } from "./request-data";
 
 export class RequestContext extends MethodHandlerContext {
   private readonly _requestData = new Map<string, any>();
@@ -63,6 +63,12 @@ export class RequestContext extends MethodHandlerContext {
   }
 
   setRequestData(key: RequestDataKey, value: any) {
+    if (!isValidRequestDataKey(key)) {
+      throw new Error(
+        `Invalid request data key ${key}.  Extension request data should be prefixed with 'x-'.`,
+      );
+    }
+
     this._requestData.set(key, value);
   }
 

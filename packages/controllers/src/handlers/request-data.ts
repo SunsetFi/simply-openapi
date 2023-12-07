@@ -29,3 +29,15 @@ export type RequestDataKey =
   | ParameterRequestDataKey
   | BodyRequestDataKey
   | ExtensionRequestDataKey;
+
+export function isValidRequestDataKey(name: string): name is RequestDataKey {
+  return (
+    isSecurityRequestDataKey(name) ||
+    isParameterRequestDataKey(name) ||
+    isBodyRequestDataKey(name) ||
+    isExtensionRequestDataKey(name)
+  );
+}
+
+export const requestDataKeyPattern =
+  "^(x-|openapi-(security-.+|parameter-.+|body))";
