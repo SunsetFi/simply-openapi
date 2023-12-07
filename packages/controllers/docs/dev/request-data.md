@@ -6,7 +6,7 @@ Request data is registered with the [RequestContext](../api-reference/contexts.m
 
 ## Request Data Keys
 
-Request data keys take on a specific format.
+Request data keys are strings with a restricted set of formats.
 
 The keys provided by this library are:
 
@@ -20,7 +20,7 @@ Additionaly, you may make your own request data keys by prefixing a key with `x-
 
 The request data system is extensible, and allows you to define your own request data for consumption by your handlers. This is particularly useful if you have existing express middleware that attaches data to a request object that you wish to expose to your methods without needing to pass them the request object as a whole.
 
-(In practice, authentication is normally done through [OpenAPI security schemes](./adding-authentication.md)).
+Here is an example that takes a `req.user` property off the express request and provides it to method handlers. Note that in practice, authentication is normally done through [OpenAPI Security Schemes](./adding-authentication.md).
 
 ### Setting the Request Data
 
@@ -56,6 +56,10 @@ Once you have middleware registered and setting request data, you can retrieve i
 Any request data can be retrieved using the `@BindRequestData` decorator, but you may wish to provide a more descriptive api by creating your own decorator with `createRequestDataDecorator`
 
 ```typescript
+import {
+  createRequestDataDecorator,
+  Get,
+} from "@simply-openapi/controllers";
 
 const RequestUser = createRequestDataDecorator("x-user");
 
