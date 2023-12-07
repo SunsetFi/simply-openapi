@@ -66,10 +66,6 @@ export const extractSOCBoundMethodSpec: OpenAPIObjectExtractor = (
       handler: methodName,
       handlerArgs: metadata.handlerArgs,
       // controller middleware should run before operation middleware
-      preExpressMiddleware: [
-        ...(controllerMetadata?.preExpressMiddleware ?? ([] as any)),
-        ...(metadata.preExpressMiddleware ?? []),
-      ],
       handlerMiddleware: [
         ...(controllerMetadata?.handlerMiddleware ?? ([] as any)),
         ...(metadata.handlerMiddleware ?? []),

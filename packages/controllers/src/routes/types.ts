@@ -17,11 +17,6 @@ export interface OperationHandlerOptions {
   handlerMiddleware?: OperationHandlerMiddleware[];
 
   /**
-   * Middleware to apply to the express router before the handler.
-   */
-  preExpressMiddleware?: RequestHandler[];
-
-  /**
    * If true, ensure that all responses are handled by the handler.
    * If false, no such check will be performed, and handlers that return undefined may leave requests hanging open.
    * @default true

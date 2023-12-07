@@ -7,14 +7,13 @@ import {
   SOCControllerMethodExtensionName,
   validateSOCControllerMethodExtensionData,
 } from "../../openapi";
-import { ControllerInstance, Middleware, RequestMethod } from "../../types";
+import { ControllerInstance, RequestMethod } from "../../types";
 import { isConstructor } from "../../utils";
 
 import { MethodHandlerContext } from "../MethodHandlerContext";
 import { OperationContext } from "../OperationContext";
 
 import { MethodHandler } from "./MethodHandler";
-import defaultExpressMiddleware from "./express-middleware/defaultExpressMiddleware";
 import { OperationHandlerMiddleware } from "./handler-middleware";
 import { operationHandlerFallbackResponseMiddleware } from "./handler-middleware/fallback";
 import defaultHandlerMiddleware from "./handler-middleware/defaultHandlerMiddleware";
@@ -52,16 +51,6 @@ export interface CreateMethodHandlerOpts {
    * processes json responses.
    */
   handlerMiddleware?: OperationHandlerMiddleware[];
-
-  /**
-   * Middleware to apply to the express router before the request.
-   */
-  preExpressMiddleware?: Middleware[];
-
-  /**
-   * Middleware to apply to the express router after the request.
-   */
-  postExpressMiddleware?: Middleware[];
 
   /**
    * If true, ensure that all responses are handled by the handler.
@@ -140,21 +129,11 @@ export function createMethodHandlerFromSpec(
     handlerMiddleware.unshift(operationHandlerFallbackResponseMiddleware);
   }
 
-  const preExpressMiddleware = [
-    ...defaultExpressMiddleware,
-    ...(opts.preExpressMiddleware ?? []),
-    ...(extensionData.preExpressMiddleware ?? []),
-  ];
-
-  const postExpressMiddleware = [...(opts.postExpressMiddleware ?? [])];
-
   return new MethodHandler(
     controller,
     handler,
     extensionData.handlerArgs ?? [],
     handlerMiddleware,
-    preExpressMiddleware,
-    postExpressMiddleware,
     methodContext,
     ajv,
   );

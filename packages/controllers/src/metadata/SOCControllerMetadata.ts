@@ -1,7 +1,7 @@
 import { OpenAPIObject, OperationObject } from "openapi3-ts/oas31";
 import { PartialDeep } from "type-fest";
 
-import { ControllerObject, Middleware } from "../types";
+import { ControllerObject } from "../types";
 import { OperationHandlerMiddleware } from "../handlers";
 import { mergeCombineArrays } from "../utils";
 
@@ -14,11 +14,6 @@ export interface SOCSharedControllerMetadata {
    * Handler middleware for every operation in this controller.
    */
   handlerMiddleware?: OperationHandlerMiddleware[];
-
-  /**
-   * Express middleware for every operation in this controller.
-   */
-  preExpressMiddleware?: Middleware[];
 }
 
 export interface SOCBoundControllerMetadata

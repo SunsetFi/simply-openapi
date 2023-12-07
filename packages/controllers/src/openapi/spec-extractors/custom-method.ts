@@ -44,12 +44,6 @@ export const extractSOCCustomMethodSpec: OpenAPIObjectExtractor = (
   );
 
   // controller middleware should run before operation middleware
-
-  const preExpressMiddleware = [
-    ...(controllerMetadata?.preExpressMiddleware ?? []),
-    ...(metadata.preExpressMiddleware ?? []),
-  ];
-
   const handlerMiddleware = [
     ...(controllerMetadata?.handlerMiddleware ?? []),
     ...(metadata.handlerMiddleware ?? []),
@@ -60,10 +54,6 @@ export const extractSOCCustomMethodSpec: OpenAPIObjectExtractor = (
     handler: methodName,
     handlerArgs: metadata.handlerArgs ?? [],
   };
-
-  if (preExpressMiddleware.length > 0) {
-    extension.preExpressMiddleware = preExpressMiddleware;
-  }
 
   if (handlerMiddleware.length > 0) {
     extension.handlerMiddleware = handlerMiddleware;

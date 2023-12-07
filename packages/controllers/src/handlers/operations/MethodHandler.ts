@@ -1,9 +1,9 @@
-import { NextFunction, Request, Response, Router } from "express";
+import { NextFunction, Request, Response } from "express";
 import Ajv from "ajv";
 
 import { SOCControllerMethodHandlerArg } from "../../openapi";
 import { isNotNullOrUndefined } from "../../utils";
-import { ControllerInstance, Middleware } from "../../types";
+import { ControllerInstance } from "../../types";
 
 import { MethodHandlerContext } from "../MethodHandlerContext";
 import { RequestContext } from "../RequestContext";
@@ -19,8 +19,6 @@ import { OperationMiddlewareFactoryContext } from "./handler-middleware";
 import { nameOperationFromContext } from "./utils";
 
 export class MethodHandler {
-  private _selfRoute = Router({ mergeParams: true });
-
   private _handlerMiddleware: OperationHandlerMiddleware[];
 
   constructor(
@@ -28,23 +26,9 @@ export class MethodHandler {
     private _handler: Function,
     private _handlerArgs: (SOCControllerMethodHandlerArg | undefined)[],
     handlerMiddleware: OperationMiddleware[],
-    preExpressMiddleware: Middleware[],
-    postExpressMiddleware: Middleware[],
     private _context: MethodHandlerContext,
     ajv: Ajv,
   ) {
-    // We use a router to handle the complex process of performing the middleware composition for us.
-    if (preExpressMiddleware.length > 0) {
-      this._selfRoute.use(...preExpressMiddleware);
-    }
-
-    const invokeHandlerBound = this._invokeHandler.bind(this);
-    this._selfRoute.use(invokeHandlerBound);
-
-    if (postExpressMiddleware.length > 0) {
-      this._selfRoute.use(...postExpressMiddleware);
-    }
-
     const middlewareFactory =
       OperationMiddlewareFactoryContext.fromMethodHandlerContext(
         this._context,
@@ -64,15 +48,7 @@ export class MethodHandler {
     });
   }
 
-  handle(req: Request, res: Response, next: NextFunction) {
-    this._selfRoute(req, res, next);
-  }
-
-  private async _invokeHandler(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ) {
+  async handle(req: Request, res: Response, next: NextFunction) {
     try {
       const ctx = RequestContext.fromMethodHandlerContext(
         this._context,

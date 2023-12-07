@@ -3,7 +3,7 @@ import { OperationObject } from "openapi3-ts/dist/oas31";
 import { merge } from "lodash";
 
 import { SOCControllerMethodHandlerArg } from "../openapi";
-import { Middleware, RequestMethod } from "../types";
+import { RequestMethod } from "../types";
 import { OperationHandlerMiddleware } from "../handlers";
 
 import { defineConstructorMetadata, getConstructorMetadata } from "./reflect";
@@ -17,10 +17,8 @@ export interface SOCControllerMethodCommonMetadata {
   handlerMiddleware?: OperationHandlerMiddleware[];
 
   /**
-   * Express middleware to run around the handler.
+   * An array matching all handler arguments, defining the data that should be passed for each argument.
    */
-  preExpressMiddleware?: Middleware[];
-
   handlerArgs?: (SOCControllerMethodHandlerArg | undefined)[];
 }
 

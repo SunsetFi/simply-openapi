@@ -2,7 +2,6 @@ import { IExtensionType } from "openapi3-ts/oas31";
 import { JSONSchema6 } from "json-schema";
 
 import ajv from "../../ajv";
-import { Middleware } from "../../types";
 import {
   OperationHandlerMiddleware,
   RequestDataKey,
@@ -205,11 +204,6 @@ export interface SOCControllerMethodExtensionData {
    * While defaults are provided to do this, you can customize the behavior of the responses by overriding this behavior here.
    */
   handlerMiddleware?: OperationHandlerMiddleware[];
-
-  /**
-   * Express middleware to run before the handler.
-   */
-  preExpressMiddleware?: Middleware[];
 }
 
 export const socControllerMethodExtensionDataSchema: JSONSchema6 = {
