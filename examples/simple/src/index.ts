@@ -23,13 +23,6 @@ app.use(router);
 
 app.use("/openapi", swaggerServe, swaggerSetup(docs));
 
-app.use(
-  (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    console.error("Unhandled path", req.path);
-    next();
-  }
-);
-
 app.listen(8080);
 
 console.log("Server started on port 8080");

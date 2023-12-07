@@ -54,17 +54,17 @@
             }
           }
         },
+        "tags": [
+          "widget"
+        ],
         "parameters": [
           {
             "in": "query",
-            "name": "disposition",
-            "description": "Filter by disposition",
+            "name": "offset",
+            "description": "Offset the results",
             "schema": {
-              "type": "string",
-              "enum": [
-                "happy",
-                "sad"
-              ]
+              "type": "number",
+              "minimum": 0
             }
           },
           {
@@ -78,18 +78,18 @@
           },
           {
             "in": "query",
-            "name": "offset",
-            "description": "Offset the results",
+            "name": "disposition",
+            "description": "Filter by disposition",
             "schema": {
-              "type": "number",
-              "minimum": 0
+              "type": "string",
+              "enum": [
+                "happy",
+                "sad"
+              ]
             }
           }
         ],
-        "description": "Get all widgets",
-        "tags": [
-          "widget"
-        ]
+        "description": "Get all widgets"
       },
       "post": {
         "operationId": "WidgetsController.createWidget",
@@ -141,9 +141,10 @@
             "content": {}
           }
         },
+        "tags": [
+          "widget"
+        ],
         "requestBody": {
-          "required": true,
-          "description": "The content of the widget",
           "content": {
             "application/json": {
               "schema": {
@@ -165,7 +166,9 @@
                   "name",
                   "disposition"
                 ]
-              }
+              },
+              "required": true,
+              "description": "The content of the widget"
             }
           }
         },
@@ -176,10 +179,7 @@
             ]
           }
         ],
-        "description": "Create a widget",
-        "tags": [
-          "widget"
-        ]
+        "description": "Create a widget"
       }
     },
     "/widgets/{id}": {
@@ -223,6 +223,9 @@
             "content": {}
           }
         },
+        "tags": [
+          "widget"
+        ],
         "parameters": [
           {
             "in": "path",
@@ -235,10 +238,7 @@
             }
           }
         ],
-        "description": "Get a widget by ID",
-        "tags": [
-          "widget"
-        ]
+        "description": "Get a widget by ID"
       }
     }
   }

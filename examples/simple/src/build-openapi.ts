@@ -19,8 +19,8 @@ let docs = createOpenAPIFromControllers(info, types);
 
 // The SOC extensions for creating routers are not needed in the case of creating external docs, so we can strip them out to avoid
 // confusion.
-// Remove this line if you are curious about how SOC extensions are used to create routers.
 docs = stripSOCExtensions(docs);
 
 fs.writeFileSync("./openapi.json", JSON.stringify(docs, null, 2));
+
 process.exit(0);
