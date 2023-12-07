@@ -1,5 +1,4 @@
 export * from "./handler-middleware";
-export * from "./request-processors";
 
 export * from "./handler-from-spec";
 

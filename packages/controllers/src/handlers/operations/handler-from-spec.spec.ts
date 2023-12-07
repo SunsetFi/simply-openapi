@@ -74,7 +74,6 @@ describe("createMethodHandlerFromSpec", function () {
           expect.any(Array),
           expect.any(Array),
           expect.any(Array),
-          expect.any(Array),
           expect.any(Object),
           expect.any(Object),
         );
@@ -111,7 +110,6 @@ describe("createMethodHandlerFromSpec", function () {
         expect(MethodHandler).toHaveBeenCalledWith(
           inputController,
           handler,
-          expect.any(Array),
           expect.any(Array),
           expect.any(Array),
           expect.any(Array),
@@ -162,7 +160,6 @@ describe("createMethodHandlerFromSpec", function () {
         expect(MethodHandler).toHaveBeenCalledWith(
           inputController,
           handler,
-          expect.any(Array),
           expect.any(Array),
           expect.any(Array),
           expect.any(Array),

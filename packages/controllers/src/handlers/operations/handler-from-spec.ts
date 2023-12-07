@@ -8,17 +8,12 @@ import {
   validateSOCControllerMethodExtensionData,
 } from "../../openapi";
 import { ControllerInstance, Middleware, RequestMethod } from "../../types";
-import { isConstructor, isNotNullOrUndefined } from "../../utils";
+import { isConstructor } from "../../utils";
 
 import { MethodHandlerContext } from "../MethodHandlerContext";
 import { OperationContext } from "../OperationContext";
 
 import { MethodHandler } from "./MethodHandler";
-import {
-  RequestProcessorFactory,
-  RequestProcessorFactoryContext,
-} from "./request-processors";
-import defaultRequestProcessors from "./request-processors/defaultRequestProcessors";
 import defaultExpressMiddleware from "./express-middleware/defaultExpressMiddleware";
 import { OperationHandlerMiddleware } from "./handler-middleware";
 import { operationHandlerFallbackResponseMiddleware } from "./handler-middleware/fallback";
@@ -48,12 +43,6 @@ export interface CreateMethodHandlerOpts {
     method: Function | string | symbol,
     ctx: OperationContext,
   ) => Function;
-
-  /**
-   * Request processors are responsible for both validating the request conforms to the OpenAPI specification
-   * as well as extracting the data to be presented to the handler function.
-   */
-  requestProcessorFactories?: RequestProcessorFactory[];
 
   /**
    * Middleware to apply to all handlers.
@@ -141,18 +130,6 @@ export function createMethodHandlerFromSpec(
     extensionData.handlerArgs ?? [],
   );
 
-  const requestProcessorContext =
-    RequestProcessorFactoryContext.fromMethodHandlerContext(methodContext, ajv);
-
-  const requestProcessorFactories = [
-    ...defaultRequestProcessors,
-    ...(opts.requestProcessorFactories ?? []),
-  ];
-
-  const processors = requestProcessorFactories
-    .map((factory) => factory(requestProcessorContext))
-    .filter(isNotNullOrUndefined);
-
   const handlerMiddleware = [
     ...defaultHandlerMiddleware,
     ...(opts.handlerMiddleware ?? []),
@@ -175,7 +152,6 @@ export function createMethodHandlerFromSpec(
     controller,
     handler,
     extensionData.handlerArgs ?? [],
-    processors,
     handlerMiddleware,
     preExpressMiddleware,
     postExpressMiddleware,

@@ -11,7 +11,6 @@ import { RequestContext } from "../RequestContext";
 
 import { RequestData, isExtractedRequestExtensionName } from "./types";
 
-import { RequestProcessor } from "./request-processors";
 import {
   OperationHandlerMiddleware,
   OperationHandlerMiddlewareNextFunction,
@@ -30,7 +29,6 @@ export class MethodHandler {
     private _controller: ControllerInstance,
     private _handler: Function,
     private _handlerArgs: (SOCControllerMethodHandlerArg | undefined)[],
-    private _requestProcessors: RequestProcessor[],
     handlerMiddleware: OperationMiddleware[],
     preExpressMiddleware: Middleware[],
     postExpressMiddleware: Middleware[],
@@ -62,7 +60,7 @@ export class MethodHandler {
         return middleware;
       } else {
         throw new Error(
-          `Unknown operation handler middleware type ${typeof middleware}.`,
+          `Unknown operation handler middleware type ${typeof middleware}.  Expected a function with 1 argument for a factory, or a function with 2 argument for middleware.`,
         );
       }
     });
@@ -78,49 +76,11 @@ export class MethodHandler {
     next: NextFunction,
   ) {
     try {
-      // It would be nice if handler middleware could mess with the req object properties so that we could embed express middleware,
-      // but we have a chicken-egg thing where we do not want to invoke middleware unless the request is valid, and the validators
-      // are responsible for pulling the request data.
-      const requestData: RequestData = {
-        body: undefined,
-        parameters: {},
-        security: {},
-      };
-
       const ctx = RequestContext.fromMethodHandlerContext(
         this._context,
         req,
         res,
       );
-
-      // Note: For performance we could await all of these in parallel, but we run them in order
-      // so as to call security before the others.  This is important, as we don't want to validate against
-      // the rest of the schema and reveal things about the request if the security fails.
-      for (const processor of this._requestProcessors) {
-        let result = processor(ctx);
-        if (typeof result === "function") {
-          result = await result(requestData);
-        } else {
-          merge(requestData, await result);
-        }
-      }
-
-      // TODO: Remove temp bridge when all request processors are converted.
-      for (const key of Object.keys(requestData.security)) {
-        ctx.setRequestData(
-          `openapi-security-${key}`,
-          requestData.security[key],
-        );
-      }
-
-      for (const key of Object.keys(requestData.parameters)) {
-        ctx.setRequestData(
-          `openapi-parameter-${key}`,
-          requestData.parameters[key],
-        );
-      }
-
-      ctx.setRequestData("openapi-body", requestData.body);
 
       // Would be nice to associate requestData with the request context, but we use request context in the processors to build the request data.
       // This would itself not be a problem except for the fact that we let request processors return entirely new request data objects.
@@ -142,7 +102,6 @@ export class MethodHandler {
     const executeMiddleware = async (index: number): Promise<any> => {
       if (index >= stack.length) {
         const args = this._extractArgs(context);
-
         return this._handler.apply(this._controller, args);
       }
 

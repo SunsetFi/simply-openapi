@@ -1,10 +1,8 @@
 import { RequestHandler } from "express";
 
+import { OperationHandlerMiddleware } from "../handlers";
+
 import { RouteCreationContext } from "./RouteCreationContext";
-import {
-  OperationHandlerMiddleware,
-  RequestProcessorFactory,
-} from "../handlers";
 
 export type OperationHandlerFactory = (
   ctx: RouteCreationContext,
@@ -22,12 +20,6 @@ export interface OperationHandlerOptions {
    * Middleware to apply to the express router before the handler.
    */
   preExpressMiddleware?: RequestHandler[];
-
-  /**
-   * Request data processors are responsible for both validating the request conforms to the OpenAPI specification
-   * as well as extracting the data to be presented to the handler function.
-   */
-  requestProcessorFactories?: RequestProcessorFactory[];
 
   /**
    * If true, ensure that all responses are handled by the handler.
