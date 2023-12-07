@@ -1,4 +1,5 @@
 export * from "./bind-param";
+export * from "./bind-request-data";
 export * from "./bind-security";
 export * from "./body";
 export * from "./cookie-param";
