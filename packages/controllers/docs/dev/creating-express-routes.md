@@ -3,7 +3,7 @@
 Once you have generated your annotated OpenAPI spec, you can use the `createRouterFromSpec` to produce a single express router that will implement all validation logic and request handling from your controllers.
 
 ```typescript
-import { 
+import {
   createOpenAPIFromControllers,
   createRouterFromSpec
 } from "@simply-openapi/controllers";
@@ -18,36 +18,36 @@ app.use(router);
 app.listen(8080);
 ```
 
-If you have been following the tutorials, this is the minimum required to produce a fully functional router.  This router is now ready to be used directly with express. That's all there is too it, enjoy!
+If you have been following the tutorials, this is the minimum required to produce a fully functional router. This router is now ready to be used directly with express. That's all there is too it, enjoy!
 
 ## Error handling and Validation
 
 ### Handling validation errors
 
-@simply-openapi/controllers performs validation and emits errors by throwing http-error derived errors through the express middleware stack.  Express will deal with these errors in a sensible way out of the box, but custom logic can be implemented if desired to handle these by providing an error handler middleware in your express app or as a `postExpressMiddleware` entry to `createRouterFromSpec`.
+@simply-openapi/controllers performs validation and emits errors by throwing http-error derived errors through the express middleware stack. Express will deal with these errors in a sensible way out of the box, but custom logic can be implemented if desired to handle these by providing an error handler middleware in your express app, or catching the error in a [handler middleware](./writing-handler-middleware.md).
 
 ### Orphaned requests
 
-In @simply-openapi/controllers, `undefined` is used as a handler and handler middleware result to indicate that the response has been handled and no further processing is needed.  If your handler returns undefined (or a promise to undefined), no processing will be performed and the request will be left unanswered.
+In @simply-openapi/controllers, `undefined` is carries special meaning when returned by a controller method or a handler middleware function. It indicates that the response has been handled and no further processing is needed. If your handler returns undefined (or a promise to undefined), and you haven't otherwise sent a resopnse, no processing will be performed and the request will be left unanswered.
 
-In order to prevent this from happening, @simply-openapi/controllers has one last emergency fallback handler middleware which will throw an internal server error if it is reached and the result still has not been sent.  If you wish to disable this behavior, you can pass `ensureResponsesHandled: false` as an option to `createRouterFromSpec`, and this middleware will be disabled.
+In order to prevent this from happening accidentally, @simply-openapi/controllers provides a fallback handler middleware which will throw an internal server error if it is reached and the result still has not been sent. If you wish to disable this behavior, you can pass `ensureResponsesHandled: false` as an option to `createRouterFromSpec`.
 
 ## Providing global middleware
 
 The createRouterFromSpec function accepts options for additional middleware to apply to all routes.
 
-Note that middleware can also be provided at a per-controller and per-method level as well.  In relation to those, global middleware will run first, then controller, then method.
+Note that middleware can also be provided at a per-controller and per-method level as well. In relation to those, global middleware will run first, then controller, then method.
 
 ### Handler Middleware
 
-Handler middleware is invoked in the context of the controller library and provides the pipeline with which controller method handler functions are called.  They can be used to provide preconditions to execution as well as to reinterpret method results.
+Handler middleware is invoked in the context of the controller library and provides the pipeline with which controller method handler functions are called. They can be used to provide preconditions to execution as well as to reinterpret method results.
 
 As handlers can be asynchronous, all handler middleware must support asynchronous operation.
 
 For example, we can make a middleware that interprets `null` responses as a `201 No Content` response
 
 ```typescript
-import { 
+import {
   createOpenAPIFromControllers,
   createRouterFromSpec
 } from "@simply-openapi/controllers";
@@ -72,7 +72,7 @@ const router = createRouterFromSpec(mySpec, {
         // of the web request.
         return undefined;
       }
-      
+
       // Pass the result on for other middlewares to handle.
       return handlerResult;
     }
@@ -88,14 +88,17 @@ For more information, see [Writing Handler Middleware](writing-handler-middlewar
 
 ### Express Middleware
 
-Middleware can be injected both prior to the handler, and after the handler executes.  These can be passed by the `preExpressMiddleware` and `postExpressMiddleware` options respectively.  Note that in practice, postExpressMiddleware is only called on an error condition, when a handler throws an error.  If the handler succeeds, it will not call its next() function and the post middleware will not be executed.
+Express middleware can be adapted into the @simply-openapi/controllers middleware ecosystem using the `convertExpressMiddleware` function. Note that this only supports standard request middleware; error handling middleware is not supported, and should instead be added to your application or to the returned router, where it will properly trap error responses from this library.
 
 ```typescript
-import { 
+import {
+  convertExpressMiddleware,
   createOpenAPIFromControllers,
   createRouterFromSpec
 } from "@simply-openapi/controllers";
 import express from "express";
+import helmet from "helmet";
+import { isHttpError } from "http-errors";
 
 import { WidgetsController } from "./widgets";
 
@@ -105,19 +108,26 @@ const controllers = [
 
 const mySpec = createOpenAPIFromControllers(..., controllers);
 
+
 const router = createRouterFromSpec(mySpec, {
-  preExpressMiddleware: [
-    (req, res, next) => {
-       console.log(`Got request to ${req.url}`);
-       next();
-    }
-  ],
-  postExpressMiddleware: [
-    (err, req, res, next) => {
-      console.error("Error handling request", err);
-      res.status(500).end();
-    }
+  handlerMiddleware: [
+    // Express middleware can be added using this adapter function
+    convertExpressMiddleware(helmet())
   ]
+});
+
+// Error handler middleware should be added to the router directly.
+// Note that @simply-openapi/controllers uses thrown errors from `http-errors` to indicate 4xx response codes,
+// which will be picked up by such middleware.  Express will properly handle such errors
+// by default.
+router.use((err, req, res, next) => {
+  console.error("Error handling request", err);
+  if (isHttpError(err)) {
+    res.status(err.statusCode).send(err.message);
+  }
+  else {
+    res.status(500).end();
+  }
 });
 
 const app = express();
@@ -131,12 +141,12 @@ Beyond the customizations listed above, there are more advanced options availabl
 
 ### Resolving controllers
 
-Sometimes, your controller metadata might not be the controller you want to operate on.  This can occur if you are passing DI symbols or class constructors to `createOpenAPIFromControllers`.  In cases like this, you can use the resolveController option to pass a function that will resolve the controller instance for you.
+Sometimes, your controller metadata might not be the controller you want to operate on. This can occur if you are passing DI symbols or class constructors to `createOpenAPIFromControllers`. In cases like this, you can use the resolveController option to pass a function that will resolve the controller instance for you.
 
 For example, you could use this function to instantiate the types if you passed constructors to the spec creation function rather than live instances:
 
 ```typescript
-import { 
+import {
   createOpenAPIFromControllers,
   createRouterFromSpec
 } from "@simply-openapi/controllers";
@@ -159,11 +169,11 @@ app.use(router);
 app.listen(8080);
 ```
 
-Other uses of this function include DI usage.  For example, your controller may be a self-bound DI dependency.  In which case, you would use your DI container to resolve the controller class into an instance.  Here is a minimal example with Inversify:
+Other uses of this function include DI usage. For example, your controller may be a self-bound DI dependency. In which case, you would use your DI container to resolve the controller class into an instance. Here is a minimal example with Inversify:
 
 ```typescript
 import { Container, Injectable } from "inversify"
-import { 
+import {
   createOpenAPIFromControllers,
   createRouterFromSpec
 } from "@simply-openapi/controllers";
@@ -196,12 +206,12 @@ This can also be useful to implement cross-cutting concerns, for example returni
 
 ### Resolving Handlers
 
-If needed, you can reinterpret the way handlers are obtained from the controllers.  You may use this as another way to implement cross-cutting concerns on your controllers.
+If needed, you can reinterpret the way handlers are obtained from the controllers. You may use this as another way to implement cross-cutting concerns on your controllers.
 
-By default, @simply-openapi/controllers will resolve metadata about methods as either a function, or a string naming a function on the controller.  The default implementation of `createOpenAPIFromControllers` will opt for string names, but it is best to handle both cases in your handler resolver.
+By default, @simply-openapi/controllers will resolve metadata about methods as either a function, or a string naming a function on the controller. The default implementation of `createOpenAPIFromControllers` will opt for string names, but it is best to handle both cases in your handler resolver.
 
 ```typescript
-import { 
+import {
   createOpenAPIFromControllers,
   createRouterFromSpec
 } from "@simply-openapi/controllers";
