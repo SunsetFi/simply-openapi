@@ -1,5 +1,6 @@
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Request, Response, Router } from "express";
 import Ajv from "ajv";
+import bodyParser from "body-parser";
 
 import { SOCControllerMethodHandlerArg } from "../../openapi";
 import { isNotNullOrUndefined } from "../../utils";
@@ -19,6 +20,7 @@ import { OperationMiddlewareFactoryContext } from "./handler-middleware";
 import { nameOperationFromContext } from "./utils";
 
 export class MethodHandler {
+  private _selfRouter = Router({ mergeParams: true });
   private _handlerMiddleware: OperationHandlerMiddleware[];
 
   constructor(
@@ -46,9 +48,18 @@ export class MethodHandler {
         );
       }
     });
+
+    this._selfRouter.use(
+      bodyParser.json({ strict: false }),
+      this._handle.bind(this),
+    );
   }
 
-  async handle(req: Request, res: Response, next: NextFunction) {
+  handle(req: Request, res: Response, next: NextFunction) {
+    return this._selfRouter(req, res, next);
+  }
+
+  private async _handle(req: Request, res: Response, next: NextFunction) {
     try {
       const ctx = RequestContext.fromMethodHandlerContext(
         this._context,
