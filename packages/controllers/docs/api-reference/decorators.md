@@ -514,8 +514,7 @@ This decorator is a shortcut for creating a required cookie param. `@RequiredCoo
 
 Binds the handler method argument to the result of the given security scheme authentication controller.
 
-This decorator does **not secure the method**. It only provides the value of an existing security scheme resolution, and that value will only be present for
-a security scheme that was both defined for, and used to authenticate, the current call. To require / validate a security scheme be used for a method, see [@RequireAuthentication](#requireauthentication-2).
+This decorator does **not secure the method**. It only provides the value of an existing security scheme resolution, and that value will only be present for a security scheme that was both defined for, and used to authenticate, the current call. To require / validate a security scheme be used for a method, see [RequireAuthentication](#requireauthentication-2).
 
 This decorator is useful for two cases:
 

@@ -20,7 +20,7 @@ This context provides detailed information about an OpenAPI Operation.
 
 ## MethodHandlerContext
 
-This context provides information about a specific method handler on a controller. As methods implement operations, it inherits all properties from OperationContext.
+This context provides information about a specific method handler on a controller. As methods implement operations, it inherits from OperationContext.
 
 ### Properties
 
@@ -32,7 +32,7 @@ In addition to all properties from the [OperationContext](#operationcontext), th
 
 ## OperationMiddlewareFactoryContext
 
-This context is used for producing middleware to handle methods. As middleware factories run on specific methods, this inherits all properties from MethodHandlerContext
+This context is used for producing middleware to handle methods. As middleware factories run on specific methods, this context inherits from MethodHandlerContext
 
 ### Properties
 
@@ -44,7 +44,7 @@ This context inherits all properties from [MethodHandlerContext](#methodhandlerc
 
 ## RequestContext
 
-This context is used when handling a specific network request. It inherits all properties from MethodHandlerContext.
+This context is used when handling a specific network request. It inherits from the MethodHandlerContext.
 
 ### Properties
 
@@ -64,6 +64,6 @@ The following methods are available to simplify working with the request:
 
 The following methods are available for working with [Request Data](../dev/request-data.md):
 
-- `hasRequestData(key)` - Returns true if the request data specified by the key was ever set, or false if it was not. This will still return `true` if the request data was explicitly set to `undefined`.
+- `hasRequestData(key)` - Returns true if the request data specified by the key was ever set, or false if it was not. This will return `true` in cases where the request data was explicitly set to `undefined`.
 - `getRequestData(key)` - Returns the request data for the specified key if set, or `undefined` if not.
 - `setRequestData(key, value)` - Sets the request data for the specified key.

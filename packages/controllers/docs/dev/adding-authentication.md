@@ -48,8 +48,10 @@ class MyAuthenticator implements AuthenticationController {
       throw new Unauthorized("Insufficient permissions");
     }
 
-    // If authentication succeeds, you can return a value that will be passed to handler method arguments decorated to recieve
-    // the authenticated user.  Any Non-falsy value will be interpreted as a successful auth.
+    // If authentication succeeds, you can return a value that will
+    // be passed to handler method arguments decorated to recieve
+    // the authenticated user.
+    // Any non-falsy value will be interpreted as a successful auth.
     return user;
   }
 }
@@ -101,7 +103,7 @@ class MyAuthenticator implements AuthenticationController {
 ### HTTP Bearer authentication
 
 The [HTTP Bearer](https://swagger.io/docs/specification/authentication/bearer-authentication/) security scheme expects authentication in an `Authorization` header, prefixed with `Bearer `.
-@simply-openapi/controllers will validate the presense of this header and the Bearer prefix, before extracting the payload (everything after `Bearer `) and passing it as the value to your authentication method.
+@simply-openapi/controllers will validate the presense of this header and the Bearer prefix, before extracting the payload (everything after `Bearer`) and passing it as the value to your authentication method.
 
 Note that the `bearerFormat` OpenAPI property is descriptive only; the value indicates no special processing instructions for OpenAPI and is not interpreted by this library.
 
@@ -139,9 +141,11 @@ class MyAuthenticator implements AuthenticationController {
 
 Authentication can be specified in 3 locations:
 
-- At the top level of your OpenAPI schema, to get applied to every endpoint
-- Per controller with the @RequireAuthentication decorator, to be applied only to methods in that controller
-- Per method with the @RequireAuthentication decorator, to be applied only to that method
+- At the top level of your OpenAPI specification in the `security` property, to get applied to every endpoint
+- Per controller with the `@RequireAuthentication` decorator, to be applied only to methods in that controller
+- Per method with the `@RequireAuthentication` decorator, to be applied only to that method.
+
+Per the OpenAPI spec, any authentication specified on a method or controller will take precidence over any authentication specified at the root level of your OpenAPI specification.
 
 ### Requiring authentication for all endpoints
 
@@ -346,6 +350,10 @@ Alternatively, you can use the `@BindSecurity` decorator to retrieve the resolve
 - Security schemes defined in OpenAPI for bound methods
 - Security schemes defined in OpenAPI at the root level
 - Security schemes defined by `@RequireAuthentication` at the class level
+
+It is important to remember that `@BindSecurity` **does not authenticate the method**. It only retrieves the value of the authenticator with the given name. If the authenticator was not called for the method in question, the argument will be undefined. In order for a security scheme authenticator to be applied to a method, it must be specified in the OpenAPI specification or by a decorator that adds such specification.
+
+Like `@RequireAuthentication`, you may pass a `@Authenticator`-decorated class constructor in place of the scheme name.
 
 ```typescript
 import {
