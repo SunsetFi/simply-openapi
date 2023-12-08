@@ -1,23 +1,24 @@
 import { Handler } from "express";
-import {
-  OperationHandlerMiddleware,
-  OperationHandlerMiddlewareNextFunction,
-} from "./types";
-import { RequestContext } from "../../RequestContext";
+
+import { Deferred } from "../../../deferred";
+
+import { OperationHandlerMiddleware } from "./types";
 
 export function convertExpressMiddleware(
   expressHandler: Handler,
 ): OperationHandlerMiddleware {
-  return (
-    context: RequestContext,
-    next: OperationHandlerMiddlewareNextFunction,
-  ) => {
-    expressHandler(context.req, context.res, (err) => {
+  return (context, next) => {
+    const deferred = new Deferred<any>();
+
+    expressHandler(context.req, context.res, async (err) => {
       if (err) {
-        throw err;
+        deferred.reject(err);
       }
 
-      next();
+      const nextResult = await next();
+      deferred.resolve(nextResult);
     });
+
+    return deferred.promise;
   };
 }
