@@ -26,7 +26,7 @@ If you have been following the docs in order, this is the minimum required to pr
 
 ### Handling 4xx errors
 
-@simply-openapi/controllers uses the `http-errors` library to produce thrown errors describing 4xx status codes. By default, express will handle these in a sensible way. However, if you want to customize the behavior, you can capture these with [handler middleware](./writing-handler-middleware.md), or by adding an express error handling middleware to the produced route.
+@simply-openapi/controllers uses the `http-errors` library to produce thrown errors describing 4xx status codes. By default, express will handle these in a sensible way. However, if you want to customize the behavior, you can add an express error handler middleware to the produced route.
 
 ```typescript
 import {
