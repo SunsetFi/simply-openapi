@@ -93,7 +93,14 @@ const router = createRouterFromSpec(mySpec, {
 
 ### Express Middleware
 
-Express middleware can be adapted into the @simply-openapi/controllers middleware ecosystem using the `convertExpressMiddleware` function. Note that this only supports standard request middleware; error handling middleware is not supported, and should instead be added to your express application or to the returned router.
+Express middleware can be adapted into the @simply-openapi/controllers middleware ecosystem using the `convertExpressMiddleware` function.
+
+The `convertExpressMiddleware` function expects a function that is either an express handler, or an express error handler. Like the `use` function of express, this converter identifies which one you pass it based on the value of `arguments.length` of the function:
+
+- 4 arguments indicates an error handler. This will be invoked if further middleware or your method handler throws an error. It is assumed that your express middleware will handle the error and send a response, so the resulting handler middleware will return undefined.
+- 3 arguments indicates a standard express handler middleware. It will be invoked, and the handler middleware chain will resume when the express middleware calls `next()`.
+
+Note that in practice, error handler middleware will not be called for OpenAPI-driven validation errors due to the position in which user supplied handler middleware are inserted into the chain. It is strongly recommended that all error handling be added at the router or express app level.
 
 ```typescript
 import {
@@ -103,6 +110,7 @@ import {
 } from "@simply-openapi/controllers";
 import express from "express";
 import helmet from "helmet";
+import { isHttpError } from "http-errors";
 
 import { WidgetsController } from "./widgets";
 
@@ -115,7 +123,15 @@ const mySpec = createOpenAPIFromControllers(..., controllers);
 const router = createRouterFromSpec(mySpec, {
   handlerMiddleware: [
     // Express middleware can be added using this adapter function
-    convertExpressMiddleware(helmet())
+    convertExpressMiddleware(helmet()),
+    convertExpressMiddleware((err, req, res, next) => {
+      if (isHttpError(err)) {
+        res.status(err.statusCode).send(err.message);
+      }
+      else {
+        res.status(500).send("Internal Server Error");
+      }
+    })
   ]
 });
 
