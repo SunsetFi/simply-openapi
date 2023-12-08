@@ -349,7 +349,7 @@ Alternatively, you can use the `@BindSecurity` decorator to retrieve the resolve
 
 - Security schemes defined in OpenAPI for bound methods
 - Security schemes defined in OpenAPI at the root level
-- Security schemes defined by `@RequireAuthentication` at the class level
+- Security schemes defined by `@RequireAuthentication` at the controller level
 
 It is important to remember that `@BindSecurity` **does not authenticate the method**. It only retrieves the value of the authenticator with the given name. If the authenticator was not called for the method in question, the argument will be undefined. In order for a security scheme authenticator to be applied to a method, it must be specified in the OpenAPI specification or by a decorator that adds such specification.
 
