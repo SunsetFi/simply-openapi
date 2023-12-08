@@ -97,7 +97,7 @@ Express middleware can be adapted into the @simply-openapi/controllers middlewar
 
 The `convertExpressMiddleware` function expects a function that is either an express handler, or an express error handler. Like the `use` function of express, this converter identifies which one you pass it based on the value of `arguments.length` of the function:
 
-- 4 arguments indicates an error handler. This will be invoked if further middleware or your method handler throws an error. It is assumed that your express middleware will handle the error and send a response, so the resulting handler middleware will return undefined.
+- 4 arguments indicates an error handler. This will be invoked if further middleware or your method handler throws an error. It is assumed that your express middleware will handle the error and send a response, so the resulting handler middleware promise will resolve to undefined when `next()` is called.
 - 3 arguments indicates a standard express handler middleware. It will be invoked, and the handler middleware chain will resume when the express middleware calls `next()`.
 
 Note that in practice, error handler middleware will not be called for OpenAPI-driven validation errors due to the position in which user supplied handler middleware are inserted into the chain. It is strongly recommended that all error handling be added at the router or express app level.
