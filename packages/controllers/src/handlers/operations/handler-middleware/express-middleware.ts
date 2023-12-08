@@ -13,6 +13,7 @@ export function convertExpressMiddleware(
     expressHandler(context.req, context.res, async (err) => {
       if (err) {
         deferred.reject(err);
+        return;
       }
 
       const nextResult = await next();
