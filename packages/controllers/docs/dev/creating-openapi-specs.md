@@ -28,10 +28,10 @@ You now have a full OpenAPI specification defining all of your API requirements,
 
 In some cases, you will already have OpenAPI spec you want to link to controllers. For example, you may use references to predefined schemas, or you may be using the direct binding decorators to attach your controllers to existing spec.
 
-In this case, use `addOpenAPIPathsFromController`
+In this case, use `addendOpenAPIFromControllers`
 
 ```typescript
-import { createOpenAPIFromControllers } from "@simply-openapi/controllers";
+import { addendOpenAPIFromControllers } from "@simply-openapi/controllers";
 import { OpenAPIObject } from "openapi3-ts/oai31";
 
 import WidgetController from "./controllers/WidgetController";
@@ -53,7 +53,7 @@ const existingSpec: OpenAPIObject = {
   },
 };
 
-const spec = addOpenAPIPathsFromController(existingSpec, controllers);
+const spec = addendOpenAPIFromControllers(existingSpec, controllers);
 ```
 
 With this method, you can supply additional spec that might be consumed or referenced by the controllers. This is also the only way to use bound controllers and bound methods.
