@@ -527,7 +527,13 @@ If you find yourself often resorting to HandlerResult, you may wish to instead u
 
 ### Escaping into Express
 
-No matter how carefully a framework is written, there will always be cases where the request and response objects are needed. These are provided with the `@Req` and `@Res` decorators respectively.
+No matter how carefully a framework is written, there will always be cases where the request and response objects are needed. However, if you find yourself often needing the raw request or response, consider abstracting your use case to keep your handlers as focused on business logic as possible. There are a few extension points that can help with this:
+
+- Extracting and processing request data - See [Creating Request Data Decorators](./request-data.md#implementing-your-own-request-data)
+- Validating requests - See [Writing Validation Handler Middleware](./writing-handler-middleware.md#middleware-for-request-validation)
+- Serializing responses - See [Writing Response Handler Middleware](./writing-handler-middleware.md#middleware-for-result-transmission)
+
+For everything else, the `@Req` and `@Res` decorators will provide a controller handler with the express request and response respectively.
 
 Additionally, express middleware can be inserted into the @simply-openapi/controllers middleware pipeline by using the `convertExpressMiddleware` function.
 
@@ -573,7 +579,7 @@ class WidgetController {
 }
 ```
 
-Note that if you do handle the response in your method, you should ensure your method returns undefined or a promise resolving to undefined. Handler middleware interprets an undefined response as an indication that the request was already handled and no further processing is needed.
+If you do handle the response in your method, you should ensure your method returns undefined or a promise resolving to undefined. Handler middleware interprets an undefined response as an indication that the request was already handled and no further processing is needed.
 
 To prevent you from accidentally leaving a request hanging, the library will throw an error by default if it completes the middleware stack for a handler and the response has not yet sent its headers. This is an optional feature that can be turned off by setting `ensureResponsesHandled` to false at the router creation step. See [Creating Express Routes](./creating-express-routes.md).
 

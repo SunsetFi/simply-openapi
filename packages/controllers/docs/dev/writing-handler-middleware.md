@@ -81,6 +81,71 @@ In cases like this, you can provide a middleware factory. A middleware factory i
 Unlike middleware, a middleware factory function has a single context argument, and no next function. As with middleware, the function's arguments.length must be equal to 1 for it to be properly detected as a middleware factory function.
 This factory context contains all the information about the schema, the operation, and the class and method being used to process the request. It also contains a `compileSchema` method, which takes a SchemaObject and returns a function that returns the input value coerced to the type, or throws an AJV ValidationError if the type does not match the schema.
 
+## Middleware for request validation
+
+Request validation is performed through handler middleware. If a middleware determines that a request is invalid, it should throw an error derived from the `http-error` library to propogate the failure up the middleware stack for eventual transmission.
+
+```typescript
+import {
+  RequestContext,
+  OperationHandlerMiddlewareNextFunction,
+} from "@simply-openapi/controllers";
+import { BadRequest } from "http-errors";
+
+export async function myValidationMiddleware(
+  context: RequestContext,
+  next: OperationHandlerMiddlewareNextFunction,
+) {
+  if (context.req.someValue) {
+    throw new BadRequest("Expected value is invalid");
+  }
+
+  return await next();
+}
+```
+
+## Middleware for data extraction
+
+Middleware can be used to extract data from the requests to be presented in a processed form to the controller method.
+
+This is done with Request Data:
+
+{% content-ref url="./request-data.md" %}
+[request-data.md](./request-data.md)
+{% endcontent-ref %}
+
+## Middleware for result transmission
+
+Middleware can be used to intercept the result of a controller method and serialize it to the response stream.
+
+```typescript
+import {
+  RequestContext,
+  OperationHandlerMiddlewareNextFunction,
+} from "@simply-openapi/controllers";
+import { BadRequest } from "http-errors";
+
+export async function myResponseMiddleware(
+  context: RequestContext,
+  next: OperationHandlerMiddlewareNextFunction,
+) {
+  // Call through the middleware stack to the handler to get the result.
+  const result = await next();
+
+  if (result instanceof MyDataObject) {
+    // Implement whatever serialization method you want.
+    context.res.setHeader("Content-Type", "application/my-data+json");
+    context.res.send(result.toJSON());
+
+    // Return undefined to tell upstream middleware that the result was handled.
+    return undefined;
+  }
+
+  // Pass the result upstream to be handled by other middleware.
+  return result;
+}
+```
+
 ## Default middleware
 
 All of the default behavior of @simply-openapi/controllers is implemented through middleware and middleware factories. The default middleware performs the following in order:
