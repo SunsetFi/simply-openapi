@@ -53,11 +53,14 @@ A benefit of using Zod over Typebox is that Zod is first and formost a validatio
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
-export const Widget = z.object({
+const WidgetValidator = z.object({
   id: z.number().int().positive(),
   name: z.string().min(1)
 });
 
-export type Widget = z.infer<Widget>();
-export const widgetSchema = zodToJsonSchema(Widget);
+export type Widget = z.infer<WidgetValidator>();
+export const widgetSchema = zodToJsonSchema(WidgetValidator);
+export function validateWidgetOrThrow(widget: Widget) {
+  WidgetValidator.parse(widget);
+}
 ```
