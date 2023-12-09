@@ -27,6 +27,50 @@ export const widgetSchema = Type.Object({
 export type Widget = Static<typeof widgetSchema>;
 ```
 
+Typebox also allows more concise schema transformation to describe variations of the base schema. Array results, ID-omitting POST bodies, and partial PATCH bodies are all easily described:
+
+```typescript
+import { Type, Static } from "@sinclair/typebox";
+
+const widgetArraySchema = Type.Array(widgetSchema);
+type WidgetArray = Static<typeof widgetArraySchema>;
+
+const creatableWidgetSchema = Type.Omit(widgetSchema, ["id"]);
+type CreatableWidget = Static<typeof creatableWidgetShema>;
+
+const patchableWidgetSchema = Type.Partial(
+  Type.Omit(widgetSchema, ["id"])
+);
+type PatchableWdiget = Static<typeof patchableWidgetSchema>;
+
+@Controller("/widgets", { tags: [ "Widgets" ]})
+export class WidgetsController {
+  @Get("/")
+  @JsonResponse(200, widgetArraySchema)
+  async getWidgets() {
+    ...
+  }
+
+  @Post("/")
+  @JsonResponse(201, widgetSchema)
+  async createWidget(
+    @RequiredJsonBody(creatableWidgetSchema)
+    body: CreatableWidget
+  ) {
+    ...
+  }
+
+  @Patch("/{widget_id}")
+  @JsonResponse(200, widgetSchema)
+  async patchWidget(
+    @RequiredJsonBody(patchableWidgetSchema)
+    body: PatchableWidget
+  ) {
+    ...
+  }
+}
+```
+
 ## Zod
 
 [Zod](https://zod.dev/) also provides a means of producing types and schemas, when paired with the [Zod to Json Schema](https://github.com/StefanTerdell/zod-to-json-schema) library.
