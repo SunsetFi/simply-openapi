@@ -96,7 +96,7 @@ export async function myValidationMiddleware(
   context: RequestContext,
   next: OperationHandlerMiddlewareNextFunction,
 ) {
-  if (context.req.someValue) {
+  if (typeof context.req.someValue !== "number") {
     throw new BadRequest("Expected value is invalid");
   }
 
