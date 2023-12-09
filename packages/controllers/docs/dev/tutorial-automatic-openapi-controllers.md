@@ -1,6 +1,6 @@
 # Tutorial: Controllers with Automatic OpenAPI Generation
 
-By far the most common use case when creating backends in the wild is that the code and functionality come first, and documentation comes after. @simply-openapi/controllers is designed with this approach as a first class concept, supporting the generation of accurate and exacting OpenAPI specifications from the controllers themselves. This produces the document that can then be fed back into the library, producing the express router that will handle all of the validation and invocation of the controller methods.
+By far the most common use case when creating backends in the wild is that the code and functionality come first, and documentation comes after. @simply-openapi/controllers is designed with this approach as a first class concept, supporting the generation of accurate OpenAPI specifications directly from the controllers. This produces the document that can then be fed back into the library, producing the express router that will handle all of the validation and invocation of the controller methods.
 
 This tutorial will cover creating controllers and producing the OpenAPI spec from them. For learning how to turn the resulting spec into an express router, see [Creating an Express Route](creating-express-routes.md).
 
