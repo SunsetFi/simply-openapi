@@ -34,7 +34,7 @@ import { getWidgets } from "../widgets";
 
 @Controller("/widgets", { tags: ["widgets"] })
 class WidgetController {
-  @Get("/", { description: "Gets all widgets" })
+  @Get("/", { summary: "Gets all widgets" })
   async getWidgets() {
     const widgets = await getWidgets();
     return widgets;
@@ -119,7 +119,7 @@ import { widgetSchema, getWidgets } from "../widgets";
 
 @Controller("/widgets", { tags: ["widgets"] })
 class WidgetController {
-  @Get("/", { description: "Gets all widgets" })
+  @Get("/", { summary: "Gets all widgets" })
   @JsonResponse(
     200,
     { type: "array", items: widgetSchema },
@@ -171,7 +171,7 @@ With this change, let's see what our PathItem looks like now?
             }
           }
         },
-        "description": "Gets all widgets",
+        "summary": "Gets all widgets",
         "tags": [
           "widgets"
         ]
@@ -194,11 +194,7 @@ For more information, see [Consuming your API from clients](../consuming-your-ap
 
 ### Getting input
 
-Handling input is one of the more sensitive areas of endpoint design. Untrusted input from outside your control can cause serious problems in an application if not properly validated. Because of this, @simply-openapi/controllers was developed with input validation against the schema as the highest priority.
-
-As a result of this design decision, all decorators for taking input require an OpenAPI schema object as a required parameter. This schema will be documented in the spec as well as strictly validated and coerced into the input value for your handler.
-
-The extra effort for producing specification for all your inputs may seem like a drag, but the amount of boilerplate validation and error handling that would otherwise need to be written outweighs the drawbacks.
+Handling input is one of the more sensitive areas of endpoint design. Untrusted input from outside your control can cause serious problems in an application if not properly validated. Because of this, @simply-openapi/controllers treats input validation as a mandatory specification across all input sources. This schema will be documented in the OpenAPI spec, as well as validated against before any controller methods are called.
 
 #### Query Parameters
 
@@ -216,7 +212,7 @@ import { widgetSchema, getWidgets } from "../widgets";
 
 @Controller("/widgets", { tags: ["widgets"] })
 class WidgetController {
-  @Get("/", { description: "Gets all widgets" })
+  @Get("/", { summary: "Gets all widgets" })
   @JsonResponse(
     200,
     { type: "array", items: widgetSchema },
@@ -290,7 +286,7 @@ import {
 class WidgetController {
   ...
 
-  @Get("/{widget_id}", { description: "Gets a widget by id" })
+  @Get("/{widget_id}", { summary: "Gets a widget by id" })
   @JsonResponse(
     200,
     widgetSchema,
@@ -386,7 +382,7 @@ import {
   EmptyResponse,
   QueryParam,
   PathParam,
-  RequiredBody
+  RequiredJsonBody
 } from "@simply-openapi/controllers";
 import { NotFound } from "http-errors";
 
@@ -399,17 +395,17 @@ import {
 class WidgetController {
   ...
 
-  @Post("/", { description: "Create a widget" })
+  @Post("/", { summary: "Create a widget" })
   @JsonResponse(
     201,
     widgetSchema,
-    { description: "The widget was created" }
+    { description: "The widget was created." }
   )
   @EmptyResponse(400, { description: "Bad Request" })
   async addWidget(
-    @RequiredBody(
+    @RequiredJsonBody(
       creatableWidgetSchema,
-      { description: "The ID of the widget to fetch" }
+      { description: "The properties of the new widget to create." }
     )
     body: CreatableWidget
   ) {
@@ -455,7 +451,7 @@ import {
 class WidgetController {
   ...
 
-  @Post("/", { description: "Create a widget" })
+  @Post("/", { summary: "Create a widget" })
   @JsonResponse(
     201,
     widgetSchema,
@@ -559,7 +555,7 @@ import {
 class WidgetController {
   ...
 
-  @Post("/", { description: "Create a widget" })
+  @Post("/", { summary: "Create a widget" })
   @JsonResponse(
     201,
     widgetSchema,
