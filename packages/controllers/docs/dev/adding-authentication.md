@@ -37,13 +37,16 @@ class MyAuthenticator implements AuthenticationController {
   ) {
     const user = await decodeBearerToken(value);
     if (!user) {
-      // Returning false is the equivalent of throwing an Unauthorized http-error with the default message.
+      // Returning false is the equivalent of throwing
+      // an Unauthorized http-error with the default message.
       return false;
     }
 
-    // It is your responsibility to check the scopes in the authentication request.
+    // It is your responsibility to check the scopes
+    // in the authentication request.
     if (!scopes.every((cope) => user.scopes.includes(scope))) {
-      // Thrown errors will be recorded.  If all authentication options reject the request,
+      // Thrown errors will be recorded.
+      // If all authentication options reject the request,
       // the last thrown http-error will be used.
       throw new Unauthorized("Insufficient permissions");
     }
@@ -145,7 +148,7 @@ Authentication can be specified in 3 locations:
 - Per controller with the `@RequireAuthentication` decorator, to be applied only to methods in that controller
 - Per method with the `@RequireAuthentication` decorator, to be applied only to that method.
 
-Per the OpenAPI spec, any authentication specified on a method or controller will take precidence over any authentication specified at the root level of your OpenAPI specification.
+Per the OpenAPI spec, any authentication specified on a method or controller will take precedence over any authentication specified at the root level of your OpenAPI specification.
 
 ### Requiring authentication for all endpoints
 
@@ -176,7 +179,11 @@ import controllers from "./controllers";
   scheme: "bearer",
 })
 class MyAuthenticator implements AuthenticationController {
-  async authenticate(value: HttpBearerAuthenticationCredentials, scopes: string[], ctx: RequestContext) {
+  async authenticate(
+    value: HttpBearerAuthenticationCredentials,
+    scopes: string[],
+    ctx: RequestContext
+  ) {
     ...
   }
 }
@@ -193,7 +200,10 @@ const mySpecFragment: OpenAPI = {
   ]
 }
 
-const openApiSpec = addendOpenAPIFromControllers(mySpecFragment, [MyAuthenticator, ...controllers]);
+const openApiSpec = addendOpenAPIFromControllers(
+  mySpecFragment,
+  [MyAuthenticator, ...controllers]
+);
 const router = createRouterFromSpec(openApiSpec);
 ```
 
@@ -237,7 +247,11 @@ import {
   scheme: "bearer",
 })
 class MyAuthenticator implements AuthenticationController {
-  async authenticate(value: HttpBearerAuthenticationCredentials, scopes: string[], ctx: RequestContext) {
+  async authenticate(
+    value: HttpBearerAuthenticationCredentials,
+    scopes: string[],
+    ctx: RequestContext
+  ) {
     ...
   }
 }
@@ -335,7 +349,9 @@ class WidgetController {
         secondAuthUser.id,
       );
     } else {
-      // This branch will theoretically never be hit, as your method will not be called if none of the provided authentication requirements are met.
+      // This branch will theoretically never be hit,
+      // as your method will not be called if none of
+      // the provided authentication requirements are met.
       // However, it is best practice to include this anyway.
       throw new Unauthorized();
     }

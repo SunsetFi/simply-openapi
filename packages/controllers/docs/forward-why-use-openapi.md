@@ -28,7 +28,7 @@ In such cases, it is better to directly defer to the spec from the code for all 
 
 ## What does OpenAPI define anyway?
 
-Let's take this simple example, straight from the OpenAPI project itself:
+Let's take this simple example, straight from the OpenAPI documentation:
 
 ```json
 {
