@@ -1,6 +1,6 @@
 # Simply OpenAPI Controllers
 
-Read our documentation more easily on [GitBook](https://simply-openapi.gitbook.io/simply-openapi/readme/controllers)!
+Read our documentation more easily on [GitBook](https://simply-openapi.gitbook.io/simply-openapi-controllers/)!
 
 Simply OpenAPI Controllers is an ExpressJS compatible OpenAPI-First controller library. It produces fully robust method handlers on controllers by consuming an OpenAPI 3.1 specification and calling your handlers with all data pre-validated and coerced according to your specification.
 
