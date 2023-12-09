@@ -9,38 +9,22 @@ This is less than ideal, and breaks away from the single source of truth princip
 [Typebox](https://www.npmjs.com/package/@sinclair/typebox) provides an elegant way to produce both interfaces and JSON Schema from a single source. As it allows you to pass custom JSON Schema at each level, it allows for a full description of your types using JSON Schema and OpenAPI Schema directives that might not be natively available in other schema generators.
 
 ```typescript
-import { Type, Static } from '@sinclair/typebox'
+import { Type, Static } from "@sinclair/typebox";
 
-const widgetIdSchema = Type.Integer({
+export const widgetIdSchema = Type.Integer({
   description: "The ID of the widget",
-  minimum: 0
+  minimum: 0,
 });
-type WidgetId = Static<typeof widgetIdSchema>;
+export type WidgetId = Static<typeof widgetIdSchema>;
 
-const widgetSchema = Type.Object({
+export const widgetSchema = Type.Object({
   id: widgetIdSchema,
   name: Type.String({
     description: "The name of the widget",
-    minLength: 1
+    minLength: 1,
   }),
 });
-type Widget = Static<typeof widgetSchema>;
-
-class WidgetsController {
-  @Get("/{widget_id}", , { description: "Gets a widget by ID" })
-  @JsonResponse(200, widgetSchema)
-  getWidget(
-    @PathParam(
-      "widget_id",
-      widgetIdSchema,
-      { description: "The ID of the widget to get" }
-    )
-    widgetId: WidgetId
-  ): Promise<Widget> {
-    ...
-  }
-}
-
+export type Widget = Static<typeof widgetSchema>;
 ```
 
 ## Zod
