@@ -1,7 +1,7 @@
 {
   "name": "@simply-openapi/controllers",
   "version": "1.2.0",
-  "description": "Controller library generating validated express handlers from OpenAPI spec and business logic.",
+  "description": "OpenAPI-first express controllers",
   "repository": {
     "type": "git",
     "url": "git@github.com:SunsetFi/simply-openapi.git"
@@ -28,8 +28,7 @@
     "router",
     "typescript",
     "swagger",
-    "openapi",
-    "decorator"
+    "openapi"
   ],
   "author": {
     "name": "SunsetFi",
