@@ -35,13 +35,13 @@ class WidgetsController {
 
 ## Zod
 
-[Zod](https://zod.dev/) also provides a means of producing types and schemas, when paired with the [Zod to Json Schema](https://github.com/StefanTerdell/zod-to-JSON Schema) library.
+[Zod](https://zod.dev/) also provides a means of producing types and schemas, when paired with the [Zod to Json Schema](https://github.com/StefanTerdell/zod-to-json-schema) library.
 
-A benefit of using Zod over Typebox is that Zod is first and formost a validation system. While @simply-openapi/controllers already validates against the JSON Schema defined in the OpenAPI spec, you may wish to retain your own validators for use elsewhere. In this case, zod is a good choice. However, as you cannot specify custom JSON Schema directives, you are limited to those validation rules that `zod-to-JSON Schema` supports.
+A benefit of using Zod over Typebox is that Zod is first and formost a validation system. While @simply-openapi/controllers already validates against the JSON Schema defined in the OpenAPI spec, you may wish to retain your own validators for use elsewhere. In this case, zod is a good choice. However, as you cannot specify custom JSON Schema directives, you are limited to those validation rules that `zod-to-json-schema` supports.
 
 ```typescript
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-JSON Schema";
+import { zodToJsonSchema } from "zod-to-json-schema";
 
 export const Widget = z.object({
   id: z.number().int().positive(),
