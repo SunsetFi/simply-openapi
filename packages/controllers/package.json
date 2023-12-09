@@ -2,6 +2,11 @@
   "name": "@simply-openapi/controllers",
   "version": "1.2.0",
   "description": "Controller library generating validated express handlers from OpenAPI spec and business logic.",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:SunsetFi/simply-openapi.git"
+  },
+  "homepage": "https://simply-openapi.gitbook.io/simply-openapi-controllers/",
   "main": "dist/index.js",
   "types": "dts/index.d.ts",
   "files": [
