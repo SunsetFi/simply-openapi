@@ -41,7 +41,7 @@ type CreatableWidget = Static<typeof creatableWidgetShema>;
 const patchableWidgetSchema = Type.Partial(
   Type.Omit(widgetSchema, ["id"])
 );
-type PatchableWdiget = Static<typeof patchableWidgetSchema>;
+type PatchableWidget = Static<typeof patchableWidgetSchema>;
 
 @Controller("/widgets", { tags: [ "Widgets" ]})
 export class WidgetsController {
