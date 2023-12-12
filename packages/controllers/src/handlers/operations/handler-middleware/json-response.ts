@@ -6,6 +6,7 @@ import { nameOperationFromContext } from "../utils";
 
 import { OperationHandlerMiddlewareNextFunction } from "./types";
 import { RequestContext } from "../../RequestContext";
+import { HandlerResult } from "./handler-result";
 
 export async function operationHandlerJsonResponseMiddleware(
   context: RequestContext,
@@ -33,20 +34,9 @@ export async function operationHandlerJsonResponseMiddleware(
     );
   }
 
-  if (!isJson(result)) {
-    throw new Error(
-      `Operation ${nameOperationFromContext(
-        context,
-      )} handler returned a result that is not JSON serializable.  Are you missing a handler middleware for the response type ${context.res.getHeader(
-        "accept",
-      )}?`,
-    );
+  if (isJson(result)) {
+    return HandlerResult.json(result).status(HttpStatusCodes.OK);
   }
 
-  // This could be chained, but unit tests appear to not always make the mocks return itself.
-  context.res.status(HttpStatusCodes.OK);
-  context.res.setHeader("Content-Type", "application/json");
-  context.res.json(result);
-
-  return undefined;
+  return result;
 }
