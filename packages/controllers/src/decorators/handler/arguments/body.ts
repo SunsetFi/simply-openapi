@@ -96,3 +96,18 @@ export function RequiredJsonBody(
     ...request,
   });
 }
+
+/**
+ * Binds the argument to the request body.
+ */
+export function BindBody() {
+  return (
+    target: any,
+    propertyKey: string | symbol,
+    parameterIndex: number,
+  ) => {
+    setMethodParameterType(target, propertyKey, parameterIndex, {
+      type: "openapi-requestbody",
+    });
+  };
+}
