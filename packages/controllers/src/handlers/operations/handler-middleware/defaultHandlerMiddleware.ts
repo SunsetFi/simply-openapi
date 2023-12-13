@@ -9,6 +9,6 @@ export default [
   securityProcessorMiddlewareFactory,
   parametersProcessorMiddlewareFactory,
   bodyProcessorMiddlewareFactory,
-  operationHandlerJsonResponseMiddleware,
   operationHandlerResponseObjectMiddleware,
+  operationHandlerJsonResponseMiddleware,
 ];
