@@ -14,7 +14,7 @@ import { MethodHandlerContext } from "../MethodHandlerContext";
 import { OperationContext } from "../OperationContext";
 
 import { MethodHandler } from "./MethodHandler";
-import { OperationHandlerMiddleware } from "./handler-middleware";
+import { OperationMiddleware } from "./handler-middleware";
 import { operationHandlerFallbackResponseMiddleware } from "./handler-middleware/fallback";
 import defaultHandlerMiddleware from "./handler-middleware/defaultHandlerMiddleware";
 
@@ -50,7 +50,7 @@ export interface CreateMethodHandlerOpts {
    * In addition to the middleware specified here, the last middleware will always be one that
    * processes json responses.
    */
-  handlerMiddleware?: OperationHandlerMiddleware[];
+  handlerMiddleware?: OperationMiddleware[];
 
   /**
    * If true, ensure that all responses are handled by the handler.

@@ -1,5 +1,6 @@
 import { OpenAPIObject } from "openapi3-ts/oas31";
 import { Router } from "express";
+import { InternalServerError } from "http-errors";
 
 import {
   Controller,
@@ -14,8 +15,9 @@ import { createRouterFromSpec } from "../routes";
 
 import { getMockReq, getMockRes } from "./mocks";
 import { tapPromise, trackPromise } from "./tracked-promise";
+import { expectNextCalledWithError } from "./expects";
 
-describe("E2E: Body", function () {
+describe("E2E: Response", function () {
   @Controller("/")
   class WidgetController {
     @Get("/")
@@ -59,6 +61,16 @@ describe("E2E: Body", function () {
       return HandlerResult.status(201)
         .header("foo", "bar")
         .json({ foo: "bar" });
+    }
+
+    @Get("/bad-response")
+    @JsonResponse(200, {
+      type: "object",
+      properties: { expectedField: { type: "boolean" } },
+    })
+    handleBadResponse() {
+      // Intentionally returning data that does not match the schema
+      return { unexpectedField: "invalid" };
     }
   }
 
@@ -128,6 +140,22 @@ describe("E2E: Body", function () {
             },
           },
         },
+        "/bad-response": {
+          get: {
+            responses: {
+              200: {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: { expectedField: { type: "boolean" } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
   });
@@ -154,7 +182,7 @@ describe("E2E: Body", function () {
       } catch (e) {
         done(e);
       }
-    }, 10);
+    }, 100);
   });
 
   it("sends the async response", function (done) {
@@ -181,7 +209,7 @@ describe("E2E: Body", function () {
         } catch (e) {
           done(e);
         }
-      }, 10);
+      }, 100);
     });
   });
 
@@ -208,7 +236,7 @@ describe("E2E: Body", function () {
       } catch (e) {
         done(e);
       }
-    }, 10);
+    }, 100);
   });
 });
 

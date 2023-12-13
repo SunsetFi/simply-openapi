@@ -1,6 +1,6 @@
 import { RequestHandler } from "express";
 
-import { OperationHandlerMiddleware } from "../handlers";
+import { OperationMiddleware } from "../handlers";
 
 import { RouteCreationContext } from "./RouteCreationContext";
 
@@ -14,7 +14,7 @@ export interface OperationHandlerOptions {
    * Middleware to apply to all handlers.
    * This middleware will apply in-order before any middleware registered on the operation.
    */
-  handlerMiddleware?: OperationHandlerMiddleware[];
+  handlerMiddleware?: OperationMiddleware[];
 
   /**
    * If true, ensure that all responses are handled by the handler.

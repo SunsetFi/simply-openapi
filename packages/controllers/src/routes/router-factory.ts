@@ -9,11 +9,18 @@ import { ControllerInstance, RequestMethod } from "../types";
 import { requestMethods } from "../utils";
 import { openAPIToExpressPath } from "../urls";
 import { createOpenAPIAjv } from "../ajv";
+
 import { OperationContext } from "../handlers";
+import { responseValidationMiddlewareCreator } from "../handlers/operations/handler-middleware/response-validator";
 
 import { OperationHandlerFactory, OperationHandlerOptions } from "./types";
 import { socOperationHandlerFactory } from "./handler-factories";
 import { RouteCreationContext } from "./RouteCreationContext";
+
+export interface ResponseValidationOptions {
+  required: boolean;
+  errorHandler?(error: Error): void;
+}
 
 export interface CreateRouterOptions extends OperationHandlerOptions {
   /**
@@ -59,6 +66,15 @@ export interface CreateRouterOptions extends OperationHandlerOptions {
    * the x-simply-controller-method extensions.
    */
   handlerFactories?: OperationHandlerFactory[];
+
+  /**
+   * Configures validation of the controller method responses according to the provided OpenAPI operation specification.
+   */
+  responseValidation?:
+    | boolean
+    | "required"
+    | ((err: Error) => void)
+    | ResponseValidationOptions;
 }
 
 /**
@@ -92,6 +108,34 @@ class RouterFromSpecFactory {
 
     // Factories run in order, so our default should be last.
     _opts.handlerFactories.push(socOperationHandlerFactory);
+
+    const responseValidation = this._opts.responseValidation;
+    if (responseValidation) {
+      const middleware = this._opts.handlerMiddleware
+        ? [...this._opts.handlerMiddleware]
+        : [];
+
+      const strict =
+        responseValidation === "required" ||
+        (typeof responseValidation === "object" &&
+          responseValidation.required) ||
+        false;
+
+      const errorHandler =
+        (typeof responseValidation === "object" &&
+          responseValidation.errorHandler) ||
+        (typeof responseValidation === "function" && responseValidation) ||
+        null;
+
+      const responseValidationMiddleware = responseValidationMiddlewareCreator(
+        strict,
+        errorHandler,
+      );
+
+      middleware.unshift(responseValidationMiddleware);
+
+      this._opts.handlerMiddleware = middleware;
+    }
   }
 
   createRouterFromSpec(): Router {

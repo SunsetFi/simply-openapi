@@ -1,6 +1,6 @@
 import { PathItemObject } from "openapi3-ts/oas31";
 import { JsonValue } from "type-fest";
-import { mergeWith } from "lodash";
+import { mergeWith, isPlainObject } from "lodash";
 
 import { ControllerObject } from "./types";
 
@@ -15,16 +15,21 @@ export const requestMethods = [
   "trace",
 ] as const satisfies readonly (keyof PathItemObject)[];
 
-export function isJson(x: any): x is JsonValue {
+export function isPlainJson(x: any): x is JsonValue {
   if (x == null) {
     return true;
   }
 
   if (Array.isArray(x)) {
-    return x.every(isJson);
+    return x.every(isPlainJson);
   }
+
   if (typeof x === "object") {
-    return Object.values(x).every(isJson);
+    if (!isPlainObject(x)) {
+      return false;
+    }
+
+    return Object.values(x).every(isPlainJson);
   }
 
   return (
