@@ -74,10 +74,15 @@ export function OptionalJsonBody(
   request?: Omit<RequestBodyObject, "content">,
   opts?: Omit<MediaTypeObject, "schema">,
 ) {
-  return Body("application/json", schema, opts, {
-    required: false,
-    ...request,
-  });
+  return Body(
+    "application/json",
+    schema,
+    {
+      required: false,
+      ...request,
+    },
+    opts,
+  );
 }
 
 /**
@@ -91,10 +96,15 @@ export function RequiredJsonBody(
   request?: Omit<RequestBodyObject, "content">,
   opts?: Omit<MediaTypeObject, "schema">,
 ) {
-  return Body("application/json", schema, opts, {
-    required: true,
-    ...request,
-  });
+  return Body(
+    "application/json",
+    schema,
+    {
+      required: true,
+      ...request,
+    },
+    opts,
+  );
 }
 
 /**
