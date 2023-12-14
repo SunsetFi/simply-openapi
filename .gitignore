@@ -3,3 +3,4 @@ dist
 dts
 coverage
 .npmrc
+.idea
