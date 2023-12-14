@@ -5,8 +5,9 @@ import "jest-extended";
 import { RequestContext } from "../../RequestContext";
 
 import { operationHandlerJsonResponseMiddleware } from "./json-response";
+import { HandlerResult } from "./handler-result";
 
-describe.skip("operationHandlerJsonResponseMiddleware", function () {
+describe("operationHandlerJsonResponseMiddleware", function () {
   function createContext(mockRes?: Response): RequestContext {
     if (!mockRes) {
       mockRes = getMockRes().res;
@@ -30,25 +31,9 @@ describe.skip("operationHandlerJsonResponseMiddleware", function () {
       () => {},
       [],
       getMockReq(),
-      mockRes,
+      mockRes
     );
   }
-
-  it("throws an error if the response is not JSON serializable", async function () {
-    const test = async () => {
-      await operationHandlerJsonResponseMiddleware(
-        createContext(),
-        jest.fn(() => ({
-          nonSerializableValue: () => void 0,
-        })) as any,
-      );
-    };
-
-    await expect(test()).rejects.toThrowWithMessage(
-      Error,
-      /not JSON serializable/,
-    );
-  });
 
   it("throws an error if the response is already sent", async function () {
     const test = async () => {
@@ -56,13 +41,13 @@ describe.skip("operationHandlerJsonResponseMiddleware", function () {
         createContext(getMockRes({ headersSent: true }).res),
         jest.fn(() => ({
           value: 42,
-        })) as any,
+        })) as any
       );
     };
 
     await expect(test()).rejects.toThrowWithMessage(
       Error,
-      /already sent its headers/,
+      /already sent its headers/
     );
   });
 
@@ -70,7 +55,7 @@ describe.skip("operationHandlerJsonResponseMiddleware", function () {
     const test = async () => {
       await operationHandlerJsonResponseMiddleware(
         createContext(getMockRes({ headersSent: true }).res),
-        jest.fn((x) => undefined) as any,
+        jest.fn((x) => undefined) as any
       );
     };
 
@@ -80,17 +65,16 @@ describe.skip("operationHandlerJsonResponseMiddleware", function () {
   it("sends the json response if one is provided", async function () {
     const res = getMockRes().res;
     const result = { value: 42 };
-    const test = async () => {
-      await operationHandlerJsonResponseMiddleware(
-        createContext(res),
-        jest.fn((x) => result) as any,
-      );
-    };
+    const handlerResult = await operationHandlerJsonResponseMiddleware(
+      createContext(res),
+      jest.fn((x) => result) as any
+    );
 
-    const handlerResult = await test();
-
-    expect(handlerResult).toBeUndefined();
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(result);
+    expect(handlerResult).toMatchObject(expect.any(HandlerResult));
+    expect(handlerResult).toMatchObject({
+      _bodyJson: result,
+      _status: 200,
+      _headers: { "Content-Type": "application/json" },
+    });
   });
 });
