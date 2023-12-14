@@ -1,7 +1,7 @@
 import { IExtensionType } from "openapi3-ts/oas31";
 import { JSONSchema6 } from "json-schema";
 
-import ajv from "../../ajv";
+import ajv from "../../validation/ajv";
 import {
   OperationHandlerMiddleware,
   RequestDataKey,

@@ -5,7 +5,6 @@ import {
   SOCControllerMethodExtensionData,
   SOCControllerMethodExtensionName,
 } from "../../openapi";
-import { createOpenAPIAjv } from "../../ajv";
 
 jest.mock("./MethodHandler", () => {
   return {
@@ -19,13 +18,15 @@ jest.mock("./MethodHandler", () => {
 
 import { createMethodHandlerFromSpec } from "./handler-from-spec";
 import { MethodHandler } from "./MethodHandler";
+import { ValidatorFactories } from "../../validation";
 
-const ajv = createOpenAPIAjv();
+const validators: ValidatorFactories = {
+  createStrictValidator: jest.fn(),
+  createCoersionValidator: jest.fn(),
+};
 
 describe("createMethodHandlerFromSpec", function () {
   describe("createFromSpec", function () {
-    test.todo("creates data processors");
-
     describe("controller resolution", function () {
       it("uses the controller resolver specified in resolveController", async function () {
         const inputController = "input";
@@ -52,7 +53,7 @@ describe("createMethodHandlerFromSpec", function () {
           },
         };
 
-        createMethodHandlerFromSpec(spec, "path", "get", ajv, {
+        createMethodHandlerFromSpec(spec, "path", "get", validators, {
           resolveController: resolver,
         });
 
@@ -103,7 +104,7 @@ describe("createMethodHandlerFromSpec", function () {
           },
         };
 
-        createMethodHandlerFromSpec(spec, "path", "get", ajv, {});
+        createMethodHandlerFromSpec(spec, "path", "get", validators, {});
 
         expect(MethodHandler).toHaveBeenCalledWith(
           inputController,
@@ -137,7 +138,7 @@ describe("createMethodHandlerFromSpec", function () {
             },
           },
         };
-        createMethodHandlerFromSpec(spec, "path", "get", ajv, {
+        createMethodHandlerFromSpec(spec, "path", "get", validators, {
           resolveHandler: resolver,
         });
 
@@ -165,7 +166,5 @@ describe("createMethodHandlerFromSpec", function () {
     });
 
     test.todo("handler middleware is concatenated in the correct order");
-    test.todo("express pre middleware is concatenated in the correct order");
-    test.todo("express post middleware is concatenated in the correct order");
   });
 });

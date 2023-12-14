@@ -5,6 +5,7 @@ import bodyParser from "body-parser";
 import { SOCControllerMethodHandlerArg } from "../../openapi";
 import { isNotNullOrUndefined } from "../../utils";
 import { ControllerInstance } from "../../types";
+import { ValidatorFactories } from "../../validation";
 
 import { MethodHandlerContext } from "../MethodHandlerContext";
 import { RequestContext } from "../RequestContext";
@@ -29,12 +30,12 @@ export class MethodHandler {
     private _handlerArgs: (SOCControllerMethodHandlerArg | undefined)[],
     handlerMiddleware: OperationMiddleware[],
     private _context: MethodHandlerContext,
-    ajv: Ajv,
+    validators: ValidatorFactories,
   ) {
     const middlewareFactory =
       OperationMiddlewareFactoryContext.fromMethodHandlerContext(
         this._context,
-        ajv,
+        validators,
       );
 
     this._handlerMiddleware = handlerMiddleware.map((middleware) => {

@@ -1,17 +1,17 @@
-import { OpenAPIObject, SchemaObject } from "openapi3-ts/oas31";
-import Ajv from "ajv";
+import { OpenAPIObject } from "openapi3-ts/oas31";
 
 import { RequestMethod } from "../../../types";
+import { ValidatorFactories } from "../../../validation";
 
 import { MethodHandlerContext } from "../../MethodHandlerContext";
 
 import { OperationHandlerArgumentDefinitions } from "../types";
 
-import { SchemaObjectProcessorFactory } from "./SchemaObjectProcessorFactory";
-import { ValueProcessorFunction } from "./types";
-
 export class OperationMiddlewareFactoryContext extends MethodHandlerContext {
-  static fromMethodHandlerContext(context: MethodHandlerContext, ajv: Ajv) {
+  static fromMethodHandlerContext(
+    context: MethodHandlerContext,
+    validators: ValidatorFactories,
+  ) {
     return new OperationMiddlewareFactoryContext(
       context.spec,
       context.path,
@@ -19,11 +19,9 @@ export class OperationMiddlewareFactoryContext extends MethodHandlerContext {
       context.controller,
       context.handler,
       context.handlerArgs,
-      ajv,
+      validators,
     );
   }
-
-  private _schemaObjectProcessorFactory: SchemaObjectProcessorFactory;
 
   constructor(
     spec: OpenAPIObject,
@@ -32,18 +30,15 @@ export class OperationMiddlewareFactoryContext extends MethodHandlerContext {
     controller: object,
     handler: Function,
     handlerArgs: OperationHandlerArgumentDefinitions,
-    ajv: Ajv,
+    private _validators: ValidatorFactories,
   ) {
     super(spec, path, method, controller, handler, handlerArgs);
-    this._schemaObjectProcessorFactory = new SchemaObjectProcessorFactory(ajv);
   }
 
   /**
-   * Create a value processor function with the given schema.
-   * The returned function will validate the value against the schema, and may coerce it depending on user settings.
-   * @param schema The schema to produce a validator for.
+   * Gets a collection of validator factories for use with validating data.
    */
-  compileSchema(schema: SchemaObject): ValueProcessorFunction {
-    return this._schemaObjectProcessorFactory.createValueProcessor(schema);
+  get validators() {
+    return this._validators;
   }
 }

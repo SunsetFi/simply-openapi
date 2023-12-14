@@ -1,7 +1,10 @@
 import { InternalServerError } from "http-errors";
+import { ValidationError } from "ajv";
 
 import { pickContentType, resolveReference } from "../../../schema-utils";
 import { isPlainJson } from "../../../utils";
+import { ValueValidatorFunction } from "../../../validation";
+import { errorObjectsToMessage } from "../../../validation/ajv";
 
 import { RequestContext } from "../../RequestContext";
 
@@ -12,24 +15,22 @@ import { OperationMiddlewareFactoryContext } from "./OperationMiddlewareFactoryC
 import {
   OperationHandlerMiddlewareFactory,
   OperationHandlerMiddlewareNextFunction,
-  ValueProcessorFunction,
 } from "./types";
-import { ValidationError } from "ajv";
-import { errorToMessage } from "../../../ajv";
 
 // Function to prepare response schemas
 function prepareResponseSchemas(ctx: OperationMiddlewareFactoryContext) {
   const responseSchemas: Record<
     string,
-    Record<string, ValueProcessorFunction>
+    Record<string, ValueValidatorFunction>
   > = {};
   function processContent(content: Record<string, any>) {
-    const valueProcessors: Record<string, ValueProcessorFunction> = {};
+    const valueProcessors: Record<string, ValueValidatorFunction> = {};
 
     Object.entries(content).forEach(([contentType, { schema }]) => {
       const resolvedSchema = resolveReference(ctx.spec, schema);
       if (resolvedSchema) {
-        valueProcessors[contentType] = ctx.compileSchema(resolvedSchema);
+        valueProcessors[contentType] =
+          ctx.validators.createStrictValidator(resolvedSchema);
       }
     });
 
@@ -114,10 +115,13 @@ async function responseValidationMiddleware(
       // Return the result as-is, if the error handler didn't throw.
       return result;
     } else if (error instanceof ValidationError) {
+      let addend = "";
+      if (error.errors) {
+        addend = `: ${errorObjectsToMessage(error.errors)}`;
+      }
+
       throw new InternalServerError(
-        `The server returned an invalid response according to the OpenAPI schema: ${errorToMessage(
-          error,
-        )}`,
+        `The server returned an invalid response according to the OpenAPI schema${addend}`,
       );
     }
 

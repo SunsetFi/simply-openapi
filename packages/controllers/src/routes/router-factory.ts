@@ -1,14 +1,13 @@
 import { Router, RequestHandler } from "express";
-import { OpenAPIObject, PathItemObject } from "openapi3-ts/oas31";
+import { OpenAPIObject, PathItemObject, SchemaObject } from "openapi3-ts/oas31";
 import { Entries } from "type-fest";
-import { pick } from "lodash";
-import AJV, { Options as AjvOptions } from "ajv";
+import { pick, mapValues } from "lodash";
 
 import { SOCControllerMethodExtensionData } from "../openapi";
 import { ControllerInstance, RequestMethod } from "../types";
 import { requestMethods } from "../utils";
 import { openAPIToExpressPath } from "../urls";
-import { createOpenAPIAjv } from "../ajv";
+import { createOpenAPIAjv } from "../validation/ajv";
 
 import { OperationContext } from "../handlers";
 import { responseValidationMiddlewareCreator } from "../handlers/operations/handler-middleware/response-validator";
@@ -16,6 +15,11 @@ import { responseValidationMiddlewareCreator } from "../handlers/operations/hand
 import { OperationHandlerFactory, OperationHandlerOptions } from "./types";
 import { socOperationHandlerFactory } from "./handler-factories";
 import { RouteCreationContext } from "./RouteCreationContext";
+import {
+  ValidatorFactories,
+  ValueValidatorFactory,
+  createValueValidator,
+} from "../validation";
 
 export interface ResponseValidationOptions {
   required: boolean;
@@ -24,9 +28,12 @@ export interface ResponseValidationOptions {
 
 export interface CreateRouterOptions extends OperationHandlerOptions {
   /**
-   * Options to pass to the AJV instance used to validate requests.
+   * A collection of validator factory producers for use with validating data.
    */
-  ajvOptions?: AjvOptions;
+  validatorFactories?: Record<
+    keyof ValidatorFactories,
+    (spec: OpenAPIObject) => ValueValidatorFactory
+  >;
 
   /**
    * Resolver to convert a controller specified in the x-simply-controller-method extension into an instance of the controller object.
@@ -91,16 +98,42 @@ export function createRouterFromSpec(
   return factory.createRouterFromSpec();
 }
 
+const defaultValidatorFactories = {
+  createStrictValidator: (spec: OpenAPIObject) => {
+    const ajv = createOpenAPIAjv(spec, {
+      coerceTypes: false,
+      useDefaults: true,
+    });
+    return (schema: SchemaObject) => {
+      return createValueValidator(ajv, schema);
+    };
+  },
+  createCoersionValidator: (spec: OpenAPIObject) => {
+    const ajv = createOpenAPIAjv(spec, {
+      coerceTypes: true,
+      useDefaults: true,
+    });
+    return (schema: SchemaObject) => {
+      return createValueValidator(ajv, schema);
+    };
+  },
+};
+
 class RouterFromSpecFactory {
-  private _ajv: AJV;
+  private _validatorFactores: ValidatorFactories;
+
   constructor(
     private _openApi: OpenAPIObject,
     private _opts: CreateRouterOptions = {},
   ) {
-    this._ajv = createOpenAPIAjv(_opts.ajvOptions);
+    let validatorFactoriesSources = {
+      ...defaultValidatorFactories,
+      ...(_opts.validatorFactories ?? {}),
+    };
 
-    // Add the full openapi schema for $ref resolution.
-    this._ajv.addSchema(_openApi);
+    this._validatorFactores = mapValues(validatorFactoriesSources, (fn) =>
+      fn(_openApi),
+    );
 
     if (!_opts.handlerFactories) {
       _opts.handlerFactories = [];
@@ -170,7 +203,12 @@ class RouterFromSpecFactory {
         continue;
       }
 
-      const ctx = new RouteCreationContext(openApi, path, method, this._ajv);
+      const ctx = new RouteCreationContext(
+        openApi,
+        path,
+        method,
+        this._validatorFactores,
+      );
 
       let handler: RequestHandler | null | undefined;
       for (const handlerFactory of opts.handlerFactories!) {

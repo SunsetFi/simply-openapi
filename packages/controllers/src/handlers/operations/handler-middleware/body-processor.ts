@@ -8,7 +8,10 @@ import { BadRequest } from "http-errors";
 import { ValidationError } from "ajv";
 
 import { pickContentType, resolveReference } from "../../../schema-utils";
-import { errorToMessage } from "../../../ajv";
+import {
+  ValueValidatorFunction,
+  errorObjectsToMessage,
+} from "../../../validation";
 
 import { RequestContext } from "../../RequestContext";
 
@@ -18,7 +21,6 @@ import {
   OperationHandlerMiddleware,
   OperationHandlerMiddlewareFactory,
   OperationHandlerMiddlewareNextFunction,
-  ValueProcessorFunction,
 } from "./types";
 import { OperationMiddlewareFactoryContext } from "./OperationMiddlewareFactoryContext";
 
@@ -38,7 +40,7 @@ export const bodyProcessorMiddlewareFactory: OperationHandlerMiddlewareFactory =
       return defaultBodyHandlerMiddleware;
     }
 
-    const processors: Record<string, ValueProcessorFunction> = mapValues(
+    const processors: Record<string, ValueValidatorFunction> = mapValues(
       // Content is required in the spec, but allow none I suppose...
       requestBody.content ?? {},
       ({ schema }, key) => compileContentSchema(key, schema, ctx),
@@ -73,7 +75,7 @@ function compileContentSchema(
   }
 
   try {
-    return ctx.compileSchema(resolved);
+    return ctx.validators.createCoersionValidator(resolved);
   } catch (e: any) {
     e.message = `Failed to compile schema for body ${key}: ${e.message}`;
     throw e;
@@ -83,7 +85,7 @@ function compileContentSchema(
 function extractBody(
   ctx: RequestContext,
   requestBody: RequestBodyObject,
-  processors: Record<string, ValueProcessorFunction>,
+  processors: Record<string, ValueValidatorFunction>,
 ) {
   // unfortunately, express (maybe body-parser?) gives us an empty object if no body.
   if (!ctx.req.body || Object.keys(ctx.req.body).length === 0) {
@@ -120,7 +122,12 @@ function extractBody(
     return processor(ctx.req.body);
   } catch (err: any) {
     if (err instanceof ValidationError) {
-      throw new BadRequest(`Invalid request body: ${errorToMessage(err)}`);
+      let addend = "";
+      if (err.errors) {
+        addend = `: ${errorObjectsToMessage(err.errors)}`;
+      }
+
+      throw new BadRequest(`Invalid request body${addend}`);
     }
     throw err;
   }

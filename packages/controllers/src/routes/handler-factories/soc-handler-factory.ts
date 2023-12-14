@@ -19,7 +19,7 @@ export function socOperationHandlerFactory(
     ctx.spec,
     ctx.path,
     ctx.method,
-    ctx.ajv,
+    ctx.validators,
     opts,
   );
   return handler.handle.bind(handler);

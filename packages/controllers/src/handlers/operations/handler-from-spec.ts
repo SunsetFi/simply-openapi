@@ -1,4 +1,3 @@
-import AJV from "ajv";
 import { isObject, isFunction } from "lodash";
 import { OpenAPIObject } from "openapi3-ts/oas31";
 
@@ -9,6 +8,7 @@ import {
 } from "../../openapi";
 import { ControllerInstance, RequestMethod } from "../../types";
 import { isConstructor } from "../../utils";
+import { ValidatorFactories, errorObjectsToMessage } from "../../validation";
 
 import { MethodHandlerContext } from "../MethodHandlerContext";
 import { OperationContext } from "../OperationContext";
@@ -64,7 +64,7 @@ export function createMethodHandlerFromSpec(
   spec: OpenAPIObject,
   path: string,
   method: RequestMethod,
-  ajv: AJV,
+  validators: ValidatorFactories,
   opts: CreateMethodHandlerOpts,
 ) {
   const pathItem = (spec.paths ?? {})[path];
@@ -88,12 +88,14 @@ export function createMethodHandlerFromSpec(
   }
 
   if (!validateSOCControllerMethodExtensionData(extensionData)) {
-    throw new Error(
-      `Operation ${
-        operation.operationId
-      } has an invalid ${SOCControllerMethodExtensionName} extension: ${ajv.errorsText(
+    let addend = "";
+    if (validateSOCControllerMethodExtensionData.errors) {
+      addend = `: ${errorObjectsToMessage(
         validateSOCControllerMethodExtensionData.errors,
-      )}}`,
+      )}`;
+    }
+    throw new Error(
+      `Operation ${operation.operationId} has an invalid ${SOCControllerMethodExtensionName} extension${addend}}`,
     );
   }
 
@@ -135,7 +137,7 @@ export function createMethodHandlerFromSpec(
     extensionData.handlerArgs ?? [],
     handlerMiddleware,
     methodContext,
-    ajv,
+    validators,
   );
 }
 

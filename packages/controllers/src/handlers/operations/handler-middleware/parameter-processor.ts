@@ -4,7 +4,10 @@ import { capitalize } from "lodash";
 import { ValidationError } from "ajv";
 
 import { resolveReference } from "../../../schema-utils";
-import { errorToMessage } from "../../../ajv";
+import {
+  ValueValidatorFactory,
+  errorObjectsToMessage,
+} from "../../../validation";
 
 import { RequestContext } from "../../RequestContext";
 
@@ -12,7 +15,6 @@ import { nameOperationFromContext } from "../utils";
 import {
   OperationHandlerMiddlewareFactory,
   OperationHandlerMiddlewareNextFunction,
-  ValueProcessorFunction,
 } from "./types";
 import { OperationMiddlewareFactoryContext } from "./OperationMiddlewareFactoryContext";
 
@@ -46,7 +48,7 @@ function collectParameterProcessors(ctx: OperationMiddlewareFactoryContext) {
     }
 
     try {
-      return ctx.compileSchema(resolved);
+      return ctx.validators.createCoersionValidator(resolved);
     } catch (e: any) {
       e.message = `Failed to compile schema for parameter ${param.in} ${param.name}: ${e.message}`;
       throw e;
@@ -59,7 +61,7 @@ function collectParameterProcessors(ctx: OperationMiddlewareFactoryContext) {
       acc[param.name] = processor;
       return acc;
     },
-    {} as Record<string, ValueProcessorFunction>,
+    {} as Record<string, ValueValidatorFactory>,
   );
 
   return processors;
@@ -67,7 +69,7 @@ function collectParameterProcessors(ctx: OperationMiddlewareFactoryContext) {
 
 function processParameters(
   ctx: RequestContext,
-  processors: Record<string, ValueProcessorFunction>,
+  processors: Record<string, ValueValidatorFactory>,
 ) {
   for (const param of ctx.parameters) {
     const processor = processors[param.name];
@@ -88,10 +90,15 @@ function processParameters(
           throw new NotFound();
         }
 
+        let addend = "";
+        if (e.errors) {
+          addend = `: ${errorObjectsToMessage(e.errors)}`;
+        }
+
         throw new BadRequest(
           `${capitalize(param.in)} parameter "${
             param.name
-          }" is invalid: ${errorToMessage(e)}`,
+          }" is invalid${addend}`,
         );
       }
     }

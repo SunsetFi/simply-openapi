@@ -1,9 +1,5 @@
-import AJV, {
-  _,
-  Options as AjvOptions,
-  ErrorObject,
-  ValidationError,
-} from "ajv";
+import { OpenAPIObject } from "openapi3-ts/oas31";
+import AJV, { _, Options as AjvOptions, ErrorObject } from "ajv";
 import addFormats from "ajv-formats";
 
 const ajv = new AJV({ coerceTypes: true, useDefaults: true });
@@ -11,11 +7,9 @@ addFormats(ajv);
 
 export default ajv;
 
-export function createOpenAPIAjv(opts?: AjvOptions): AJV {
+export function createOpenAPIAjv(spec: OpenAPIObject, opts?: AjvOptions): AJV {
   const ajv = new AJV({
     schemaId: "$id",
-    coerceTypes: true,
-    useDefaults: true,
     discriminator: true,
     ...opts,
   });
@@ -23,13 +17,15 @@ export function createOpenAPIAjv(opts?: AjvOptions): AJV {
   addFormats(ajv);
 
   // Allow SchemaObject examples that do not participate in validation.
-  // Note: Oddly enough, ajv allows examples plural but not example.
   ajv.addKeyword({
     keyword: "example",
     code(ctx) {
       ctx.fail(_`false`);
     },
   });
+
+  // Add the spec for $ref resolution.
+  ajv.addSchema(spec);
 
   return ajv;
 }
@@ -57,10 +53,20 @@ export function sliceAjvError(errorObject: ErrorObject, propertyName: string) {
   return newError;
 }
 
-export function errorToMessage(error: ValidationError): string {
-  return ajv.errorsText(error.errors.map(partialErrorToError), {
-    dataVar: "value",
-  });
+export function errorObjectsToMessage(errors: Partial<ErrorObject>[]): string {
+  let message: string;
+
+  const processedErrors = errors.map(partialErrorToError);
+
+  if (!errors || errors.length === 0) {
+    message = "No errors";
+  } else {
+    message = processedErrors
+      .map((e) => `value${e.instancePath} ${e.message}`)
+      .join(", ");
+  }
+
+  return message;
 }
 
 function partialErrorToError(error: Partial<ErrorObject>): ErrorObject {

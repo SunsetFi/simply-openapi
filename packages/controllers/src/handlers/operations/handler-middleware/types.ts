@@ -30,8 +30,3 @@ export type OperationMiddleware =
  * @returns A promise awaiting the result of the handler function or next middleware step.
  */
 export type OperationHandlerMiddlewareNextFunction = () => Promise<any>;
-
-/**
- * A function that validates and coerces a value.
- */
-export type ValueProcessorFunction = (value: any) => any;
