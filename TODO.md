@@ -6,9 +6,7 @@
 - Validate incomming oapi.
 - Tests for decorators
 - Additional packages:
-  - Package for OpenAPI Schema Object utils: pickProperty, omitProperty, arrayOf, maybe, optionalProperty, jsonSchemaToSchemaObject
   - Package for DTOs: class-validator / class-validators-json-schema (for openapi) / class-transformer
-  - Package for promethius
 - The world is slowly moving on from express, and fastify's schema validation is interesting.
   - We dont actually have too hard of a dependency on express, we just have:
     - middleware (koa has its own variant, fastify doesnt have this, but has adapters... we would want to support its hooks instead)
