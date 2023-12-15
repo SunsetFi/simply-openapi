@@ -5,8 +5,8 @@ import { mergeSOCControllerMethodMetadata } from "../../metadata";
 /**
  * Documents a possible response from this operation.
  * @param statusCode The status code of the response.
- * @param content A mapping of content types this response object can return.  This is optional and merged with response.
- * @param response The OpenAPI response object.
+ * @param content A mapping of content types this response object can return.
+ * @param response Additional properties for the OpenAPI Response object.
  */
 export function Response(
   statusCode: number | "default",
@@ -18,7 +18,6 @@ export function Response(
       throw new Error(`@Response() must be applied to a method.`);
     }
 
-    // Warn: We might be a bound method.  In which case, operationFragment will be totally ignored.
     mergeSOCControllerMethodMetadata(
       target,
       {
@@ -40,9 +39,9 @@ export function Response(
 }
 
 /**
- * Documents an application/json that returns no response.
+ * Documents a status code that returns no response.
  * @param statusCode The status code of the response.
- * @param response The OpenAPI response object.
+ * @param response Additional properties for the OpenAPI Response object.
  */
 export function EmptyResponse(
   statusCode: number | "default",
@@ -55,7 +54,7 @@ export function EmptyResponse(
  * Documents an application/json response from this operation.
  * @param statusCode The status code of the response.
  * @param schema The OpenAPI schema object for the application/json response.
- * @param response The OpenAPI response object.
+ * @param response Additional properties for the OpenAPI Response object.
  */
 export function JsonResponse(
   statusCode: number | "default",

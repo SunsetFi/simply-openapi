@@ -27,8 +27,16 @@ export const extractSOCBoundMethodSpec: OpenAPIObjectExtractor = (
     return undefined;
   }
 
+  if ("operationFragment" in metadata) {
+    throw new Error(
+      `Controller ${nameController(controller)} method ${String(
+        methodName,
+      )} is a bound operation, but uses OpenAPI-generating decorators.  Decorators that modify the OpenAPI spec are not allowed on bound operations.`,
+    );
+  }
+
   return (spec: OpenAPIObject) => {
-    const opData = findOperationById(spec.paths ?? {}, metadata.operationId);
+    const opData = findOperationById(spec, metadata.operationId);
     if (!opData) {
       throw new Error(
         `Controller ${nameController(controller)} method ${String(
@@ -81,10 +89,17 @@ export const extractSOCBoundMethodSpec: OpenAPIObjectExtractor = (
 };
 
 function findOperationById(
-  paths: PathsObject,
+  spec: OpenAPIObject,
   operationId: string,
 ): [path: string, method: string, operation: OperationObject] | null {
-  for (const [path, pathItem] of Object.entries(paths)) {
+  for (const [path, pathItem] of Object.entries(spec.paths ?? {})) {
+    const resolved = resolveReference(spec, pathItem);
+    if (!resolved) {
+      throw new Error(
+        `Could not resolve path item reference for path ${path} in OpenAPI spec.`,
+      );
+    }
+
     for (const [method, operation] of Object.entries(pathItem)) {
       if (!requestMethods.includes(method as any)) {
         continue;
