@@ -152,6 +152,8 @@
           }
         ],
         "requestBody": {
+          "required": true,
+          "description": "The content of the widget",
           "content": {
             "application/json": {
               "schema": {
@@ -173,9 +175,7 @@
                   "name",
                   "disposition"
                 ]
-              },
-              "required": true,
-              "description": "The content of the widget"
+              }
             }
           }
         },

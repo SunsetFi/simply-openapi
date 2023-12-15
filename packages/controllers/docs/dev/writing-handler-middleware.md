@@ -59,7 +59,7 @@ In general, a typical middleware will do prepratory work before the call, extrac
 
 ### The Middleware Context
 
-The first argument to the middleware, its context, contains all the information needed to proces the response, as well as functions to influence the execution of the controller method that will handle it. Some useful properties are:
+The first argument to the middleware is its context, which contains all the information needed to proces the response. Some useful properties are:
 
 - `req` - The express request.
 - `res` - The express response.
@@ -70,7 +70,7 @@ The first argument to the middleware, its context, contains all the information 
 - `getRequestData` - A method to get data extracted from the request. See [Request Data](./request-data.md).
 - `setRequestData` - A method to set data extracted from the request. See [Request Data](./request-data.md).
 
-Many more properties and methods are available to further simplify interacting with the request. For a full list, see docuemntation for the [RequestContext](../api-reference/contexts.md#requestcontext).
+Many more properties and methods are available to further simplify interacting with the request. For a full list, see the documentation for the [RequestContext](../api-reference/contexts.md#requestcontext).
 
 ## Middleware factories
 
@@ -79,11 +79,11 @@ Sometimes, middleware might want to do prepratory work on the method it is bound
 In cases like this, you can provide a middleware factory. A middleware factory is called for every operation that uses it at the time of router creation, and returns a middleware function to use for that operation.
 
 Unlike middleware, a middleware factory function has a single context argument, and no next function. As with middleware, the function's arguments.length must be equal to 1 for it to be properly detected as a middleware factory function.
-This factory context contains all the information about the schema, the operation, and the class and method being used to process the request. It also contains a `compileSchema` method, which takes a SchemaObject and returns a function that returns the input value coerced to the type, or throws an AJV ValidationError if the type does not match the schema.
+This factory context contains all the information about the schema, the operation, and the class and method being used to process the request. It also contains a `validators` object, which contains various validation function factories for converting OpenAPI [SchemaObjects](https://spec.openapis.org/oas/v3.1.0#schemaObject) into validators with varying degrees of strictness and data coersion.
 
 ## Middleware for request validation
 
-Request validation is performed through handler middleware. If a middleware determines that a request is invalid, it should throw an error derived from the `http-error` library to propogate the failure up the middleware stack for eventual transmission.
+Request validation can be performed through handler middleware. If a middleware determines that a request is invalid, it should throw an error derived from the `http-error` library to propogate the failure up the middleware stack for eventual transmission.
 
 ```typescript
 import {
@@ -116,7 +116,7 @@ This is done with Request Data:
 
 ## Middleware for result transmission
 
-Middleware can be used to intercept the result of a controller method and serialize it to the response stream.
+Middleware can be used to intercept the result of a controller method. It can transform the results to pass upstream, or it can serialize it directly to the express response.
 
 ```typescript
 import {
@@ -153,5 +153,5 @@ All of the default behavior of @simply-openapi/controllers is implemented throug
 - Processes the global and operation-specific `security` OpenAPI directives. Improper requests are denied, and proper requests have their authentication result registered as request data for the `@RequireAuthentication` and `@BindSecurity` decorators.
 - Processes the path and operation `parameters` OpenAPI directives. Invalid requests are rejected, and values are coerced and registered for the various parameter-centric decorators (`@QueryParam`, `@PathParam`, and similar).
 - Process the `requestBody` OpenAPI directive. Data is validated and coerced according to its media type, and registered for the `@Body` decorator and its variants.
-- If no further middleware has processed the handler result, the handler result is checked to see if it is a JSON object. If so, it is sent as the response body and the Content-Type header is set to `application/json` .
 - If no further middleware has processed the handler result, and the handler result is an instance of the `HandlerResult` class, handling of the result is delegated to that class.
+- If no further middleware has processed the handler result, the handler result is checked to see if it is a plain (non class instance) JSON object. If so, it is trasnformed into a HandlerResult, specifying a content type of "application/json" and setting the status code to 200. This handler result is then passed up the middleware chain.
