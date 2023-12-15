@@ -65,7 +65,7 @@ app.listen(8080);
 
 ### Orphaned requests
 
-In @simply-openapi/controllers, `undefined` is carries special meaning when returned by a controller method or a handler middleware function. It indicates that the response has been handled and no further processing is needed.
+In @simply-openapi/controllers, `undefined` carries special meaning when returned by a controller method or a handler middleware function. It indicates that the response has been handled and no further processing is needed.
 
 However, `undefined` may also crop up if you forget to return a result from your handler method. This will cause the request to be orphaned, and the connecting client to time out.
 

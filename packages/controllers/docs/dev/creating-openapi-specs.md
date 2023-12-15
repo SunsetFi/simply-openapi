@@ -80,7 +80,7 @@ const spec = createOpenAPIFromControllers(
 );
 ```
 
-Note however that if you produce specs in this way, the metadata in the spec will point to the constructors and not to the instances. Because of this, extra effort will be needed on the route generation phase to configure the generator with information on how to produce instances of your classes.
+Note however that if you produce specs in this way, the metadata in the spec will point to the constructors and not to the instances. Because of this, extra effort will be needed on the route generation phase to configure the generator with information on how to produce instances of your classes. See [Resolving controllers](./creating-express-routes.md#resolving-controllers).
 
 ## Caveat: Empty controllers
 
