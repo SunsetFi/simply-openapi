@@ -145,7 +145,13 @@ export function mySchemaMiddlewareFactory(
       if (err instanceof ValidationError) {
         // AJV determined that this value is invalid.
         // We can check err.errors for a comprehensive list of issues with the data.
-        throw new BadRequest();
+        // For convienence, @simply-openapi/controllers provides
+        // a function that can provide a human readable string describing
+        // the issues encountered.
+        const message = `someValue is invalid: ${errorObjectsToMessage(
+          err.errors,
+        )}`;
+        throw new BadRequest(message);
       }
     }
 
