@@ -1,6 +1,6 @@
 {
   "name": "@simply-openapi/controllers",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "OpenAPI-first express controllers",
   "repository": {
     "type": "git",
@@ -17,7 +17,7 @@
   "scripts": {
     "clean": "rimraf dist dts",
     "prebuild": "npm run clean",
-    "build": "tsc -p src",
+    "build": "tsc -p tsconfig.release.json",
     "test": "jest --coverage",
     "format": "prettier --write \"./src/**/*.{ts,js}\"",
     "prepublish": "npm run build"

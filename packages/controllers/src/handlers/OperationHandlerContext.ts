@@ -5,14 +5,14 @@ import { RequestMethod } from "../types";
 import { OperationContext } from "./OperationContext";
 import { OperationHandlerArgumentDefinitions } from "./operations/types";
 
-export class MethodHandlerContext extends OperationContext {
+export class OperationHandlerContext extends OperationContext {
   static fromOperationContext(
     context: OperationContext,
     controller: object,
     handler: Function,
     handlerArgs: OperationHandlerArgumentDefinitions,
   ) {
-    return new MethodHandlerContext(
+    return new OperationHandlerContext(
       context.spec,
       context.path,
       context.method,

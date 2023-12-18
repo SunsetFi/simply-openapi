@@ -530,7 +530,7 @@ If you find yourself often resorting to HandlerResult, you may wish to instead u
 No matter how carefully a framework is written, there will always be cases where the request and response objects are needed. However, if you find yourself often needing the raw request or response, consider abstracting your use case to keep your handlers as focused on business logic as possible. There are a few extension points that can help with this:
 
 - Extracting and processing request data - See [Creating Request Data Decorators](./request-data.md#implementing-your-own-request-data)
-- Validating requests - See [Writing Validation Handler Middleware](./writing-handler-middleware.md#middleware-for-request-validation)
+- Validating requests - See [Writing Validation Handler Middleware](./writing-handler-middleware.md#writing-middleware-for-request-validation)
 - Serializing responses - See [Writing Response Handler Middleware](./writing-handler-middleware.md#middleware-for-result-transmission)
 
 For everything else, the `@Req` and `@Res` decorators will provide a controller handler with the express request and response respectively.

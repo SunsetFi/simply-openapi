@@ -12,10 +12,10 @@ import { getMockReq, getMockRes } from "@jest-mock/express";
 import { MockRequest } from "@jest-mock/express/dist/src/request";
 import "jest-extended";
 
-import { RequestContext } from "../../RequestContext";
+import { OperationRequestContext } from "../../OperationRequestContext";
 
 const coercionValueProcessor = jest.fn((value) => value);
-const createCoersionValidator = jest.fn(
+const createCoercingValidator = jest.fn(
   (schema: any) => coercionValueProcessor,
 );
 
@@ -23,8 +23,8 @@ beforeEach(() => {
   coercionValueProcessor.mockReset();
   coercionValueProcessor.mockImplementation((value) => value);
 
-  createCoersionValidator.mockReset();
-  createCoersionValidator.mockImplementation(
+  createCoercingValidator.mockReset();
+  createCoercingValidator.mockImplementation(
     (schema: any) => coercionValueProcessor,
   );
 });
@@ -32,14 +32,17 @@ beforeEach(() => {
 import { OperationMiddlewareFactoryContext } from "./OperationMiddlewareFactoryContext";
 
 import { bodyProcessorMiddlewareFactory } from "./body-processor";
-import { OperationHandlerMiddleware } from "./types";
+import { OperationMiddlewareFunction } from "./types";
 
 describe("bodyProcessorMiddlewareFactory", function () {
   function createSut(
     requestBody: RequestBodyObject | ReferenceObject | undefined,
     path: string = "/",
     additionalSpec?: PartialDeep<OpenAPIObject>,
-  ): [OperationHandlerMiddleware, (req: MockRequest) => RequestContext] {
+  ): [
+    OperationMiddlewareFunction,
+    (req: MockRequest) => OperationRequestContext,
+  ] {
     const spec = merge(
       {
         openapi: "3.0.0",
@@ -67,13 +70,13 @@ describe("bodyProcessorMiddlewareFactory", function () {
       () => {},
       [],
       {
-        createCoersionValidator,
+        createCoercingValidator,
         createStrictValidator: jest.fn(),
       },
     );
 
     const createRequestCtx = (req: MockRequest) =>
-      new RequestContext(
+      new OperationRequestContext(
         spec,
         path,
         "get",
@@ -128,7 +131,7 @@ describe("bodyProcessorMiddlewareFactory", function () {
       },
     );
 
-    expect(createCoersionValidator).toHaveBeenCalledWith(schema);
+    expect(createCoercingValidator).toHaveBeenCalledWith(schema);
   });
 
   it("throws if the request body is an unknown reference", function () {
@@ -192,7 +195,7 @@ describe("bodyProcessorMiddlewareFactory", function () {
       },
     });
 
-    expect(createCoersionValidator).toHaveBeenCalledWith(schema);
+    expect(createCoercingValidator).toHaveBeenCalledWith(schema);
   });
 
   it("calls the processor for a given body", function () {
@@ -264,7 +267,7 @@ describe("bodyProcessorMiddlewareFactory", function () {
 
     let valueProcessors = new Map<string, ReturnType<typeof jest.fn>>();
 
-    createCoersionValidator.mockImplementation((schema: SchemaObject) => {
+    createCoercingValidator.mockImplementation((schema: SchemaObject) => {
       const processor = jest.fn((value) => value);
       valueProcessors.set(schema["x-for"], processor);
       return processor;
@@ -296,7 +299,7 @@ describe("bodyProcessorMiddlewareFactory", function () {
     expect(next).toHaveBeenCalled();
     expect(result).toBe(nextResult);
 
-    expect(createCoersionValidator).toHaveBeenCalledWith(schemaFooBar);
+    expect(createCoercingValidator).toHaveBeenCalledWith(schemaFooBar);
 
     const fooBarProcessor = valueProcessors.get("foo/bar");
     expect(fooBarProcessor).toHaveBeenCalledWith(body);
@@ -387,7 +390,7 @@ describe("bodyProcessorMiddlewareFactory", function () {
       },
     );
 
-    expect(createCoersionValidator).toHaveBeenCalledWith(schema);
+    expect(createCoercingValidator).toHaveBeenCalledWith(schema);
   });
 
   it("throws an error when the schema reference is unknown", function () {

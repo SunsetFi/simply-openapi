@@ -248,3 +248,17 @@ const app = express();
 app.use(router);
 app.listen(8080);
 ```
+
+### Modifying or adding OpenAPI Schema validators
+
+By default, @simply-openapi/controllers uses AJV to create a varity of functions to validate, coerce, and apply default values from [OpenAPI Schemas](https://spec.openapis.org/oas/v3.1.0#schema-object).
+
+However, you can replace this with any logic you wish, as well as register additional validators for use in [schema validating middleware](./writing-handler-middleware.md#schema-based-validation). The `validatorFactories` option is provided for this purpose.
+
+`validatorFactories` takes an object whose keys are the names of validators to be provided. By default, this library provides `createStrictValidator` and `createCoercingValidator`, and these names can be used as keys to override their behavior. Additional names can also be used, which will then be made available on the `validators` property of [OperationMiddlewareFactoryContext](../api-reference/contexts.md#operationmiddlewarefactorycontext).
+
+The value of this option should be factory functions that take the OpenAPI specification, and return a validator factory function.
+
+The validator factory function returned by the above factory should take an [OpenAPI Schemas](https://spec.openapis.org/oas/v3.1.0#schema-object), and return a value validation function.
+
+The value validation function should take an object to validate. If the value is invalid, it should throw an instance of `ValidationError` from the AJV library with the `errors` property describing the errors encountered. If the value is valid, the function should either return the value unchanged, or return a new value to use in its place (for example, with coercion and default values applied).

@@ -7,14 +7,14 @@ import { isNotNullOrUndefined } from "../../utils";
 import { ControllerInstance } from "../../types";
 import { ValidatorFactories } from "../../validation";
 
-import { MethodHandlerContext } from "../MethodHandlerContext";
-import { RequestContext } from "../RequestContext";
+import { OperationHandlerContext } from "../OperationHandlerContext";
+import { OperationRequestContext } from "../OperationRequestContext";
 
 import {
-  OperationHandlerMiddleware,
-  OperationHandlerMiddlewareNextFunction,
+  OperationMiddlewareFunction,
+  OperationMiddlewareNextFunction,
   OperationMiddleware,
-  isOperationHandlerMiddlewareFactory,
+  isOperationMiddlewareFactory,
   isOperationHandlerMiddleware,
 } from "./handler-middleware";
 import { OperationMiddlewareFactoryContext } from "./handler-middleware";
@@ -22,24 +22,24 @@ import { nameOperationFromContext } from "./utils";
 
 export class MethodHandler {
   private _selfRouter = Router({ mergeParams: true });
-  private _handlerMiddleware: OperationHandlerMiddleware[];
+  private _handlerMiddleware: OperationMiddlewareFunction[];
 
   constructor(
     private _controller: ControllerInstance,
     private _handler: Function,
     private _handlerArgs: (SOCControllerMethodHandlerArg | undefined)[],
     handlerMiddleware: OperationMiddleware[],
-    private _context: MethodHandlerContext,
+    private _context: OperationHandlerContext,
     validators: ValidatorFactories,
   ) {
     const middlewareFactory =
-      OperationMiddlewareFactoryContext.fromMethodHandlerContext(
+      OperationMiddlewareFactoryContext.fromOperationHandlerContext(
         this._context,
         validators,
       );
 
     this._handlerMiddleware = handlerMiddleware.map((middleware) => {
-      if (isOperationHandlerMiddlewareFactory(middleware)) {
+      if (isOperationMiddlewareFactory(middleware)) {
         return middleware(middlewareFactory);
       } else if (isOperationHandlerMiddleware(middleware)) {
         return middleware;
@@ -62,7 +62,7 @@ export class MethodHandler {
 
   private async _handle(req: Request, res: Response, next: NextFunction) {
     try {
-      const ctx = RequestContext.fromMethodHandlerContext(
+      const ctx = OperationRequestContext.fromOperationHandlerContext(
         this._context,
         req,
         res,
@@ -82,7 +82,7 @@ export class MethodHandler {
     }
   }
 
-  private async _runHandler(context: RequestContext): Promise<any> {
+  private async _runHandler(context: OperationRequestContext): Promise<any> {
     const stack = this._handlerMiddleware;
 
     const executeMiddleware = async (index: number): Promise<any> => {
@@ -91,7 +91,7 @@ export class MethodHandler {
         return this._handler.apply(this._controller, args);
       }
 
-      const next: OperationHandlerMiddlewareNextFunction = async () => {
+      const next: OperationMiddlewareNextFunction = async () => {
         return executeMiddleware(index + 1);
       };
 
@@ -102,7 +102,7 @@ export class MethodHandler {
     return executeMiddleware(0);
   }
 
-  private _extractArgs(context: RequestContext): any[] {
+  private _extractArgs(context: OperationRequestContext): any[] {
     return (this._handlerArgs ?? []).filter(isNotNullOrUndefined).map((arg) => {
       if (!arg) {
         return undefined;

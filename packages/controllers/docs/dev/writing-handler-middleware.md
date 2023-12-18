@@ -17,13 +17,13 @@ For example, @simply-openapi/controllers provides this default handler, which is
 
 ```typescript
 import {
-  RequestContext,
-  OperationHandlerMiddlewareNextFunction,
+  OperationRequestContext,
+  OperationMiddlewareNextFunction,
 } from "@simply-openapi/controllers";
 
 export async function operationHandlerJsonResponseMiddleware(
-  context: RequestContext,
-  next: OperationHandlerMiddlewareNextFunction,
+  context: OperationRequestContext,
+  next: OperationMiddlewareNextFunction,
 ) {
   const result = await next();
 
@@ -70,7 +70,7 @@ The first argument to the middleware is its context, which contains all the info
 - `getRequestData` - A method to get data extracted from the request. See [Request Data](./request-data.md).
 - `setRequestData` - A method to set data extracted from the request. See [Request Data](./request-data.md).
 
-Many more properties and methods are available to further simplify interacting with the request. For a full list, see the documentation for the [RequestContext](../api-reference/contexts.md#requestcontext).
+Many more properties and methods are available to further simplify interacting with the request. For a full list, see the documentation for the [OperationRequestContext](../api-reference/contexts.md#requestcontext).
 
 ## Middleware factories
 
@@ -78,23 +78,27 @@ Sometimes, middleware might want to do prepratory work on the method it is bound
 
 In cases like this, you can provide a middleware factory. A middleware factory is called for every operation that uses it at the time of router creation, and returns a middleware function to use for that operation.
 
-Unlike middleware, a middleware factory function has a single context argument, and no next function. As with middleware, the function's arguments.length must be equal to 1 for it to be properly detected as a middleware factory function.
-This factory context contains all the information about the schema, the operation, and the class and method being used to process the request. It also contains a `validators` object, which contains various validation function factories for converting OpenAPI [SchemaObjects](https://spec.openapis.org/oas/v3.1.0#schemaObject) into validators with varying degrees of strictness and data coersion.
+Unlike middleware, a middleware factory function has a single argument that recieves an [OperationMiddlewareFactoryContext](../api-reference/contexts.md#operationmiddlewarefactorycontext), and no next function. As with middleware, the function's arguments.length must be equal to 1 for it to be properly detected as a middleware factory function.
+This factory context contains all the information about the schema, the operation, and the class and method being used to process the request. It also contains a `validators` object, which contains various validation function factories for converting OpenAPI [SchemaObjects](https://spec.openapis.org/oas/v3.1.0#schemaObject) into validators with varying degrees of strictness and data coercion.
 
-## Middleware for request validation
+See [Schema Based Validation](#schema-based-validation) for an example.
+
+## Writing middleware for request validation
+
+### Basic request validation
 
 Request validation can be performed through handler middleware. If a middleware determines that a request is invalid, it should throw an error derived from the `http-error` library to propogate the failure up the middleware stack for eventual transmission.
 
 ```typescript
 import {
-  RequestContext,
-  OperationHandlerMiddlewareNextFunction,
+  OperationRequestContext,
+  OperationMiddlewareNextFunction,
 } from "@simply-openapi/controllers";
 import { BadRequest } from "http-errors";
 
 export async function myValidationMiddleware(
-  context: RequestContext,
-  next: OperationHandlerMiddlewareNextFunction,
+  context: OperationRequestContext,
+  next: OperationMiddlewareNextFunction,
 ) {
   if (typeof context.req.someValue !== "number") {
     throw new BadRequest("Expected value is invalid");
@@ -103,6 +107,54 @@ export async function myValidationMiddleware(
   return await next();
 }
 ```
+
+### Schema based validation
+
+@simply-openapi/controllers makes heavy use of json-schema based [SchemaObjects](https://spec.openapis.org/oas/v3.1.0#schemaObject). Depending on the context, these schemas can be used either strictly for validation, or they can be used to validate, coerce, and provide default values. All of this behavior is driven by [AJV](https://ajv.js.org/), preconfigured to support OpenAPI constructs.
+
+As AJV performs code generation to 'compile' the schemas, middleware that wants to perform validation with it needs to be able to pre-process these schemas to perform the heavy compilation step on startup rather than re-compiling the schema on every request. However, often the schema required is dependent on the particular operation, which must be derived seperately for every operation.
+
+Middleware Factories make this possible.
+
+```typescript
+import {
+  OperationMiddlewareFactoryContext,
+  OperationRequestContext,
+  OperationMiddlewareNextFunction,
+} from "@simply-openapi/controllers";
+import { BadRequest } from "http-errors";
+import { ValidationError } from "ajv";
+
+export function mySchemaMiddlewareFactory(
+  factoryContext: OperationMiddlewareFactoryContext,
+) {
+  // Pull the schema from the operation this factory is running on.
+  const mySchema = factoryContext.operation["x-my-schema"];
+
+  // Create a validation function from the schema.
+  const validator = factoryContext.validators.createStrictValidator(mySchema);
+
+  return async (
+    context: OperationRequestContext,
+    next: OperationMiddlewareNextFunction,
+  ) => {
+    try {
+      // Run the validator on our data.
+      validator(context.req.someValue);
+    } catch (error) {
+      if (err instanceof ValidationError) {
+        // AJV determined that this value is invalid.
+        // We can check err.errors for a comprehensive list of issues with the data.
+        throw new BadRequest();
+      }
+    }
+
+    return await next();
+  };
+}
+```
+
+By default, @simply-openapi/controllers comes with two validators, `createStrictValidator` and `createCoercingValidator`, but you can modify these or add your own. See [OperationMiddlewareFacotryContext](../api-reference/contexts.md#operationmiddlewarefactorycontext) for details on these validators, or look to [Modifying or adding OpenAPI Schema Validators](../dev/creating-express-routes.md#modifying-or-adding-openapi-schema-validators) to modify or add your own.
 
 ## Middleware for data extraction
 
@@ -120,14 +172,14 @@ Middleware can be used to intercept the result of a controller method. It can tr
 
 ```typescript
 import {
-  RequestContext,
-  OperationHandlerMiddlewareNextFunction,
+  OperationRequestContext,
+  OperationMiddlewareNextFunction,
 } from "@simply-openapi/controllers";
 import { BadRequest } from "http-errors";
 
 export async function myResponseMiddleware(
-  context: RequestContext,
-  next: OperationHandlerMiddlewareNextFunction,
+  context: OperationRequestContext,
+  next: OperationMiddlewareNextFunction,
 ) {
   // Call through the middleware stack to the handler to get the result.
   const result = await next();

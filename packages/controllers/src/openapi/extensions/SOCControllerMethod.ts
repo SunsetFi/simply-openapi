@@ -3,7 +3,7 @@ import { JSONSchema6 } from "json-schema";
 
 import ajv from "../../validation/ajv";
 import {
-  OperationHandlerMiddleware,
+  OperationMiddlewareFunction,
   RequestDataKey,
   requestDataKeyPattern,
 } from "../../handlers";
@@ -203,7 +203,7 @@ export interface SOCControllerMethodExtensionData {
    * These middlewares are responsible for sending the return value of the handler to the response.
    * While defaults are provided to do this, you can customize the behavior of the responses by overriding this behavior here.
    */
-  handlerMiddleware?: OperationHandlerMiddleware[];
+  handlerMiddleware?: OperationMiddlewareFunction[];
 }
 
 export const socControllerMethodExtensionDataSchema: JSONSchema6 = {

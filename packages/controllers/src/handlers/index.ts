@@ -3,6 +3,6 @@ export * from "./operations";
 
 export * from "./request-data";
 
-export * from "./MethodHandlerContext";
+export * from "./OperationHandlerContext";
 export * from "./OperationContext";
-export * from "./RequestContext";
+export * from "./OperationRequestContext";

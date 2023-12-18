@@ -1,30 +1,31 @@
 import { Unauthorized, isHttpError } from "http-errors";
 
-import { RequestContext } from "../../../RequestContext";
+import { OperationRequestContext } from "../../../OperationRequestContext";
 
 import { nameOperationFromContext } from "../../utils";
 
 import { OperationMiddlewareFactoryContext } from "../OperationMiddlewareFactoryContext";
 import {
-  OperationHandlerMiddlewareFactory,
-  OperationHandlerMiddlewareNextFunction,
+  OperationMiddlewareFactory,
+  OperationMiddlewareNextFunction,
 } from "../types";
 
 import { ApiKeyRequirementProcessor } from "./ApiKeyRequirementProcessor";
 import { HttpRequirementProcessor } from "./HttpRequirementProcessor";
 import { SecurityRequirementProcessor } from "./SecurityRequirementProcessor";
 
-export const securityProcessorMiddlewareFactory: OperationHandlerMiddlewareFactory =
-  (ctx) => {
-    const processors = collectSecurityRequirementProcessors(ctx);
-    return async (
-      reqCtx: RequestContext,
-      next: OperationHandlerMiddlewareNextFunction,
-    ) => {
-      await applySecurityRequirements(reqCtx, processors);
-      return next();
-    };
+export const securityProcessorMiddlewareFactory: OperationMiddlewareFactory = (
+  ctx,
+) => {
+  const processors = collectSecurityRequirementProcessors(ctx);
+  return async (
+    reqCtx: OperationRequestContext,
+    next: OperationMiddlewareNextFunction,
+  ) => {
+    await applySecurityRequirements(reqCtx, processors);
+    return next();
   };
+};
 
 function collectSecurityRequirementProcessors(
   ctx: OperationMiddlewareFactoryContext,
@@ -59,7 +60,7 @@ function collectSecurityRequirementProcessors(
 }
 
 async function applySecurityRequirements(
-  ctx: RequestContext,
+  ctx: OperationRequestContext,
   requirementProcessors: SecurityRequirementProcessor[][],
 ) {
   let desiredError: Error | undefined;
@@ -96,7 +97,7 @@ async function applySecurityRequirements(
 }
 
 async function applyProcessors(
-  ctx: RequestContext,
+  ctx: OperationRequestContext,
   set: SecurityRequirementProcessor[],
 ) {
   const results: Record<string, any> = {};

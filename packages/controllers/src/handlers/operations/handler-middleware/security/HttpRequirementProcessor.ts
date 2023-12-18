@@ -1,7 +1,7 @@
 import { SecuritySchemeObject } from "openapi3-ts/oas31";
 import { Unauthorized } from "http-errors";
 
-import { RequestContext } from "../../../RequestContext";
+import { OperationRequestContext } from "../../../OperationRequestContext";
 
 import { SecurityRequirementProcessor } from "./SecurityRequirementProcessor";
 
@@ -35,7 +35,7 @@ export class HttpRequirementProcessor extends SecurityRequirementProcessor {
     super(schemeKey, scheme, scopes);
   }
 
-  protected _getValue(ctx: RequestContext) {
+  protected _getValue(ctx: OperationRequestContext) {
     const value = ctx.getHeader("authorization");
     if (!value || Array.isArray(value)) {
       return undefined;

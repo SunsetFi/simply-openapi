@@ -9,7 +9,7 @@ import {
   Controller,
   Get,
 } from "../decorators";
-import { AuthenticationController, RequestContext } from "../handlers";
+import { AuthenticationController, OperationRequestContext } from "../handlers";
 import { createOpenAPIFromControllers } from "../openapi";
 import { createRouterFromSpec } from "../routes";
 
@@ -39,7 +39,11 @@ describe("E2E: Auth", function () {
 
     @Authenticator("widgetAuth", auth)
     class WidgetAuthenticator implements AuthenticationController {
-      authenticate(value: string, scopes: string[], ctx: RequestContext) {
+      authenticate(
+        value: string,
+        scopes: string[],
+        ctx: OperationRequestContext,
+      ) {
         return authenticatorFn(value, scopes, ctx);
       }
     }
@@ -285,7 +289,11 @@ describe("E2E: Auth", function () {
 
     @Authenticator("widgetAuth", auth)
     class WidgetAuthenticator implements AuthenticationController {
-      authenticate(value: string, scopes: string[], ctx: RequestContext) {
+      authenticate(
+        value: string,
+        scopes: string[],
+        ctx: OperationRequestContext,
+      ) {
         return authenticatorFn(value, scopes, ctx);
       }
     }
@@ -496,7 +504,11 @@ describe("E2E: Auth", function () {
 
     @Authenticator("widgetAuth", auth)
     class WidgetAuthenticator implements AuthenticationController {
-      authenticate(value: string, scopes: string[], ctx: RequestContext) {
+      authenticate(
+        value: string,
+        scopes: string[],
+        ctx: OperationRequestContext,
+      ) {
         return true;
       }
     }

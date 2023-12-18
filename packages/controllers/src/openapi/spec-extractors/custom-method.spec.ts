@@ -13,8 +13,8 @@ import {
 
 import { SOCControllerMethodExtensionName } from "../extensions";
 import {
-  RequestContext,
-  OperationHandlerMiddlewareNextFunction,
+  OperationRequestContext,
+  OperationMiddlewareNextFunction,
 } from "../../handlers";
 
 import { extractSOCCustomMethodSpec } from "./custom-method";
@@ -234,8 +234,8 @@ describe("extractSOCCustomMethodSpec", function () {
     it("configures controller middleware", function () {
       const operationId = "foobar";
       const middleware = (
-        ctx: RequestContext,
-        next: OperationHandlerMiddlewareNextFunction,
+        ctx: OperationRequestContext,
+        next: OperationMiddlewareNextFunction,
       ) => {};
 
       const [result] = invoke(
@@ -277,8 +277,8 @@ describe("extractSOCCustomMethodSpec", function () {
     it("configures method middleware", function () {
       const operationId = "foobar";
       const middleware = (
-        ctx: RequestContext,
-        next: OperationHandlerMiddlewareNextFunction,
+        ctx: OperationRequestContext,
+        next: OperationMiddlewareNextFunction,
       ) => {};
 
       const [result] = invoke(
@@ -318,12 +318,12 @@ describe("extractSOCCustomMethodSpec", function () {
     it("orders method middleware after controller middleware", function () {
       const operationId = "foobar";
       const controllerMiddleware = (
-        ctx: RequestContext,
-        next: OperationHandlerMiddlewareNextFunction,
+        ctx: OperationRequestContext,
+        next: OperationMiddlewareNextFunction,
       ) => {};
       const methodMiddleware = (
-        ctx: RequestContext,
-        next: OperationHandlerMiddlewareNextFunction,
+        ctx: OperationRequestContext,
+        next: OperationMiddlewareNextFunction,
       ) => {};
 
       const [result] = invoke(

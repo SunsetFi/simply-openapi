@@ -18,7 +18,7 @@ This context provides detailed information about an OpenAPI Operation.
 - `parameters` - Gets an array of the resolved [Parameter Objects](https://spec.openapis.org/oas/v3.1.0#parameter-object) of this operation. These may come from the operation itself, or the path item.
 - `requestBody` - Gets the resolved [Request Body Object](https://spec.openapis.org/oas/v3.1.0#request-body-object) for this operation.
 
-## MethodHandlerContext
+## OperationHandlerContext
 
 This context provides information about a specific method handler on a controller. As methods implement operations, it inherits from OperationContext.
 
@@ -32,23 +32,24 @@ In addition to all properties from the [OperationContext](#operationcontext), th
 
 ## OperationMiddlewareFactoryContext
 
-This context is used for producing middleware to handle methods. As middleware factories run on specific methods, this context inherits from MethodHandlerContext
+This context is used for producing middleware to handle methods. As middleware factories run on specific methods, this context inherits from OperationHandlerContext
 
 ### Properties
 
-This context inherits all properties from [MethodHandlerContext](#methodhandlercontext). It contains no additional properties on its own.
+In addition to all all properties from [OperationHandlerContext](#OperationHandlerContext), the following properties are available:
 
-### Methods
+- `validators` - An object containing functions which will take an [OpenAPI 3.1 Schema](https://spec.openapis.org/oas/v3.1.0#schema-object) object, and return a function that attempts to validate and coerce its argument. If the data is valid, the cosersed value will be returned. If the data is invalid, an AJV `ValidationError` will be thrown with an array of [AJV Errors](https://ajv.js.org/api.html#validation-errors) in its `errors` property. For an example of this, see [Schema Based Validation](../dev/writing-handler-middleware.md#schema-based-validation).
+  The following functions are available by default. They may be modified, or new validators may be added, through the `validatorFactories` option of `createRouterFromSpec`. [See here for more details](../dev/creating-express-routes.md#modifying-or-adding-openapi-schema-validators).
+  - `createStrictValidator` - Creates a validator function that validates types exactly and performs no coercion. Default values will still be substituted according to the schema object.
+  - `createCoercingValidator` - Creates a validator function that both validates and coerces data according to the schema object. Coercion is done in accordance with the [AJV Type Coercion Rules](https://ajv.js.org/coercion.html)
 
-- `compileSchema(schema)` - Takes an [OpenAPI 3.1 Schema](https://spec.openapis.org/oas/v3.1.0#schema-object) object, and returns a function that attempts to validate and coerce its argument. If the data is valid, the cosersed value will be returned. If the data is invalid, an AJV `ValidationError` will be thrown with an array of [AJV Errors](https://ajv.js.org/api.html#validation-errors) in its `errors` property.
+## OperationRequestContext
 
-## RequestContext
-
-This context is used when handling a specific network request. It inherits from the MethodHandlerContext.
+This context is used when handling a specific network request. It inherits from the OperationHandlerContext.
 
 ### Properties
 
-In addition to all properties from the [MethodHandlerContext](#methodhandlercontext), the following properties are available:
+In addition to all properties from the [OperationHandlerContext](#OperationHandlerContext), the following properties are available:
 
 - `req` - The express request object of this request.
 - `res` - The express response object of this request.

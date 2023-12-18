@@ -10,10 +10,11 @@
     "strict": true,
     "removeComments": true,
     "forceConsistentCasingInFileNames": true,
-    "outDir": "../dist",
+    "rootDir": "./src",
+    "outDir": "./dist",
     "declaration": true,
-    "declarationDir": "../dts",
+    "declarationDir": "./dts",
     "sourceMap": true
   },
-  "exclude": ["**/*.spec.ts"]
+  "include": ["./src/**/*"]
 }

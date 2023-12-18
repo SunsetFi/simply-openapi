@@ -4,13 +4,13 @@ import { isPlainJson } from "../../../utils";
 
 import { nameOperationFromContext } from "../utils";
 
-import { OperationHandlerMiddlewareNextFunction } from "./types";
-import { RequestContext } from "../../RequestContext";
+import { OperationMiddlewareNextFunction } from "./types";
+import { OperationRequestContext } from "../../OperationRequestContext";
 import { HandlerResult } from "./handler-result";
 
 export async function operationHandlerJsonResponseMiddleware(
-  context: RequestContext,
-  next: OperationHandlerMiddlewareNextFunction,
+  context: OperationRequestContext,
+  next: OperationMiddlewareNextFunction,
 ) {
   const result = await next();
 

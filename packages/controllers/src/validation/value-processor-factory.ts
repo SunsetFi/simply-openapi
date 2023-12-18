@@ -8,7 +8,7 @@ export function createValueValidator(
   ajv: Ajv,
   schema: SchemaObject,
 ): ValueValidatorFunction {
-  // Wrap the value so that coersion functions properly on non-reference values.
+  // Wrap the value so that coercion functions properly on non-reference values.
   const wrappedSchema: SchemaObject = {
     type: "object",
     properties: {

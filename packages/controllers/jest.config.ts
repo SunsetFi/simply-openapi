@@ -5,7 +5,7 @@ const config: Config.InitialOptions = {
   preset: "ts-jest",
   testEnvironment: "node",
   transform: {
-    "^.+\\.tsx?$": ["ts-jest", { tsconfig: "<rootDir>/src/tsconfig.json" }],
+    "^.+\\.tsx?$": ["ts-jest", { tsconfig: "<rootDir>/tsconfig.json" }],
   },
   setupFilesAfterEnv: ["reflect-metadata", "jest-extended/all"],
   coveragePathIgnorePatterns: ["src/tests/"],

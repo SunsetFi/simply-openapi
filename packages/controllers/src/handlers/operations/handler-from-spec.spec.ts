@@ -22,7 +22,7 @@ import { ValidatorFactories } from "../../validation";
 
 const validators: ValidatorFactories = {
   createStrictValidator: jest.fn(),
-  createCoersionValidator: jest.fn(),
+  createCoercingValidator: jest.fn(),
 };
 
 describe("createMethodHandlerFromSpec", function () {

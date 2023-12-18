@@ -1,4 +1,4 @@
-import { OperationHandlerMiddleware } from "../handlers";
+import { OperationMiddleware } from "../handlers";
 import {
   SOCControllerMethodMetadata,
   mergeSOCControllerMetadata,
@@ -6,7 +6,7 @@ import {
   SOCControllerMetadata,
 } from "../metadata";
 
-export function UseHandlerMiddleware(middleware: OperationHandlerMiddleware) {
+export function UseHandlerMiddleware(middleware: OperationMiddleware) {
   return (target: any, propertyKey?: string | symbol | undefined) => {
     function middlewareInjector<
       T extends SOCControllerMetadata | SOCControllerMethodMetadata,

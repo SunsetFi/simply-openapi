@@ -2,7 +2,7 @@
 
 A fundimental part of @simply-openapi/controllers is that method handlers should operate on the preprocessed extracted data of a request, and be isolated from the nuances of the nature of web requests. This is accomplished by having middleware extract "request data" from the request object, and register it with the request context for use in the controller method via decorators on the arguments.
 
-Request data is registered with the [RequestContext](../api-reference/contexts.md#requestcontext) using the `setRequestData` method, and can take any value. They are keyed by string values following a specific format.
+Request data is registered with the [OperationRequestContext](../api-reference/contexts.md#requestcontext) using the `setRequestData` method, and can take any value. They are keyed by string values following a specific format.
 
 ## Request Data Keys
 
@@ -24,13 +24,13 @@ Here is an example that takes a `req.user` property off the express request and 
 
 ### Setting the Request Data
 
-Request data is extracted by [handler middleware](./writing-handler-middleware.md). You can use the `setRequestData` method of [RequestContext](../api-reference/contexts.md#requestcontext) to store the value you wish to associate with the request.
+Request data is extracted by [handler middleware](./writing-handler-middleware.md). You can use the `setRequestData` method of [OperationRequestContext](../api-reference/contexts.md#requestcontext) to store the value you wish to associate with the request.
 
 ```typescript
-import { OperationHandlerMiddleware } from "@simply-openapi/controllers";
+import { OperationMiddlewareFunction } from "@simply-openapi/controllers";
 import { Unauthorized } from "http-errors";
 
-const requestUserAdapterMiddleware: OperationHandlerMiddleware = (
+const requestUserAdapterMiddleware: OperationMiddlewareFunction = (
   ctx,
   next,
 ) => {

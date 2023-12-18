@@ -16,7 +16,7 @@ For more information, see [Adding Authentication](../dev/adding-authentication.m
 import {
   Authenticator,
   AuthenticationController,
-  RequestContext,
+  OperationRequestContext,
 } from "@simply-openapi/controllers";
 
 @Authenticator("MyAuthentication", {
@@ -24,7 +24,7 @@ import {
   scheme: "basic",
 })
 class MyAuthentication implements AuthenticationController {
-  authenticate(value: any, scopes: string[], ctx: RequestContext) {
+  authenticate(value: any, scopes: string[], ctx: OperationRequestContext) {
     if (value.username === "myself" && value.password === "swordfish") {
       return true;
     }

@@ -20,7 +20,7 @@ about the endpoint being called. It can be synchronous, or asynchronous, and hav
 import {
   Authenticator,
   AuthenticationController,
-  RequestContext,
+  OperationRequestContext,
   HTTPBearerAuthenticationCredentials,
 } from "@simply-openapi/controllers";
 import { Unauthorized } from "http-errors";
@@ -33,7 +33,7 @@ class MyAuthenticator implements AuthenticationController {
   async authenticate(
     value: HTTPBearerAuthenticationCredentials,
     scopes: string[],
-    ctx: RequestContext,
+    ctx: OperationRequestContext,
   ) {
     const user = await decodeBearerToken(value);
     if (!user) {
@@ -76,7 +76,7 @@ import {
   Authenticator,
   AuthenticationController,
   HttpBasicAuthenticationCredentials,
-  RequestContext,
+  OperationRequestContext,
 } from "@simply-openapi/controllers";
 
 @Authenticator("myAuth", {
@@ -87,7 +87,7 @@ class MyAuthenticator implements AuthenticationController {
   async authenticate(
     value: HttpBasicAuthenticationCredentials,
     scopes: string[],
-    ctx: RequestContext,
+    ctx: OperationRequestContext,
   ) {
     const user = await getUserByUsername(value.username);
     if (!checkPassword(value.password, user.hashedPassword)) {
@@ -115,7 +115,7 @@ import {
   Authenticator,
   AuthenticationController,
   HttpBearerAuthenticationCredentials,
-  RequestContext,
+  OperationRequestContext,
 } from "@simply-openapi/controllers";
 
 @Authenticator("myAuth", {
@@ -127,7 +127,7 @@ class MyAuthenticator implements AuthenticationController {
   async authenticate(
     value: HttpBearerAuthenticationCredentials,
     scopes: string[],
-    ctx: RequestContext,
+    ctx: OperationRequestContext,
   ) {
     const user = await decodeJwt(value);
 
@@ -164,7 +164,7 @@ import {
   Authenticator,
   AuthenticationController,
   HttpBearerAuthenticationCredentials,
-  RequestContext,
+  OperationRequestContext,
   addendOpenAPIFromControllers,
   createRouterFromSpec
 } from "@simply-openapi/controllers";
@@ -182,7 +182,7 @@ class MyAuthenticator implements AuthenticationController {
   async authenticate(
     value: HttpBearerAuthenticationCredentials,
     scopes: string[],
-    ctx: RequestContext
+    ctx: OperationRequestContext
   ) {
     ...
   }
@@ -237,7 +237,7 @@ import {
   Authenticator,
   AuthenticationController,
   HttpBearerAuthenticationCredentials,
-  RequestContext,
+  OperationRequestContext,
   Controller,
   RequireAuthentication
 } from "@simply-openapi/controllers";
@@ -250,7 +250,7 @@ class MyAuthenticator implements AuthenticationController {
   async authenticate(
     value: HttpBearerAuthenticationCredentials,
     scopes: string[],
-    ctx: RequestContext
+    ctx: OperationRequestContext
   ) {
     ...
   }

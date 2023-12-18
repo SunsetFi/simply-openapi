@@ -1,6 +1,6 @@
 import { SecuritySchemeObject } from "openapi3-ts/oas31";
 
-import { RequestContext } from "../../../RequestContext";
+import { OperationRequestContext } from "../../../OperationRequestContext";
 
 import { SecurityRequirementProcessor } from "./SecurityRequirementProcessor";
 
@@ -31,7 +31,7 @@ export class ApiKeyRequirementProcessor extends SecurityRequirementProcessor {
     super(schemeKey, scheme, scopes);
   }
 
-  protected _getValue(ctx: RequestContext) {
+  protected _getValue(ctx: OperationRequestContext) {
     let value: any;
     switch (this.scheme.in) {
       case "header":

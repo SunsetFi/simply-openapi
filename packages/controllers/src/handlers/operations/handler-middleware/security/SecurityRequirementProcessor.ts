@@ -5,7 +5,7 @@ import {
   SOCAuthenticatorExtensionName,
 } from "../../../../openapi";
 
-import { RequestContext } from "../../../RequestContext";
+import { OperationRequestContext } from "../../../OperationRequestContext";
 
 export abstract class SecurityRequirementProcessor {
   private _handlerFn: Function;
@@ -32,7 +32,9 @@ export abstract class SecurityRequirementProcessor {
     this._handlerFn = handler.bind(extension.controller);
   }
 
-  async process(ctx: RequestContext): Promise<Record<string, any> | boolean> {
+  async process(
+    ctx: OperationRequestContext,
+  ): Promise<Record<string, any> | boolean> {
     const value = this._getValue(ctx);
     if (value === undefined) {
       return false;
@@ -41,5 +43,5 @@ export abstract class SecurityRequirementProcessor {
     return this._handlerFn(value, this._scopes, ctx);
   }
 
-  protected abstract _getValue(ctx: RequestContext): any;
+  protected abstract _getValue(ctx: OperationRequestContext): any;
 }

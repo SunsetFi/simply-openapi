@@ -2,11 +2,11 @@ import { Handler, ErrorRequestHandler } from "express";
 
 import { Deferred } from "../../../deferred";
 
-import { OperationHandlerMiddleware } from "./types";
+import { OperationMiddlewareFunction } from "./types";
 
 export function convertExpressMiddleware(
   expressHandler: Handler | ErrorRequestHandler,
-): OperationHandlerMiddleware {
+): OperationMiddlewareFunction {
   if (expressHandler.arguments.length === 4) {
     return async (context, next) => {
       try {

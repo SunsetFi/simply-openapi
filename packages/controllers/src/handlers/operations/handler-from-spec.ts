@@ -10,7 +10,7 @@ import { ControllerInstance, RequestMethod } from "../../types";
 import { isConstructor } from "../../utils";
 import { ValidatorFactories, errorObjectsToMessage } from "../../validation";
 
-import { MethodHandlerContext } from "../MethodHandlerContext";
+import { OperationHandlerContext } from "../OperationHandlerContext";
 import { OperationContext } from "../OperationContext";
 
 import { MethodHandler } from "./MethodHandler";
@@ -114,7 +114,7 @@ export function createMethodHandlerFromSpec(
   const controller = resolveController(extensionData.controller, opContext);
   const handler = resolveHandler(controller, extensionData.handler, opContext);
 
-  const methodContext = MethodHandlerContext.fromOperationContext(
+  const methodContext = OperationHandlerContext.fromOperationContext(
     opContext,
     controller,
     handler,

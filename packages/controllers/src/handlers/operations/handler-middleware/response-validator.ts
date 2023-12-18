@@ -6,15 +6,15 @@ import { isPlainJson } from "../../../utils";
 import { ValueValidatorFunction } from "../../../validation";
 import { errorObjectsToMessage } from "../../../validation/ajv";
 
-import { RequestContext } from "../../RequestContext";
+import { OperationRequestContext } from "../../OperationRequestContext";
 
 import { nameOperationFromContext } from "../utils";
 
 import { HandlerResult } from "./handler-result";
 import { OperationMiddlewareFactoryContext } from "./OperationMiddlewareFactoryContext";
 import {
-  OperationHandlerMiddlewareFactory,
-  OperationHandlerMiddlewareNextFunction,
+  OperationMiddlewareFactory,
+  OperationMiddlewareNextFunction,
 } from "./types";
 
 // Function to prepare response schemas
@@ -55,8 +55,8 @@ async function responseValidationMiddleware(
   responseSchemas: Record<number, Record<string, any>>,
   strict: boolean,
   errorHandler: ((error: Error) => void) | null,
-  reqCtx: RequestContext,
-  next: OperationHandlerMiddlewareNextFunction,
+  reqCtx: OperationRequestContext,
+  next: OperationMiddlewareNextFunction,
 ) {
   const result = await next();
 
@@ -133,12 +133,12 @@ async function responseValidationMiddleware(
 export function responseValidationMiddlewareCreator(
   required: boolean,
   errorHandler: ((error: Error) => void) | null,
-): OperationHandlerMiddlewareFactory {
+): OperationMiddlewareFactory {
   return (ctx) => {
     const responseSchemas = prepareResponseSchemas(ctx);
     return (
-      reqCtx: RequestContext,
-      next: OperationHandlerMiddlewareNextFunction,
+      reqCtx: OperationRequestContext,
+      next: OperationMiddlewareNextFunction,
     ) =>
       responseValidationMiddleware(
         responseSchemas,

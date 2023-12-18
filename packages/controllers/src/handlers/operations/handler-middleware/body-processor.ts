@@ -13,18 +13,18 @@ import {
   errorObjectsToMessage,
 } from "../../../validation";
 
-import { RequestContext } from "../../RequestContext";
+import { OperationRequestContext } from "../../OperationRequestContext";
 
 import { nameOperationFromContext } from "../utils";
 
 import {
-  OperationHandlerMiddleware,
-  OperationHandlerMiddlewareFactory,
-  OperationHandlerMiddlewareNextFunction,
+  OperationMiddlewareFunction,
+  OperationMiddlewareFactory,
+  OperationMiddlewareNextFunction,
 } from "./types";
 import { OperationMiddlewareFactoryContext } from "./OperationMiddlewareFactoryContext";
 
-const defaultBodyHandlerMiddleware: OperationHandlerMiddleware = (
+const defaultBodyHandlerMiddleware: OperationMiddlewareFunction = (
   ctx,
   next,
 ) => {
@@ -32,29 +32,30 @@ const defaultBodyHandlerMiddleware: OperationHandlerMiddleware = (
   return next();
 };
 
-export const bodyProcessorMiddlewareFactory: OperationHandlerMiddlewareFactory =
-  (ctx) => {
-    const requestBody = ctx.requestBody;
+export const bodyProcessorMiddlewareFactory: OperationMiddlewareFactory = (
+  ctx,
+) => {
+  const requestBody = ctx.requestBody;
 
-    if (!requestBody) {
-      return defaultBodyHandlerMiddleware;
-    }
+  if (!requestBody) {
+    return defaultBodyHandlerMiddleware;
+  }
 
-    const processors: Record<string, ValueValidatorFunction> = mapValues(
-      // Content is required in the spec, but allow none I suppose...
-      requestBody.content ?? {},
-      ({ schema }, key) => compileContentSchema(key, schema, ctx),
-    );
+  const processors: Record<string, ValueValidatorFunction> = mapValues(
+    // Content is required in the spec, but allow none I suppose...
+    requestBody.content ?? {},
+    ({ schema }, key) => compileContentSchema(key, schema, ctx),
+  );
 
-    return (
-      reqCtx: RequestContext,
-      next: OperationHandlerMiddlewareNextFunction,
-    ) => {
-      const body = extractBody(reqCtx, requestBody, processors);
-      reqCtx.setRequestData("openapi-body", body);
-      return next();
-    };
+  return (
+    reqCtx: OperationRequestContext,
+    next: OperationMiddlewareNextFunction,
+  ) => {
+    const body = extractBody(reqCtx, requestBody, processors);
+    reqCtx.setRequestData("openapi-body", body);
+    return next();
   };
+};
 
 function compileContentSchema(
   key: string,
@@ -75,7 +76,7 @@ function compileContentSchema(
   }
 
   try {
-    return ctx.validators.createCoersionValidator(resolved);
+    return ctx.validators.createCoercingValidator(resolved);
   } catch (e: any) {
     e.message = `Failed to compile schema for body ${key}: ${e.message}`;
     throw e;
@@ -83,7 +84,7 @@ function compileContentSchema(
 }
 
 function extractBody(
-  ctx: RequestContext,
+  ctx: OperationRequestContext,
   requestBody: RequestBodyObject,
   processors: Record<string, ValueValidatorFunction>,
 ) {

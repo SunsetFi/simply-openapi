@@ -2,17 +2,17 @@ import { getMockReq, getMockRes } from "@jest-mock/express";
 import { Response } from "express";
 import "jest-extended";
 
-import { RequestContext } from "../../RequestContext";
+import { OperationRequestContext } from "../../OperationRequestContext";
 
 import { operationHandlerFallbackResponseMiddleware } from "./fallback";
 
 describe("operationHandlerFallbackResponseMiddleware", function () {
-  function createContext(mockRes?: Response): RequestContext {
+  function createContext(mockRes?: Response): OperationRequestContext {
     if (!mockRes) {
       mockRes = getMockRes().res;
     }
 
-    return new RequestContext(
+    return new OperationRequestContext(
       {
         openapi: "3.1.0",
         info: { title: "Test", version: "1.0.0" },

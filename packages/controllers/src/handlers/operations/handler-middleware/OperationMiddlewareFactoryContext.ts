@@ -3,13 +3,13 @@ import { OpenAPIObject } from "openapi3-ts/oas31";
 import { RequestMethod } from "../../../types";
 import { ValidatorFactories } from "../../../validation";
 
-import { MethodHandlerContext } from "../../MethodHandlerContext";
+import { OperationHandlerContext } from "../../OperationHandlerContext";
 
 import { OperationHandlerArgumentDefinitions } from "../types";
 
-export class OperationMiddlewareFactoryContext extends MethodHandlerContext {
-  static fromMethodHandlerContext(
-    context: MethodHandlerContext,
+export class OperationMiddlewareFactoryContext extends OperationHandlerContext {
+  static fromOperationHandlerContext(
+    context: OperationHandlerContext,
     validators: ValidatorFactories,
   ) {
     return new OperationMiddlewareFactoryContext(

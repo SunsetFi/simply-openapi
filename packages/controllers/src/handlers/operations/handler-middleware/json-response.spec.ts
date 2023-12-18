@@ -2,18 +2,18 @@ import { getMockReq, getMockRes } from "@jest-mock/express";
 import { Response } from "express";
 import "jest-extended";
 
-import { RequestContext } from "../../RequestContext";
+import { OperationRequestContext } from "../../OperationRequestContext";
 
 import { operationHandlerJsonResponseMiddleware } from "./json-response";
 import { HandlerResult } from "./handler-result";
 
 describe("operationHandlerJsonResponseMiddleware", function () {
-  function createContext(mockRes?: Response): RequestContext {
+  function createContext(mockRes?: Response): OperationRequestContext {
     if (!mockRes) {
       mockRes = getMockRes().res;
     }
 
-    return new RequestContext(
+    return new OperationRequestContext(
       {
         openapi: "3.1.0",
         info: { title: "Test", version: "1.0.0" },
@@ -31,7 +31,7 @@ describe("operationHandlerJsonResponseMiddleware", function () {
       () => {},
       [],
       getMockReq(),
-      mockRes
+      mockRes,
     );
   }
 
@@ -41,13 +41,13 @@ describe("operationHandlerJsonResponseMiddleware", function () {
         createContext(getMockRes({ headersSent: true }).res),
         jest.fn(() => ({
           value: 42,
-        })) as any
+        })) as any,
       );
     };
 
     await expect(test()).rejects.toThrowWithMessage(
       Error,
-      /already sent its headers/
+      /already sent its headers/,
     );
   });
 
@@ -55,7 +55,7 @@ describe("operationHandlerJsonResponseMiddleware", function () {
     const test = async () => {
       await operationHandlerJsonResponseMiddleware(
         createContext(getMockRes({ headersSent: true }).res),
-        jest.fn((x) => undefined) as any
+        jest.fn((x) => undefined) as any,
       );
     };
 
@@ -67,7 +67,7 @@ describe("operationHandlerJsonResponseMiddleware", function () {
     const result = { value: 42 };
     const handlerResult = await operationHandlerJsonResponseMiddleware(
       createContext(res),
-      jest.fn((x) => result) as any
+      jest.fn((x) => result) as any,
     );
 
     expect(handlerResult).toMatchObject(expect.any(HandlerResult));

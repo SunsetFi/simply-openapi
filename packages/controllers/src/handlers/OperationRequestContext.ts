@@ -3,19 +3,19 @@ import { Request, Response } from "express";
 
 import { RequestMethod } from "../types";
 
-import { MethodHandlerContext } from "./MethodHandlerContext";
+import { OperationHandlerContext } from "./OperationHandlerContext";
 import { OperationHandlerArgumentDefinitions } from "./operations/types";
 import { RequestDataKey, isValidRequestDataKey } from "./request-data";
 
-export class RequestContext extends MethodHandlerContext {
+export class OperationRequestContext extends OperationHandlerContext {
   private readonly _requestData = new Map<string, any>();
 
-  static fromMethodHandlerContext(
-    context: MethodHandlerContext,
+  static fromOperationHandlerContext(
+    context: OperationHandlerContext,
     req: Request,
     res: Response,
   ) {
-    return new RequestContext(
+    return new OperationRequestContext(
       context.spec,
       context.path,
       context.method,

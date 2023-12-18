@@ -4,7 +4,7 @@ import { merge } from "lodash";
 
 import { SOCControllerMethodHandlerArg } from "../openapi";
 import { RequestMethod } from "../types";
-import { OperationHandlerMiddleware } from "../handlers";
+import { OperationMiddlewareFunction } from "../handlers";
 
 import { defineConstructorMetadata, getConstructorMetadata } from "./reflect";
 
@@ -14,7 +14,7 @@ export interface SOCControllerMethodCommonMetadata {
   /**
    * Middleware for transforming the arguments or response of the handler.
    */
-  handlerMiddleware?: OperationHandlerMiddleware[];
+  handlerMiddleware?: OperationMiddlewareFunction[];
 
   /**
    * An array matching all handler arguments, defining the data that should be passed for each argument.

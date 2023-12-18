@@ -9,21 +9,21 @@ import {
   errorObjectsToMessage,
 } from "../../../validation";
 
-import { RequestContext } from "../../RequestContext";
+import { OperationRequestContext } from "../../OperationRequestContext";
 
 import { nameOperationFromContext } from "../utils";
 import {
-  OperationHandlerMiddlewareFactory,
-  OperationHandlerMiddlewareNextFunction,
+  OperationMiddlewareFactory,
+  OperationMiddlewareNextFunction,
 } from "./types";
 import { OperationMiddlewareFactoryContext } from "./OperationMiddlewareFactoryContext";
 
-export const parametersProcessorMiddlewareFactory: OperationHandlerMiddlewareFactory =
+export const parametersProcessorMiddlewareFactory: OperationMiddlewareFactory =
   (ctx) => {
     const processors = collectParameterProcessors(ctx);
     return (
-      reqCtx: RequestContext,
-      next: OperationHandlerMiddlewareNextFunction,
+      reqCtx: OperationRequestContext,
+      next: OperationMiddlewareNextFunction,
     ) => {
       processParameters(reqCtx, processors);
       return next();
@@ -48,7 +48,7 @@ function collectParameterProcessors(ctx: OperationMiddlewareFactoryContext) {
     }
 
     try {
-      return ctx.validators.createCoersionValidator(resolved);
+      return ctx.validators.createCoercingValidator(resolved);
     } catch (e: any) {
       e.message = `Failed to compile schema for parameter ${param.in} ${param.name}: ${e.message}`;
       throw e;
@@ -68,7 +68,7 @@ function collectParameterProcessors(ctx: OperationMiddlewareFactoryContext) {
 }
 
 function processParameters(
-  ctx: RequestContext,
+  ctx: OperationRequestContext,
   processors: Record<string, ValueValidatorFactory>,
 ) {
   for (const param of ctx.parameters) {
@@ -107,7 +107,10 @@ function processParameters(
   }
 }
 
-function getParameterValue(ctx: RequestContext, param: ParameterObject) {
+function getParameterValue(
+  ctx: OperationRequestContext,
+  param: ParameterObject,
+) {
   switch (param.in) {
     case "path":
       return ctx.getPathParam(param.name);

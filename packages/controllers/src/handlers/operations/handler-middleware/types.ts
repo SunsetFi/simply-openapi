@@ -1,32 +1,32 @@
-import { RequestContext } from "../../RequestContext";
+import { OperationRequestContext } from "../../OperationRequestContext";
 
 import { OperationMiddlewareFactoryContext } from "./OperationMiddlewareFactoryContext";
 
-export type OperationHandlerMiddlewareFactory = (
+export type OperationMiddlewareFactory = (
   context: OperationMiddlewareFactoryContext,
-) => OperationHandlerMiddleware;
-export function isOperationHandlerMiddlewareFactory(
+) => OperationMiddlewareFunction;
+export function isOperationMiddlewareFactory(
   middleware: OperationMiddleware,
-): middleware is OperationHandlerMiddlewareFactory {
+): middleware is OperationMiddlewareFactory {
   return typeof middleware === "function" && middleware.length === 1;
 }
 
-export type OperationHandlerMiddleware = (
-  context: RequestContext,
-  next: OperationHandlerMiddlewareNextFunction,
+export type OperationMiddlewareFunction = (
+  context: OperationRequestContext,
+  next: OperationMiddlewareNextFunction,
 ) => Promise<any> | any;
 export function isOperationHandlerMiddleware(
   middleware: OperationMiddleware,
-): middleware is OperationHandlerMiddlewareFactory {
+): middleware is OperationMiddlewareFunction {
   return typeof middleware === "function" && middleware.length === 2;
 }
 
 export type OperationMiddleware =
-  | OperationHandlerMiddleware
-  | OperationHandlerMiddlewareFactory;
+  | OperationMiddlewareFunction
+  | OperationMiddlewareFactory;
 
 /**
  * Function to invoke the next middleware in the chain.
  * @returns A promise awaiting the result of the handler function or next middleware step.
  */
-export type OperationHandlerMiddlewareNextFunction = () => Promise<any>;
+export type OperationMiddlewareNextFunction = () => Promise<any>;

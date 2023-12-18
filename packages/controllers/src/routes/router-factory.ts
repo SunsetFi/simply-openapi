@@ -108,7 +108,7 @@ const defaultValidatorFactories = {
       return createValueValidator(ajv, schema);
     };
   },
-  createCoersionValidator: (spec: OpenAPIObject) => {
+  createCoercingValidator: (spec: OpenAPIObject) => {
     const ajv = createOpenAPIAjv(spec, {
       coerceTypes: true,
       useDefaults: true,

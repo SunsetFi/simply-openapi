@@ -1,6 +1,6 @@
 import { MaybePromise } from "../../types";
 
-import { RequestContext } from "../RequestContext";
+import { OperationRequestContext } from "../OperationRequestContext";
 
 /**
  * An interface for authentication controllers.
@@ -16,6 +16,6 @@ export interface AuthenticationController {
   authenticate(
     value: any,
     scopes: string[],
-    ctx: RequestContext,
+    ctx: OperationRequestContext,
   ): MaybePromise<boolean | object>;
 }
