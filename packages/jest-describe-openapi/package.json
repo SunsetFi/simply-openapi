@@ -16,7 +16,7 @@
   "scripts": {
     "clean": "rimraf dist dts",
     "prebuild": "npm run clean",
-    "build": "tsc -p src",
+    "build": "tsc -p tsconfig.release.json",
     "format": "prettier --write \"./src/**/*.{ts,js}\"",
     "prepublish": "npm run build"
   },
@@ -30,6 +30,10 @@
     "email": "sunsetfidev@gmail.com"
   },
   "license": "MIT",
+  "dependencies": {
+    "@json-schema-spec/json-pointer": "^0.1.2",
+    "lodash": "^4.17.21"
+  },
   "peerDependencies": {
     "jest": "^29.7.0"
   },
@@ -38,9 +42,5 @@
     "jest": "^29.7.0",
     "rimraf": "^5.0.5",
     "typescript": "^5.3.3"
-  },
-  "dependencies": {
-    "@json-schema-spec/json-pointer": "^0.1.2",
-    "lodash": "^4.17.21"
   }
 }

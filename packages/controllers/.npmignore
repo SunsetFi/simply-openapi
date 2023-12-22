@@ -1,7 +1,0 @@
-/coverage
-/src
-**/*.spec.js
-.lintstagedrc.json
-jest.config.js
-tsconfig.json
-TODO.md
