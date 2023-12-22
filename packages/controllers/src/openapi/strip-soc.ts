@@ -19,22 +19,8 @@ function stripSOCExtensionsDeep<T extends object | any[]>(object: T): T {
         return acc;
       }
 
-      if (Array.isArray(value)) {
-        return {
-          ...acc,
-          [key]: value.map(stripSOCExtensionsDeep),
-        };
-      } else if (typeof value === "object") {
-        return {
-          ...acc,
-          [key]: stripSOCExtensionsDeep(value),
-        };
-      } else {
-        return {
-          ...acc,
-          [key]: value,
-        };
-      }
+      (acc as any)[key] = stripSOCExtensionsDeep(value);
+      return acc;
     }, {} as T);
   }
 
