@@ -17,6 +17,16 @@
     {
       "request": "launch",
       "type": "node",
+      "name": "Test controllers-ast",
+      "args": ["--runInBand"],
+      "cwd": "${workspaceFolder}/packages/controllers-ast",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "program": "${workspaceFolder}/node_modules/jest/bin/jest"
+    },
+    {
+      "request": "launch",
+      "type": "node",
       "name": "Launch Example",
       "program": "${workspaceFolder}/examples/simple/src/index.ts",
       "cwd": "${workspaceFolder}/examples/simple",

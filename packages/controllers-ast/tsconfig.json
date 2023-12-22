@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "lib": ["es6"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "stripInternal": true,
+    "strict": true,
+    "removeComments": true,
+    "forceConsistentCasingInFileNames": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "declaration": true,
+    "declarationDir": "./dts",
+    "sourceMap": true
+  },
+  "include": ["./src/**/*"]
+}
