@@ -14,26 +14,22 @@ export function describeOperationRequestBodySnapshots(
 ) {
   const requestBody = operation.requestBody;
   if (requestBody) {
-    describe("requestBody", function () {
-      const resolvedRequestBody = resolveReference(spec, requestBody);
+    const resolvedRequestBody = resolveReference(spec, requestBody);
 
-      it(`maintains the request body`, function () {
-        expect(omit(resolvedRequestBody, "description")).toMatchSnapshot();
-      });
-
-      it(`maintains all request media types`, function () {
-        expect(
-          Object.keys(resolvedRequestBody.content).sort(),
-        ).toMatchSnapshot();
-      });
-
-      for (const [mediaType, mediaTypeObject] of Object.entries(
-        resolvedRequestBody.content,
-      )) {
-        it(`maintains the ${mediaType} request body`, function () {
-          expect(mediaTypeObject).toMatchSnapshot();
-        });
-      }
+    it(`maintains the request body`, function () {
+      expect(omit(resolvedRequestBody, "description")).toMatchSnapshot();
     });
+
+    it(`maintains all request media types`, function () {
+      expect(Object.keys(resolvedRequestBody.content).sort()).toMatchSnapshot();
+    });
+
+    for (const [mediaType, mediaTypeObject] of Object.entries(
+      resolvedRequestBody.content,
+    )) {
+      it(`maintains the ${mediaType} request body`, function () {
+        expect(mediaTypeObject).toMatchSnapshot();
+      });
+    }
   }
 }
