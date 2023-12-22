@@ -7,11 +7,11 @@ import { describeOperationSnapshots } from "./operation";
 export function describePathsSnapshots(spec: OpenAPIObject): void;
 export function describePathsSnapshots(
   paths: PathsObject,
-  spec: OpenAPIObject
+  spec: OpenAPIObject,
 ): void;
 export function describePathsSnapshots(
   pathsOrSpec: PathsObject | OpenAPIObject,
-  spec?: OpenAPIObject
+  spec?: OpenAPIObject,
 ): void {
   const paths = spec ? pathsOrSpec : (pathsOrSpec as OpenAPIObject).paths;
   spec = spec ?? (pathsOrSpec as OpenAPIObject);
@@ -27,7 +27,7 @@ export function describePathsSnapshots(
 export function describePathSnapshots(
   path: string,
   pathItem: PathItemObject,
-  spec: OpenAPIObject
+  spec: OpenAPIObject,
 ) {
   pathItem = resolveReference(spec, pathItem);
 

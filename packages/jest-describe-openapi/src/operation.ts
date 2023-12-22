@@ -12,7 +12,7 @@ import { describeOperationSecuritySnapshots } from "./security";
  */
 export function describeOperationSnapshots(
   operation: OperationObject,
-  spec: OpenAPIObject
+  spec: OpenAPIObject,
 ) {
   describe("security", function () {
     describeOperationSecuritySnapshots(operation, spec);

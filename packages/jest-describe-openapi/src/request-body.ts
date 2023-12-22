@@ -10,7 +10,7 @@ import { resolveReference } from "./utils";
  */
 export function describeOperationRequestBodySnapshots(
   operation: OperationObject,
-  spec: OpenAPIObject
+  spec: OpenAPIObject,
 ) {
   const requestBody = operation.requestBody;
   if (requestBody) {
@@ -23,12 +23,12 @@ export function describeOperationRequestBodySnapshots(
 
       it(`maintains all request media types`, function () {
         expect(
-          Object.keys(resolvedRequestBody.content).sort()
+          Object.keys(resolvedRequestBody.content).sort(),
         ).toMatchSnapshot();
       });
 
       for (const [mediaType, mediaTypeObject] of Object.entries(
-        resolvedRequestBody.content
+        resolvedRequestBody.content,
       )) {
         it(`maintains the ${mediaType} request body`, function () {
           expect(mediaTypeObject).toMatchSnapshot();

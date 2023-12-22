@@ -8,13 +8,13 @@ import { sortBy } from "lodash";
  */
 export function describeOperationSecuritySnapshots(
   operation: OperationObject,
-  spec: OpenAPIObject
+  spec: OpenAPIObject,
 ) {
   const security = operation.security;
   if (security) {
     // The array order has no meaning.  Stabilize it for snapshot testing.
     const sortedSecurity = sortBy(security, (x) =>
-      Object.keys(x).sort().join(",")
+      Object.keys(x).sort().join(","),
     );
 
     it(`maintains all security schemes`, function () {

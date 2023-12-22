@@ -10,13 +10,13 @@ import { resolveReference } from "./utils";
  */
 export function describeOperationParameterSnapshots(
   operation: OperationObject,
-  spec: OpenAPIObject
+  spec: OpenAPIObject,
 ) {
   const parameters = operation.parameters;
   if (parameters) {
     const resolvedParams = sortBy(
       parameters.map((x) => resolveReference(spec, x)),
-      ["in", "name"]
+      ["in", "name"],
     );
     it(`maintains all parameters`, function () {
       expect(resolvedParams.map((x) => `${x.in}:${x.name}`)).toMatchSnapshot();

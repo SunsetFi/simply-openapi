@@ -20,12 +20,12 @@ export const requestMethods = [
 
 export function resolveReference<T extends object>(
   spec: OpenAPIObject,
-  value: T | ReferenceObject
+  value: T | ReferenceObject,
 ): T {
   if ("$ref" in value) {
     if (!value["$ref"].startsWith("#")) {
       throw new Error(
-        `Cannot resolve external reference "${value["$ref"]}" in the OpenAPI schema.`
+        `Cannot resolve external reference "${value["$ref"]}" in the OpenAPI schema.`,
       );
     }
     const ptr = Ptr.parse(value["$ref"].substring(1));
@@ -36,7 +36,7 @@ export function resolveReference<T extends object>(
 }
 
 export function getOperationsByKey(
-  spec: OpenAPIObject
+  spec: OpenAPIObject,
 ): Record<string, OperationObject> {
   const ops: Record<string, OperationObject> = {};
   for (const [path, data] of Object.entries(spec.paths ?? {})) {

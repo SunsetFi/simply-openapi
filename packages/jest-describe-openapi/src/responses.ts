@@ -8,7 +8,7 @@ import { omit } from "lodash";
  */
 export function describeOperationResponsesSnapshots(
   operation: OperationObject,
-  spec: OpenAPIObject
+  spec: OpenAPIObject,
 ) {
   if (Object.keys(operation.responses).length > 0) {
     it(`maintains all response codes`, function () {
@@ -21,7 +21,7 @@ export function describeOperationResponsesSnapshots(
       });
 
       for (const [mediaType, schema] of Object.entries(
-        (response as any).content ?? {}
+        (response as any).content ?? {},
       )) {
         it(`maintains the ${code} ${mediaType} response`, function () {
           expect(schema).toMatchSnapshot();

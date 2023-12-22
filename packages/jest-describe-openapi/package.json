@@ -2,7 +2,17 @@
   "name": "@simply-openapi/jest-describe-openapi",
   "version": "1.0.0",
   "description": "Jest testing utilities for OpenAPI contracts.",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:SunsetFi/simply-openapi.git"
+  },
   "main": "dist/index.js",
+  "types": "dts/index.d.ts",
+  "files": [
+    "/dist",
+    "/dts",
+    "/readme.md"
+  ],
   "scripts": {
     "clean": "rimraf dist dts",
     "prebuild": "npm run clean",
@@ -15,10 +25,6 @@
     "swagger",
     "jest"
   ],
-  "repository": {
-    "type": "git",
-    "url": "git@github.com:SunsetFi/simply-openapi.git"
-  },
   "author": {
     "name": "SunsetFi",
     "email": "sunsetfidev@gmail.com"
