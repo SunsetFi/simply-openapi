@@ -12,14 +12,15 @@ import { createOpenAPIAjv } from "../validation/ajv";
 import { OperationContext } from "../handlers";
 import { responseValidationMiddlewareCreator } from "../handlers/operations/handler-middleware/response-validator";
 
-import { OperationHandlerFactory, OperationHandlerOptions } from "./types";
-import { socOperationHandlerFactory } from "./handler-factories";
-import { RouteCreationContext } from "./RouteCreationContext";
 import {
   ValidatorFactories,
   ValueValidatorFactory,
   createValueValidator,
 } from "../validation";
+
+import { OperationHandlerFactory, OperationHandlerOptions } from "./types";
+import { socOperationHandlerFactory } from "./handler-factories";
+import { RouteCreationContext } from "./RouteCreationContext";
 
 export interface ResponseValidationOptions {
   required: boolean;
