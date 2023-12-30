@@ -10,9 +10,11 @@ import {
 export interface ControllersAstScannerOpts {
   controllerResolver?(
     declaration: ts.ClassDeclaration,
+    program: ts.Program,
   ): ControllerMetadata | null;
   controllerDecoratorResolver?(
     decorator: ts.Decorator,
+    program: ts.Program,
   ): ControllerDecoratorMetadata | null;
 }
 export class ControllersAstScanner {
@@ -63,7 +65,10 @@ export class ControllersAstScanner {
   private _tryResolveControllerMetadata(
     declaration: ts.ClassDeclaration,
   ): ControllerMetadata | null {
-    const externalResolved = this._opts?.controllerResolver?.(declaration);
+    const externalResolved = this._opts?.controllerResolver?.(
+      declaration,
+      this._program,
+    );
     if (externalResolved) {
       return externalResolved;
     }
@@ -100,8 +105,10 @@ export class ControllersAstScanner {
       );
     }
 
-    const externalResolved =
-      this._opts?.controllerDecoratorResolver?.(decorator);
+    const externalResolved = this._opts?.controllerDecoratorResolver?.(
+      decorator,
+      this._program,
+    );
     if (externalResolved) {
       return externalResolved;
     }
