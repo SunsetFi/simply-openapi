@@ -1,16 +1,10 @@
-import ts from "typescript";
+import { ControllerDeclaration } from "../types";
 
-export function expectDeclarationsContainClassByName(
-  declarations: ts.ClassDeclaration[],
-  name: string,
+export function expectDeclarationMatches(
+  declarations: ControllerDeclaration[],
+  declaration: Partial<ControllerDeclaration>,
 ): void {
   expect(declarations).toEqual(
-    expect.arrayContaining([
-      expect.objectContaining({
-        name: expect.objectContaining({
-          escapedText: name,
-        }),
-      }),
-    ]),
+    expect.arrayContaining([expect.objectContaining(declaration)]),
   );
 }

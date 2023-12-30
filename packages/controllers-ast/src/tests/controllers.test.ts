@@ -1,14 +1,15 @@
 import ts from "typescript";
 
 import { ControllersAstScanner } from "../ControllersAstScanner";
+import { ControllerDeclaration } from "../types";
 
 import { createTsProgram } from "./ts-program";
-import { expectDeclarationsContainClassByName } from "./expects";
+import { expectDeclarationMatches } from "./expects";
 
 describe("ControllersAstScanner.getControllerDeclarations", function () {
   let program: ts.Program;
   let scanner: ControllersAstScanner;
-  let declarations: ts.ClassDeclaration[];
+  let declarations: ControllerDeclaration[];
 
   beforeAll(() => {
     program = createTsProgram();
@@ -17,13 +18,19 @@ describe("ControllersAstScanner.getControllerDeclarations", function () {
   });
 
   it("finds a controller decorated with a basic Controller decorator", function () {
-    expectDeclarationsContainClassByName(declarations, "EmptyBasicController");
+    expectDeclarationMatches(declarations, { name: "EmptyBasicController" });
   });
 
   it("finds a controller decorated with an aliased Controller decorator", function () {
-    expectDeclarationsContainClassByName(
-      declarations,
-      "EmptyAliasedImportController",
-    );
+    expectDeclarationMatches(declarations, {
+      name: "EmptyAliasedImportController",
+    });
+  });
+
+  it("extracts the controller path from the decorator", function () {
+    expectDeclarationMatches(declarations, {
+      name: "EmptyPathController",
+      path: "/controller-path",
+    });
   });
 });
