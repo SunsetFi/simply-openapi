@@ -6,6 +6,7 @@ import {
 } from "openapi3-ts/oas31";
 import { BadRequest } from "http-errors";
 import { ValidationError } from "ajv";
+import { hasBody } from "type-is";
 
 import { pickContentType, resolveReference } from "../../../schema-utils";
 import {
@@ -88,8 +89,7 @@ function extractBody(
   requestBody: RequestBodyObject,
   processors: Record<string, ValueValidatorFunction>,
 ) {
-  // unfortunately, express (maybe body-parser?) gives us an empty object if no body.
-  if (!ctx.req.body || Object.keys(ctx.req.body).length === 0) {
+  if (!hasBody(ctx.req)) {
     if (requestBody.required) {
       throw new BadRequest(`Request body is required.`);
     }
