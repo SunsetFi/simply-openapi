@@ -94,6 +94,12 @@ export const socControllerMethodHandlerParameterArgSchema: JSONSchema6 = {
  */
 export interface SOCControllerMethodHandlerBodyArg {
   type: "openapi-requestbody";
+
+  /**
+   * The media type of the request body.
+   * If the request body is not this media type, then this argument will be undefined.
+   */
+  mediaType: string;
 }
 
 export const socControllerMethodHandlerBodyArgSchema: JSONSchema6 = {

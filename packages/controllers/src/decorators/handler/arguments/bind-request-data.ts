@@ -6,9 +6,7 @@ import { setMethodParameterType } from "./utils";
  * Specifies that this argument receives request data extracted by a handler.
  * @param requestDataKey The key of the request data.
  */
-export function BindRequestData(
-  requestDataKey: RequestDataKey,
-): ParameterDecorator {
+export function BindRequestData(requestDataKey: RequestDataKey) {
   return (
     target: any,
     propertyKey: string | symbol | undefined,

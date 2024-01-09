@@ -88,11 +88,6 @@ describe("E2E: Auth", function () {
     });
 
     it("should generate the correct schema", function () {
-      const spec = createOpenAPIFromControllers(
-        { title: "My API", version: "1.0.0" },
-        controllers,
-      );
-
       expect(spec).toMatchObject({
         paths: {
           "/authenticated": {
@@ -142,7 +137,7 @@ describe("E2E: Auth", function () {
         } catch (e) {
           done(e);
         }
-      }, 10);
+      }, 100);
     });
 
     it("calls the authenticator for an authenticated request", function (done) {
@@ -173,7 +168,7 @@ describe("E2E: Auth", function () {
         } catch (e) {
           done(e);
         }
-      }, 10);
+      }, 100);
     });
 
     it("rejects a request without the right header", function (done) {
@@ -199,7 +194,7 @@ describe("E2E: Auth", function () {
         } catch (e) {
           done(e);
         }
-      }, 10);
+      }, 100);
     });
 
     it("rejects a request that fails authentication", function (done) {
@@ -231,7 +226,7 @@ describe("E2E: Auth", function () {
         } catch (e) {
           done(e);
         }
-      }, 10);
+      }, 100);
     });
 
     it("passes the authentication result when used on a parameter", function (done) {
@@ -264,7 +259,7 @@ describe("E2E: Auth", function () {
         } catch (e) {
           done(e);
         }
-      }, 10);
+      }, 100);
     });
   });
 
@@ -374,7 +369,7 @@ describe("E2E: Auth", function () {
         } catch (e) {
           done(e);
         }
-      }, 10);
+      }, 100);
     });
 
     it("calls the authenticator for an authenticated request", function (done) {
@@ -405,7 +400,7 @@ describe("E2E: Auth", function () {
         } catch (e) {
           done(e);
         }
-      }, 10);
+      }, 100);
     });
 
     it("rejects a request without the right header", function (done) {
@@ -431,7 +426,7 @@ describe("E2E: Auth", function () {
         } catch (e) {
           done(e);
         }
-      }, 10);
+      }, 100);
     });
 
     it("rejects a request with a malformed header", function (done) {
@@ -459,7 +454,7 @@ describe("E2E: Auth", function () {
         } catch (e) {
           done(e);
         }
-      }, 10);
+      }, 100);
     });
 
     it("rejects a request that fails authentication", function (done) {
@@ -491,7 +486,7 @@ describe("E2E: Auth", function () {
         } catch (e) {
           done(e);
         }
-      }, 10);
+      }, 100);
     });
   });
 

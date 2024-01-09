@@ -17,7 +17,7 @@ export function PathParam(
   name: string,
   schema: SchemaObject | ReferenceObject | SchemaObjectType | null,
   spec?: BaseParameterObject,
-): ParameterDecorator {
+) {
   let finalParam: BaseParameterObject = {
     // The spec says path params are always required, but I suppose we can let the user override this if they really want to.
     required: true,

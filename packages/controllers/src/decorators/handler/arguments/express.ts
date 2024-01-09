@@ -1,6 +1,6 @@
 import { setMethodParameterType } from "./utils";
 
-export function Req(): ParameterDecorator {
+export function Req() {
   return (
     target: any,
     propertyKey: string | symbol | undefined,
@@ -16,7 +16,7 @@ export function Req(): ParameterDecorator {
   };
 }
 
-export function Res(): ParameterDecorator {
+export function Res() {
   return (
     target: any,
     propertyKey: string | symbol | undefined,

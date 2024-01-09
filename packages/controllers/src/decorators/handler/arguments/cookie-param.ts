@@ -17,7 +17,7 @@ export function CookieParam(
   name: string,
   schema: SchemaObject | ReferenceObject | SchemaObjectType | null,
   spec?: BaseParameterObject,
-): ParameterDecorator {
+) {
   let finalParam: BaseParameterObject = {
     ...spec,
   };
@@ -41,7 +41,7 @@ export function RequiredCookieParam(
   name: string,
   schema: SchemaObject | ReferenceObject | SchemaObjectType | null,
   spec?: BaseParameterObject,
-): ParameterDecorator {
+) {
   return CookieParam(name, schema, {
     ...spec,
     required: true,

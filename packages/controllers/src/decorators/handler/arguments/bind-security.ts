@@ -8,7 +8,7 @@ import { setMethodParameterType } from "./utils";
  * will only be performed if the OpenAPI specification actually contains the security scheme in question.
  * @param scheme Either the name of the security scheme, or a class constructor defining a security scheme with `@Authenticator`
  */
-export function BindSecurity(scheme: string | Function): ParameterDecorator {
+export function BindSecurity(scheme: string | Function) {
   let schemeName: string = scheme as any;
   if (typeof scheme === "function") {
     const schemeControllerMetadata = getSOCAuthenticatorMetadata(scheme);

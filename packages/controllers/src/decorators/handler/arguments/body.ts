@@ -19,7 +19,7 @@ export function Body(
   schema: SchemaObject,
   request?: Partial<RequestBodyObject>,
   opts?: Omit<MediaTypeObject, "schema">,
-): ParameterDecorator {
+) {
   return (
     target: any,
     propertyKey: string | symbol | undefined,
@@ -61,6 +61,7 @@ export function Body(
     if (parameterIndex != undefined) {
       setMethodParameterType(target, propertyKey, parameterIndex, {
         type: "openapi-requestbody",
+        mediaType,
       });
     }
   };
@@ -121,6 +122,7 @@ export function BindBody() {
   ) => {
     setMethodParameterType(target, propertyKey, parameterIndex, {
       type: "openapi-requestbody",
+      mediaType: "*/*",
     });
   };
 }
