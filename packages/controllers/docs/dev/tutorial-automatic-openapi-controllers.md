@@ -380,15 +380,12 @@ import {
   Get,
   JsonResponse,
   EmptyResponse,
-  QueryParam,
-  PathParam,
   RequiredJsonBody
 } from "@simply-openapi/controllers";
-import { NotFound } from "http-errors";
 
 import {
   widgetSchema,
-  getWidgets
+  addWidget
 } from "../widgets";
 
 @Controller("/widgets", {tags: ["widgets"]})
@@ -420,18 +417,8 @@ For differing media types, you can use the `@Body` decorator directly. This can 
 import {
   Controller,
   Post,
-  JsonResponse,
-  EmptyResponse,
-  QueryParam,
-  PathParam,
   Body
 } from "@simply-openapi/controllers";
-import { NotFound } from "http-errors";
-
-import {
-  widgetSchema,
-  getWidgets
-} from "../widgets";
 
 @Controller()
 class MultiBodyController {
