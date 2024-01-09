@@ -363,7 +363,7 @@ Headers and cookies are no different than any of the parameters we have discusse
 
 As before, these are parameter decorators, and should be put on function arguments. The cookie or header will be validated against the rules you specify and, if they pass validation, your handler will be invoked with the cookie or header content inside the argument.
 
-#### Body arguments
+#### Bodies
 
 Bodies are unique among input as they can take different forms and content types, even on the same handler.
 
@@ -414,7 +414,43 @@ class WidgetController {
 }
 ```
 
-With this, we now have a validated body.
+For differing media types, you can use the `@Body` decorator directly. This can be done with different media types in the same request. Only the request with the matching media type will have a value, all others will be undefined.
+
+```typescript
+import {
+  Controller,
+  Post,
+  JsonResponse,
+  EmptyResponse,
+  QueryParam,
+  PathParam,
+  Body
+} from "@simply-openapi/controllers";
+import { NotFound } from "http-errors";
+
+import {
+  widgetSchema,
+  getWidgets
+} from "../widgets";
+
+@Controller()
+class MultiBodyController {
+  @Post("/")
+  async postRequest(
+    @Body("application/foo+json", fooTypeSchema)
+    fooBody: FooType | undefined,
+    @Body("application/bar+json", barTypeSchema)
+    barBody: BarType | undefined
+  ) {
+    if (fooBody) {
+      ...
+    }
+    else if (barBody) {
+      ...
+    }
+  }
+}
+```
 
 ## Returning Results
 
@@ -432,12 +468,12 @@ This can be done through the `HandlerResult` special return type. Lets modify ou
 ```typescript
 import {
   Controller,
-  Get,
+  Post,
   JsonResponse,
   EmptyResponse,
   QueryParam,
   PathParam,
-  RequiredBody,
+  RequiredJsonBody,
   HandlerResult
 } from "@simply-openapi/controllers";
 import { NotFound } from "http-errors";
@@ -459,7 +495,7 @@ class WidgetController {
   )
   @EmptyResponse(400, { description: "Bad Request" })
   async addWidget(
-    @RequiredBody(
+    @RequiredJsonBody(
       creatableWidgetSchema,
       { description: "The ID of the widget to fetch" }
     )
