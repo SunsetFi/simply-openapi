@@ -413,6 +413,8 @@ class WidgetController {
 
 For differing media types, you can use the `@Body` decorator directly. This can be done with different media types in the same request. Only the request with the matching media type will have a value, all others will be undefined.
 
+Note that the actual body used and checked against the schema will be that stored in the express request body property. To add support for content types beyond `application/json`, you will need additional middleware, either from adding middleware as a precursor to the express router, or writing your own [handler middleware](./writing-handler-middleware.md#writing-handler-middleware).
+
 ```typescript
 import {
   Controller,
