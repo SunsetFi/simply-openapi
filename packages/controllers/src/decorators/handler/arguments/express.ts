@@ -4,7 +4,7 @@ export function Req(): ParameterDecorator {
   return (
     target: any,
     propertyKey: string | symbol | undefined,
-    parameterIndex: number
+    parameterIndex: number,
   ) => {
     if (propertyKey === undefined) {
       throw new Error(`@Req() must be applied to a method.`);
@@ -20,10 +20,10 @@ export function Res(): ParameterDecorator {
   return (
     target: any,
     propertyKey: string | symbol | undefined,
-    parameterIndex: number
+    parameterIndex: number,
   ) => {
     if (propertyKey === undefined) {
-      throw new Error(`@Res() must be applied to a method.`);
+      throw new Error(`@Res() must be applied to a method argument.`);
     }
 
     setMethodParameterType(target, propertyKey, parameterIndex, {

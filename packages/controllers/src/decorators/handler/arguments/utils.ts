@@ -17,7 +17,7 @@ export function createParameterDecorator(
     parameterIndex: number,
   ) => {
     if (propertyKey === undefined) {
-      throw new Error(`@QueryParam() must be applied to a method.`);
+      throw new Error(`This decorator must be applied to a method argument.`);
     }
 
     mergeSOCControllerMethodMetadata(

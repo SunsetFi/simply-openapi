@@ -31,7 +31,7 @@ export function BindSecurity(scheme: string | Function): ParameterDecorator {
     parameterIndex: number,
   ) => {
     if (propertyKey === undefined) {
-      throw new Error(`@BindSecurity() must be applied to a method.`);
+      throw new Error(`@BindSecurity() must be applied to a method argument.`);
     }
 
     setMethodParameterType(target, propertyKey, parameterIndex, {

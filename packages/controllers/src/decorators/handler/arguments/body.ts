@@ -23,10 +23,10 @@ export function Body(
   return (
     target: any,
     propertyKey: string | symbol | undefined,
-    parameterIndex: number,
+    parameterIndex?: number,
   ) => {
     if (propertyKey === undefined) {
-      throw new Error("Body parameter must be on a method.");
+      throw new Error("Body parameter must be on a method or method argument.");
     }
 
     let content: ContentObject = {};
@@ -57,9 +57,12 @@ export function Body(
       },
       propertyKey,
     );
-    setMethodParameterType(target, propertyKey, parameterIndex, {
-      type: "openapi-requestbody",
-    });
+
+    if (parameterIndex != undefined) {
+      setMethodParameterType(target, propertyKey, parameterIndex, {
+        type: "openapi-requestbody",
+      });
+    }
   };
 }
 

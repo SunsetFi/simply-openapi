@@ -15,7 +15,9 @@ export function BindRequestData(
     parameterIndex: number,
   ) => {
     if (propertyKey === undefined) {
-      throw new Error(`@BindRequestData() must be applied to a method.`);
+      throw new Error(
+        `@BindRequestData() must be applied to a method argument.`,
+      );
     }
 
     setMethodParameterType(target, propertyKey, parameterIndex, {
