@@ -137,12 +137,12 @@ function addOpenAPIPathsFromControllerMethods(
   return extractors
     .filter(isOpenAPIObjectMethodExtractor)
     .reduce((spec, extractor) => {
-      for (const method of getClassMethods(controller)) {
+      for (const [methodName] of getClassMethods(controller)) {
         spec = runMethodExtractor(
           spec,
           extractor,
           controller,
-          method.name,
+          methodName,
           seen,
         );
       }
