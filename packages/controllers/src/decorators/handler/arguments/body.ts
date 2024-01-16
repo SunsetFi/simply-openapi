@@ -19,14 +19,14 @@ export function Body(
   schema: SchemaObject,
   request?: Partial<RequestBodyObject>,
   opts?: Omit<MediaTypeObject, "schema">,
-): ParameterDecorator {
+) {
   return (
     target: any,
     propertyKey: string | symbol | undefined,
-    parameterIndex: number,
+    parameterIndex?: number,
   ) => {
     if (propertyKey === undefined) {
-      throw new Error("Body parameter must be on a method.");
+      throw new Error("Body parameter must be on a method or method argument.");
     }
 
     let content: ContentObject = {};
@@ -57,9 +57,13 @@ export function Body(
       },
       propertyKey,
     );
-    setMethodParameterType(target, propertyKey, parameterIndex, {
-      type: "openapi-requestbody",
-    });
+
+    if (parameterIndex != undefined) {
+      setMethodParameterType(target, propertyKey, parameterIndex, {
+        type: "openapi-requestbody",
+        mediaType,
+      });
+    }
   };
 }
 
@@ -118,6 +122,7 @@ export function BindBody() {
   ) => {
     setMethodParameterType(target, propertyKey, parameterIndex, {
       type: "openapi-requestbody",
+      mediaType: "*/*",
     });
   };
 }

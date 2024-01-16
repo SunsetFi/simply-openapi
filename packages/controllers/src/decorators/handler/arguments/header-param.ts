@@ -17,7 +17,7 @@ export function HeaderParam(
   name: string,
   schema: SchemaObject | ReferenceObject | SchemaObjectType | null,
   spec?: BaseParameterObject,
-): ParameterDecorator {
+) {
   let finalParam: BaseParameterObject = {
     ...spec,
   };
@@ -40,7 +40,7 @@ export function RequiredHeaderParam(
   name: string,
   schema: SchemaObject | ReferenceObject | SchemaObjectType | null,
   spec?: BaseParameterObject,
-): ParameterDecorator {
+) {
   return HeaderParam(name, schema, {
     ...spec,
     required: true,

@@ -16,8 +16,8 @@ import { createParameterDecorator } from "./utils";
 export function QueryParam(
   name: string,
   schema: SchemaObject | ReferenceObject | SchemaObjectType | null,
-  spec?: BaseParameterObject
-): ParameterDecorator {
+  spec?: BaseParameterObject,
+) {
   let finalParam: BaseParameterObject = {
     ...spec,
   };
@@ -39,8 +39,8 @@ export function QueryParam(
 export function RequiredQueryParam(
   name: string,
   schema: SchemaObject | ReferenceObject | SchemaObjectType | null,
-  spec?: BaseParameterObject
-): ParameterDecorator {
+  spec?: BaseParameterObject,
+) {
   return QueryParam(name, schema, {
     ...spec,
     required: true,

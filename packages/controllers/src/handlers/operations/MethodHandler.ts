@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response, Router } from "express";
 import bodyParser from "body-parser";
+import typeIs from "type-is";
 
 import { SOCControllerMethodHandlerArg } from "../../openapi";
 import { isNotNullOrUndefined } from "../../utils";
@@ -125,7 +126,11 @@ export class MethodHandler {
             `openapi-parameter-${arg.parameterName}`,
           );
         case "openapi-requestbody":
-          // It should be safe to return undefined here, as the processor should have thrown for required bodies.
+          const desiredType = arg.mediaType;
+          if (!typeIs(context.req, desiredType)) {
+            return undefined;
+          }
+
           return context.getRequestData("openapi-body");
         default:
           throw new Error(

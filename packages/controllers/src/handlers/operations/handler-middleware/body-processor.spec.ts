@@ -153,7 +153,10 @@ describe("bodyProcessorMiddlewareFactory", function () {
       "/",
     );
 
-    const ctx = createRequestCtx({ body });
+    const ctx = createRequestCtx({
+      body,
+      headers: { "content-length": String(JSON.stringify(body).length) },
+    });
     const nextResult = {};
     const next = jest.fn().mockReturnValue(nextResult);
     const result = middleware(ctx, next);
@@ -219,7 +222,10 @@ describe("bodyProcessorMiddlewareFactory", function () {
       },
     });
 
-    const ctx = createRequestCtx({ body });
+    const ctx = createRequestCtx({
+      body,
+      headers: { "content-length": String(JSON.stringify(body).length) },
+    });
     const nextResult = {};
     const next = jest.fn().mockReturnValue(nextResult);
     const result = middleware(ctx, next);
@@ -289,7 +295,10 @@ describe("bodyProcessorMiddlewareFactory", function () {
 
     const ctx = createRequestCtx({
       body,
-      headers: { "content-type": contentType },
+      headers: {
+        "content-type": contentType,
+        "content-length": String(JSON.stringify(body).length),
+      },
     });
     const nextResult = {};
     const next = jest.fn().mockReturnValue(nextResult);
@@ -348,6 +357,7 @@ describe("bodyProcessorMiddlewareFactory", function () {
 
     const ctx = createRequestCtx({
       body,
+      headers: { "content-length": String(JSON.stringify(body).length) },
     });
     const nextResult = {};
     const next = jest.fn().mockReturnValue(nextResult);

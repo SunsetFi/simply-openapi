@@ -45,8 +45,8 @@ const forbiddenProperties: (string | symbol)[] = [
   "callee",
   "arguments",
 ];
-export function getClassMethods(object: object) {
-  const methods: Function[] = [];
+export function getClassMethods(object: object): [string | symbol, Function][] {
+  const methods: [string | symbol, Function][] = [];
 
   function scanObject(obj: object) {
     do {
@@ -59,7 +59,7 @@ export function getClassMethods(object: object) {
         }
         const value = (obj as any)[propertyName];
         if (typeof value === "function") {
-          methods.push(value);
+          methods.push([propertyName, value]);
         }
       }
     } while ((obj = Object.getPrototypeOf(obj)));
@@ -74,7 +74,7 @@ export function getClassMethods(object: object) {
     scanObject(object);
   } else {
     // No idea what this is
-    scanObject(Object);
+    scanObject(object);
   }
 
   return methods;

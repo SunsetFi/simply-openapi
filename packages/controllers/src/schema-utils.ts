@@ -29,6 +29,9 @@ export function pickContentType<T>(
   const contentTypeParts = contentType.split("/");
   let chosen: T | null = null;
   let wildcardsUsed = 0;
+  // We could use type-is here, but we need to search all values to find the most accurate one.
+  // We also need to get the type returned, not the resolved content type, as that is needed
+  // to pick the value.
   for (const [type, value] of Object.entries(values)) {
     const typeParts = type.split("/");
     if (typeParts[0] !== "*" && typeParts[0] !== contentTypeParts[0]) {
