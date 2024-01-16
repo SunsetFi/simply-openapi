@@ -66,7 +66,10 @@ export class HandlerResult {
   json(value: any): this {
     this._ensureBodyNotSet();
     this._bodyJson = value;
-    this._headers["Content-Type"] = "application/json";
+    if (this._headers["Content-Type"] === undefined) {
+      this._headers["Content-Type"] = "application/json";
+    }
+
     return this;
   }
 
