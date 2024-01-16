@@ -1,5 +1,4 @@
 import { NextFunction, Request, Response, Router } from "express";
-import Ajv from "ajv";
 import bodyParser from "body-parser";
 
 import { SOCControllerMethodHandlerArg } from "../../openapi";
