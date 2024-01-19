@@ -3,7 +3,10 @@ import { OpenAPIObject, PathItemObject, SchemaObject } from "openapi3-ts/oas31";
 import { Entries } from "type-fest";
 import { pick, mapValues } from "lodash";
 
-import { SOCControllerMethodExtensionData } from "../openapi";
+import {
+  SOCControllerMethodExtensionData,
+  stripSOCExtensions,
+} from "../openapi";
 import { ControllerInstance, RequestMethod } from "../types";
 import { requestMethods } from "../utils";
 import { openAPIToExpressPath } from "../urls";
@@ -101,6 +104,7 @@ export function createRouterFromSpec(
 
 const defaultValidatorFactories = {
   createStrictValidator: (spec: OpenAPIObject) => {
+    spec = stripSOCExtensions(spec);
     const ajv = createOpenAPIAjv(spec, {
       coerceTypes: false,
       useDefaults: true,
@@ -110,6 +114,7 @@ const defaultValidatorFactories = {
     };
   },
   createCoercingValidator: (spec: OpenAPIObject) => {
+    spec = stripSOCExtensions(spec);
     const ajv = createOpenAPIAjv(spec, {
       coerceTypes: true,
       useDefaults: true,

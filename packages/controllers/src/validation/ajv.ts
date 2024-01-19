@@ -36,9 +36,11 @@ export function sliceAjvError(errorObject: ErrorObject, propertyName: string) {
 
   // Check if the property name exists in the instancePath
   const propertyPath = "/" + propertyName;
-  if (newError.instancePath.endsWith(propertyPath)) {
+  if (newError.instancePath.startsWith(propertyPath)) {
     // Modify the instancePath to point to the nested property
-    newError.instancePath = newError.instancePath.replace(propertyPath, "");
+    newError.instancePath = newError.instancePath.substring(
+      propertyPath.length,
+    );
 
     // If the data is an object and has the property, set it as the root value
     if (
