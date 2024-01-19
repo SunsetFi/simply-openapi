@@ -14,19 +14,15 @@ import "jest-extended";
 
 import { OperationRequestContext } from "../../OperationRequestContext";
 
-const coercionValueProcessor = jest.fn((value) => value);
-const createCoercingValidator = jest.fn(
-  (schema: any) => coercionValueProcessor,
-);
+const bodyValueProcessor = jest.fn((value) => value);
+const createBodyValidator = jest.fn((schema: any) => bodyValueProcessor);
 
 beforeEach(() => {
-  coercionValueProcessor.mockReset();
-  coercionValueProcessor.mockImplementation((value) => value);
+  bodyValueProcessor.mockReset();
+  bodyValueProcessor.mockImplementation((value) => value);
 
-  createCoercingValidator.mockReset();
-  createCoercingValidator.mockImplementation(
-    (schema: any) => coercionValueProcessor,
-  );
+  createBodyValidator.mockReset();
+  createBodyValidator.mockImplementation((schema: any) => bodyValueProcessor);
 });
 
 import { OperationMiddlewareFactoryContext } from "./OperationMiddlewareFactoryContext";
@@ -70,7 +66,8 @@ describe("bodyProcessorMiddlewareFactory", function () {
       () => {},
       [],
       {
-        createParameterValidator: createCoercingValidator,
+        createParameterValidator: jest.fn(),
+        createBodyValidator,
         createResponseValidator: jest.fn(),
       },
     );
@@ -131,7 +128,7 @@ describe("bodyProcessorMiddlewareFactory", function () {
       },
     );
 
-    expect(createCoercingValidator).toHaveBeenCalledWith(schema);
+    expect(createBodyValidator).toHaveBeenCalledWith(schema);
   });
 
   it("throws if the request body is an unknown reference", function () {
@@ -198,7 +195,7 @@ describe("bodyProcessorMiddlewareFactory", function () {
       },
     });
 
-    expect(createCoercingValidator).toHaveBeenCalledWith(schema);
+    expect(createBodyValidator).toHaveBeenCalledWith(schema);
   });
 
   it("calls the processor for a given body", function () {
@@ -273,7 +270,7 @@ describe("bodyProcessorMiddlewareFactory", function () {
 
     let valueProcessors = new Map<string, ReturnType<typeof jest.fn>>();
 
-    createCoercingValidator.mockImplementation((schema: SchemaObject) => {
+    createBodyValidator.mockImplementation((schema: SchemaObject) => {
       const processor = jest.fn((value) => value);
       valueProcessors.set(schema["x-for"], processor);
       return processor;
@@ -308,7 +305,7 @@ describe("bodyProcessorMiddlewareFactory", function () {
     expect(next).toHaveBeenCalled();
     expect(result).toBe(nextResult);
 
-    expect(createCoercingValidator).toHaveBeenCalledWith(schemaFooBar);
+    expect(createBodyValidator).toHaveBeenCalledWith(schemaFooBar);
 
     const fooBarProcessor = valueProcessors.get("foo/bar");
     expect(fooBarProcessor).toHaveBeenCalledWith(body);
@@ -325,7 +322,7 @@ describe("bodyProcessorMiddlewareFactory", function () {
       foo: "a",
     };
 
-    coercionValueProcessor.mockImplementation(() => {
+    bodyValueProcessor.mockImplementation(() => {
       throw new ValidationError([
         {
           data: "a",
@@ -400,7 +397,7 @@ describe("bodyProcessorMiddlewareFactory", function () {
       },
     );
 
-    expect(createCoercingValidator).toHaveBeenCalledWith(schema);
+    expect(createBodyValidator).toHaveBeenCalledWith(schema);
   });
 
   it("throws an error when the schema reference is unknown", function () {

@@ -21,8 +21,9 @@ import { MethodHandler } from "./MethodHandler";
 import { ValidatorFactories } from "../../validation";
 
 const validators: ValidatorFactories = {
-  createResponseValidator: jest.fn(),
   createParameterValidator: jest.fn(),
+  createBodyValidator: jest.fn(),
+  createResponseValidator: jest.fn(),
 };
 
 describe("createMethodHandlerFromSpec", function () {
