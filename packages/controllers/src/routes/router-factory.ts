@@ -10,14 +10,15 @@ import {
 import { ControllerInstance, RequestMethod } from "../types";
 import { requestMethods } from "../utils";
 import { openAPIToExpressPath } from "../urls";
-import { createOpenAPIAjv } from "../validation/ajv";
+import { createOpenAPIAjv, isAjvInstance } from "../validation/ajv";
 
-import { OperationContext } from "../handlers";
+import { OperationContext, OperationRequestContext } from "../handlers";
 import { responseValidationMiddlewareCreator } from "../handlers/operations/handler-middleware/response-validator";
 
 import {
   ValidatorFactories,
-  ValueValidatorFactory,
+  ValidatorFactoriesCommon,
+  ValidatorFactoryOption,
   createValueValidator,
 } from "../validation";
 
@@ -27,17 +28,14 @@ import { RouteCreationContext } from "./RouteCreationContext";
 
 export interface ResponseValidationOptions {
   required: boolean;
-  errorHandler?(error: Error): void;
+  errorHandler?(error: Error, ctx: OperationRequestContext): void;
 }
 
 export interface CreateRouterOptions extends OperationHandlerOptions {
   /**
    * A collection of validator factory producers for use with validating data.
    */
-  validatorFactories?: Record<
-    keyof ValidatorFactories,
-    (spec: OpenAPIObject) => ValueValidatorFactory
-  >;
+  validatorFactories?: Record<keyof ValidatorFactories, ValidatorFactoryOption>;
 
   /**
    * Resolver to convert a controller specified in the x-simply-controller-method extension into an instance of the controller object.
@@ -84,7 +82,7 @@ export interface CreateRouterOptions extends OperationHandlerOptions {
   responseValidation?:
     | boolean
     | "required"
-    | ((err: Error) => void)
+    | ((err: Error, ctx: OperationRequestContext) => void)
     | ResponseValidationOptions;
 }
 
@@ -102,21 +100,31 @@ export function createRouterFromSpec(
   return factory.createRouterFromSpec();
 }
 
-const defaultValidatorFactories = {
-  createStrictValidator: (spec: OpenAPIObject) => {
+const defaultValidatorFactories: ValidatorFactoriesCommon = {
+  createParameterValidator: (spec: OpenAPIObject) => {
     spec = stripSOCExtensions(spec);
     const ajv = createOpenAPIAjv(spec, {
-      coerceTypes: false,
+      coerceTypes: true,
       useDefaults: true,
     });
     return (schema: SchemaObject) => {
       return createValueValidator(ajv, schema);
     };
   },
-  createCoercingValidator: (spec: OpenAPIObject) => {
+  createBodyValidator: (spec: OpenAPIObject) => {
     spec = stripSOCExtensions(spec);
     const ajv = createOpenAPIAjv(spec, {
       coerceTypes: true,
+      useDefaults: true,
+    });
+    return (schema: SchemaObject) => {
+      return createValueValidator(ajv, schema);
+    };
+  },
+  createResponseValidator: (spec: OpenAPIObject) => {
+    spec = stripSOCExtensions(spec);
+    const ajv = createOpenAPIAjv(spec, {
+      coerceTypes: false,
       useDefaults: true,
     });
     return (schema: SchemaObject) => {
@@ -132,14 +140,29 @@ class RouterFromSpecFactory {
     private _openApi: OpenAPIObject,
     private _opts: CreateRouterOptions = {},
   ) {
-    let validatorFactoriesSources = {
+    // We should use a more concrete type for the key, so that we do not need to `as any`
+    // _validatorFactories below.
+    // However, typescript is treating `keyof ValidatorFactories` as string | number.
+    let validatorFactoriesSources: Record<string, ValidatorFactoryOption> = {
       ...defaultValidatorFactories,
       ...(_opts.validatorFactories ?? {}),
     };
 
-    this._validatorFactores = mapValues(validatorFactoriesSources, (fn) =>
-      fn(_openApi),
-    );
+    this._validatorFactores = mapValues(
+      validatorFactoriesSources,
+      (value, key) => {
+        if (typeof value === "function") {
+          return value(_openApi);
+        } else if (value && typeof value === "object") {
+          const ajv = isAjvInstance(value)
+            ? value
+            : createOpenAPIAjv(_openApi, value);
+          return (schema: SchemaObject) => createValueValidator(ajv, schema);
+        } else {
+          throw new Error(`Invalid validator factory source for ${key}`);
+        }
+      },
+    ) as any;
 
     if (!_opts.handlerFactories) {
       _opts.handlerFactories = [];

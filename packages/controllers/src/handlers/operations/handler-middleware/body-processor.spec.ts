@@ -70,8 +70,8 @@ describe("bodyProcessorMiddlewareFactory", function () {
       () => {},
       [],
       {
-        createCoercingValidator,
-        createStrictValidator: jest.fn(),
+        createParameterValidator: createCoercingValidator,
+        createResponseValidator: jest.fn(),
       },
     );
 

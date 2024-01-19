@@ -3,5 +3,5 @@
   // include tests in our build but still gain the benefit of refactors
   // affecting test files when using typescript-aware IDEs.
   "extends": "./tsconfig.json",
-  "exclude": ["**/*.spec.ts", "**/*.test.ts"]
+  "exclude": ["**/*.spec.ts", "**/*.test.ts", "tests/**/*"]
 }

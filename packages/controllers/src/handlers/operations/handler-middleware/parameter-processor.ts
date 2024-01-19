@@ -48,7 +48,7 @@ function collectParameterProcessors(ctx: OperationMiddlewareFactoryContext) {
     }
 
     try {
-      return ctx.validators.createCoercingValidator(resolved);
+      return ctx.validators.createParameterValidator(resolved);
     } catch (e: any) {
       e.message = `Failed to compile schema for parameter ${param.in} ${param.name}: ${e.message}`;
       throw e;

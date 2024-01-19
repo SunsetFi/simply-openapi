@@ -20,6 +20,50 @@ app.listen(8080);
 
 If you have been following the docs in order, this is the minimum required to produce a fully functional router. This router is now ready to be used directly with express. That's all there is too it, enjoy!
 
+## Enforcing Response Schemas
+
+Response schemas are an important contract in OpenAPI, but their validity is a function of the service itself. In theory, a properly designed service will always return valid objects. However, it may be useful to enforce these contracts in lower environments or during testing to ensure the response data is valid according to the specifications.
+
+The `responseValidation` option can be used to apply such validation to the api. It supports the following values:
+
+- `true` - Validate the response, if a matching media type is found in the specification. Returns an Internal Server Error status code if the response is not valid.
+- `"required"` - Validate the response, and returns an Internal Server Error if it fails to validate. If no matching media type is found in the specification, an Internal Server Error is also returned.
+- `function` - If the response fails to validate, the function will be called with the AJV ValidationError of the failing validation.
+- `{required: true, errorHandler: function}` - Applies the behavior of both `"required"` and `function`.
+
+When using a function, you may want to use the exported `errorObjectsToMessage` utility to stringify the errors property of a ValidationError.
+
+```typescript
+import {
+  createOpenAPIFromControllers,
+  createRouterFromSpec,
+  errorObjectsToMessage
+} from "@simply-openapi/controllers";
+import express from "express";
+
+import { WidgetsController } from "./widgets";
+
+const controllers = [
+  new WidgetsController()
+];
+
+const mySpec = createOpenAPIFromControllers(..., controllerTypes);
+
+const router = createRouterFromSpec(mySpec, {
+  responseValidation: {
+    required: true,
+    errorHandler: (err, ctx) => {
+      console.log("Method", ctx.method, "at path", ctx.path, "returned an invalid body:", errorObjectsToMessage(err.errors));
+      ctx.res.status(500).end();
+    }
+  }
+});
+
+const app = express();
+app.use(router);
+app.listen(8080);
+```
+
 ## Error Handling
 
 @simply-openapi/controllers performs validation on all incoming data against the OpenAPI spec. When this validation fails, an appropriate 4xx error is produced and thrown using the `http-errors` library. Your method handlers may also throw errors in this way if desired.
@@ -140,125 +184,6 @@ app.use(router);
 app.listen(8080);
 ```
 
-## Advanced use cases
+---
 
-Beyond the customizations listed above, there are more advanced options available for use.
-
-### Resolving controllers
-
-Sometimes, your controller metadata might not be the controller you want to operate on. This can occur if you are passing DI symbols or class constructors to `createOpenAPIFromControllers`. In cases like this, you can use the resolveController option to pass a function that will resolve the controller instance for you.
-
-For example, you could use this function to instantiate the types if you passed constructors to the spec creation function rather than live instances:
-
-```typescript
-import {
-  createOpenAPIFromControllers,
-  createRouterFromSpec
-} from "@simply-openapi/controllers";
-import express from "express";
-
-import { WidgetsController } from "./widgets";
-
-const controllerTypes = [
-  WidgetsController
-];
-
-const mySpec = createOpenAPIFromControllers(..., controllerTypes);
-
-const router = createRouterFromSpec(mySpec, {
-  resolveController: (controller) => new Controller()
-});
-
-const app = express();
-app.use(router);
-app.listen(8080);
-```
-
-Other uses of this function include DI usage. For example, your controller may be a self-bound DI dependency. In which case, you would use your DI container to resolve the controller class into an instance. Here is a minimal example with Inversify:
-
-```typescript
-import { Container, Injectable } from "inversify"
-import {
-  createOpenAPIFromControllers,
-  createRouterFromSpec
-} from "@simply-openapi/controllers";
-import express from "express";
-
-@Injectable()
-class MyController {
-  ...
-}
-
-const container = new Container();
-container.bind(MyController).toSelf();
-
-const controllerTypes = [
-  MyController
-];
-
-const mySpec = createOpenAPIFromControllers(..., controllerTypes);
-
-const router = createRouterFromSpec(mySpec, {
-  resolveController: (controller) => container.get(controller)
-});
-
-const app = express();
-app.use(router);
-app.listen(8080);
-```
-
-This can also be useful to implement cross-cutting concerns, for example returning a proxy object onto the controller with built-in logging and monitoring for its methods.
-
-### Resolving Handlers
-
-If needed, you can reinterpret the way handlers are obtained from the controllers. You may use this as another way to implement cross-cutting concerns on your controllers.
-
-By default, @simply-openapi/controllers will resolve metadata about methods as either a function, or a string naming a function on the controller. The default implementation of `createOpenAPIFromControllers` will opt for string names, but it is best to handle both cases in your handler resolver.
-
-```typescript
-import {
-  createOpenAPIFromControllers,
-  createRouterFromSpec
-} from "@simply-openapi/controllers";
-import express from "express";
-
-import { WidgetsController } from "./widgets";
-
-const controllers = [
-  new WidgetsController()
-];
-
-const mySpec = createOpenAPIFromControllers(..., controllerTypes);
-
-const router = createRouterFromSpec(mySpec, {
-  resolveHandler: (controller, method) => {
-    return (...args: any[]) => {
-      console.log(`Method ${method} called.`);
-      if (typeof method === "string") {
-        return controller[method](...args);
-      }
-      else {
-        return method(...args);
-      }
-    }
-  }
-});
-
-const app = express();
-app.use(router);
-app.listen(8080);
-```
-
-### Modifying or adding OpenAPI Schema validators
-
-By default, @simply-openapi/controllers uses AJV to create a varity of functions to validate, coerce, and apply default values from [OpenAPI Schemas](https://spec.openapis.org/oas/v3.1.0#schema-object).
-
-However, you can replace this with any logic you wish, as well as register additional validators for use in [schema validating middleware](./writing-handler-middleware.md#schema-based-validation). The `validatorFactories` option is provided for this purpose.
-
-`validatorFactories` takes an object whose keys are the names of validators to be provided. By default, this library provides `createStrictValidator` and `createCoercingValidator`, and these names can be used as keys to override their behavior. Additional names can also be used, which will then be made available on the `validators` property of [OperationMiddlewareFactoryContext](../api-reference/contexts.md#operationmiddlewarefactorycontext).
-
-The value of this option should be factory functions that take the OpenAPI specification, and return a validator factory function.
-
-The validator factory function returned by the above factory should take an [OpenAPI Schemas](https://spec.openapis.org/oas/v3.1.0#schema-object), and return a value validation function.
-
-The value validation function should take an object to validate. If the value is invalid, it should throw an instance of `ValidationError` from the AJV library with the `errors` property describing the errors encountered. If the value is valid, the function should either return the value unchanged, or return a new value to use in its place (for example, with coercion and default values applied).
+For more advanced use cases around making routers from controllers, see [Advanced Use Cases](./advanced-use-cases.md).

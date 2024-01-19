@@ -13,6 +13,7 @@
 - [Publishing your OpenAPI specification](dev/publishing-openapi-specs.md)
 - [Reducing interface and schema duplication](dev/reducing-interface-and-schema-duplication.md)
 - [Writing Handler Middleware](dev/writing-handler-middleware.md)
+- [Advanced Use Cases](dev/advanced-use-cases.md)
 - [Requst Data](dev/request-data.md)
 
 ---

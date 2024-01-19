@@ -8,7 +8,7 @@ import { createRouterFromSpec } from "../routes";
 import { getMockReq, getMockRes } from "./mocks";
 import { expectNextCalledWithError } from "./expects";
 
-describe("E2E: Body", function () {
+describe("E2E: Handler Errors", function () {
   @Controller("/")
   class WidgetController {
     @Get("/throw")

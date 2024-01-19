@@ -1,6 +1,7 @@
 import { OpenAPIObject } from "openapi3-ts/oas31";
 import AJV, { _, Options as AjvOptions, ErrorObject } from "ajv";
 import addFormats from "ajv-formats";
+import Ajv from "ajv";
 
 const ajv = new AJV({ coerceTypes: true, useDefaults: true });
 addFormats(ajv);
@@ -53,6 +54,17 @@ export function sliceAjvError(errorObject: ErrorObject, propertyName: string) {
   }
 
   return newError;
+}
+
+export function isAjvInstance(instance: any): instance is Ajv {
+  if (instance instanceof Ajv) {
+    return true;
+  }
+
+  // The ajv instance might be a different copy than we include in our node_modules folder.
+  // This can happen if the nodejs program using us is using a different version.
+  // Fall back to checking to see if we have the schema compiling function.
+  return typeof instance.compile === "function";
 }
 
 export function errorObjectsToMessage(errors: Partial<ErrorObject>[]): string {

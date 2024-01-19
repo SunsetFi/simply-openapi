@@ -30,7 +30,7 @@ function prepareResponseSchemas(ctx: OperationMiddlewareFactoryContext) {
       const resolvedSchema = resolveReference(ctx.spec, schema);
       if (resolvedSchema) {
         valueProcessors[contentType] =
-          ctx.validators.createStrictValidator(resolvedSchema);
+          ctx.validators.createResponseValidator(resolvedSchema);
       }
     });
 
@@ -54,7 +54,7 @@ function prepareResponseSchemas(ctx: OperationMiddlewareFactoryContext) {
 async function responseValidationMiddleware(
   responseSchemas: Record<number, Record<string, any>>,
   strict: boolean,
-  errorHandler: ((error: Error) => void) | null,
+  errorHandler: ((error: Error, ctx: OperationRequestContext) => void) | null,
   reqCtx: OperationRequestContext,
   next: OperationMiddlewareNextFunction,
 ) {
@@ -111,7 +111,7 @@ async function responseValidationMiddleware(
   } catch (error: any) {
     // Handle validation error
     if (typeof errorHandler === "function") {
-      errorHandler(error);
+      errorHandler(error, reqCtx);
       // Return the result as-is, if the error handler didn't throw.
       return result;
     } else if (error instanceof ValidationError) {
@@ -132,7 +132,7 @@ async function responseValidationMiddleware(
 // Middleware factory for response validation
 export function responseValidationMiddlewareCreator(
   required: boolean,
-  errorHandler: ((error: Error) => void) | null,
+  errorHandler: ((error: Error, ctx: OperationRequestContext) => void) | null,
 ): OperationMiddlewareFactory {
   return (ctx) => {
     const responseSchemas = prepareResponseSchemas(ctx);
