@@ -226,9 +226,6 @@ export const socControllerMethodExtensionDataSchema: JSONSchema6 = {
     handlerMiddleware: {
       type: "array",
     },
-    expressMiddleware: {
-      type: "array",
-    },
   },
   required: ["controller", "handler"],
 };

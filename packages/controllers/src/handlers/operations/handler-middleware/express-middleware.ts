@@ -7,7 +7,7 @@ import { OperationMiddlewareFunction } from "./types";
 export function convertExpressMiddleware(
   expressHandler: Handler | ErrorRequestHandler,
 ): OperationMiddlewareFunction {
-  if (expressHandler.arguments.length === 4) {
+  if (expressHandler.length === 4) {
     return async (context, next) => {
       try {
         return await next();
@@ -34,7 +34,7 @@ export function convertExpressMiddleware(
         return deferred.promise;
       }
     };
-  } else {
+  } else if (expressHandler.length === 3) {
     return (context, next) => {
       const deferred = new Deferred<any>();
 
@@ -50,5 +50,9 @@ export function convertExpressMiddleware(
 
       return deferred.promise;
     };
+  } else {
+    throw new Error(
+      `Unsupported express middleware function with ${expressHandler.length} parameters.`,
+    );
   }
 }
