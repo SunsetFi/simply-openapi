@@ -31,5 +31,5 @@ export function BindRequestData(requestDataKey: RequestDataKey) {
  * @returns A decorator function that can bind a controller method argument to the given request data key.
  */
 export function createRequestDataDecorator(requestDataKey: RequestDataKey) {
-  return BindRequestData(requestDataKey);
+  return () => BindRequestData(requestDataKey);
 }
