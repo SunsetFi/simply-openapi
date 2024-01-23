@@ -79,7 +79,9 @@ function compileContentSchema(
   try {
     return ctx.validators.createBodyValidator(resolved);
   } catch (e: any) {
-    e.message = `Failed to compile schema for body ${key}: ${e.message}`;
+    e.message = `Failed to compile schema for body ${key} in operation ${nameOperationFromContext(
+      ctx,
+    )}: ${e.message}`;
     throw e;
   }
 }
