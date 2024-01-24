@@ -17,7 +17,7 @@ export function convertExpressMiddleware(
             e,
             context.req,
             context.res,
-            async (err) => {
+            (err) => {
               if (err) {
                 reject(err);
                 return;
@@ -35,18 +35,15 @@ export function convertExpressMiddleware(
   } else if (expressHandler.length === 3) {
     return (context, next) => {
       return new Promise((accept, reject) => {
-        (expressHandler as Handler)(context.req, context.res, async (err) => {
+        (expressHandler as Handler)(context.req, context.res, (err) => {
           if (err) {
             reject(err);
             return;
           }
 
-          try {
-            const nextResult = await next();
-            accept(nextResult);
-          } catch (err) {
-            reject(err);
-          }
+          // Accept the promise returned by next.  It might reject, which will get
+          // forwarded up the promise chain.
+          accept(next());
         });
       });
     };
