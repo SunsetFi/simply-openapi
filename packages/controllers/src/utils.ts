@@ -16,6 +16,10 @@ export const requestMethods = [
 ] as const satisfies readonly (keyof PathItemObject)[];
 
 export function isPlainJson(x: any): x is JsonValue {
+  if (x === undefined) {
+    return false;
+  }
+
   if (x == null) {
     return true;
   }

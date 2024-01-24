@@ -61,7 +61,9 @@ async function responseValidationMiddleware(
   const result = await next();
 
   let status, contentType, body;
-  if (result instanceof HandlerResult) {
+  if (result === undefined) {
+    return undefined;
+  } else if (result instanceof HandlerResult) {
     status = result._status;
     contentType = result._headers["Content-Type"];
     body = result._bodyJson || result._bodyRaw;
