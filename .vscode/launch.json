@@ -8,7 +8,7 @@
       "request": "launch",
       "type": "node",
       "name": "Test controllers",
-      "args": ["--runInBand"],
+      "args": ["--runInBand", "-t"],
       "cwd": "${workspaceFolder}/packages/controllers",
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
