@@ -49,7 +49,7 @@ describe("E2E: Auth", function () {
     }
 
     @Controller()
-    class WidgetController {
+    class AuthedController {
       @Get("/authenticated")
       @RequireAuthentication(WidgetAuthenticator, ["scope"])
       getAuthenticated() {
@@ -73,7 +73,22 @@ describe("E2E: Auth", function () {
       }
     }
 
-    const controllers = [new WidgetAuthenticator(), new WidgetController()];
+    @Controller("/merged")
+    @RequireAuthentication(WidgetAuthenticator, ["scope1"])
+    class MergedAuthController {
+      @Get("/")
+      @RequireAuthentication(WidgetAuthenticator, ["scope2"])
+      getAuthenticated() {
+        authenticatedFn();
+        return "OK";
+      }
+    }
+
+    const controllers = [
+      new WidgetAuthenticator(),
+      new AuthedController(),
+      new MergedAuthController(),
+    ];
 
     let spec: OpenAPIObject;
     let router: Router;
@@ -110,6 +125,15 @@ describe("E2E: Auth", function () {
           },
           "/unauthenticated": {
             get: {},
+          },
+          "/merged": {
+            get: {
+              security: [
+                {
+                  widgetAuth: ["scope1", "scope2"],
+                },
+              ],
+            },
           },
         },
         components: {

@@ -5,6 +5,7 @@ import { PartialDeep } from "type-fest";
 import "jest-extended";
 
 import {
+  SOCBoundControllerMetadata,
   SOCControllerMetadata,
   SOCControllerMethodMetadata,
   setSOCControllerMetadata,
