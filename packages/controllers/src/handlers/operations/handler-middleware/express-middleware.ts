@@ -1,7 +1,5 @@
 import { Handler, ErrorRequestHandler } from "express";
 
-import { Deferred } from "../../../deferred";
-
 import { OperationMiddlewareFunction } from "./types";
 
 export function convertExpressMiddleware(
