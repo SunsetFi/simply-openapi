@@ -78,8 +78,13 @@ describe("E2E: Auth", function () {
     class MergedAuthController {
       @Get("/")
       @RequireAuthentication(WidgetAuthenticator, ["scope2"])
-      getAuthenticated() {
-        authenticatedFn();
+      merge() {
+        return "OK";
+      }
+
+      @Get("/m2")
+      @RequireAuthentication(WidgetAuthenticator, ["scope3"])
+      merge2() {
         return "OK";
       }
     }
@@ -131,6 +136,15 @@ describe("E2E: Auth", function () {
               security: [
                 {
                   widgetAuth: ["scope1", "scope2"],
+                },
+              ],
+            },
+          },
+          "/merged/m2": {
+            get: {
+              security: [
+                {
+                  widgetAuth: ["scope1", "scope3"],
                 },
               ],
             },

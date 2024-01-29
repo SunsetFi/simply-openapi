@@ -15,7 +15,11 @@ import {
 } from "../../metadata";
 import { joinUrlPaths } from "../../urls";
 import { ControllerObject } from "../../types";
-import { mergeCombineArrays, nameController } from "../../utils";
+import {
+  mergeCombineArrays,
+  mergeSecurityReqs,
+  nameController,
+} from "../../utils";
 
 import { OpenAPIObjectExtractor } from "../types";
 import {
@@ -71,30 +75,13 @@ export const extractSOCCustomMethodSpec: OpenAPIObjectExtractor = (
     extension.handlerMiddleware = handlerMiddleware;
   }
 
-  const security: SecurityRequirementObject[] = [];
+  let security: SecurityRequirementObject[] = [];
   if (customControllerMetadata?.sharedOperationFragment?.security) {
     security.push(...customControllerMetadata.sharedOperationFragment.security);
   }
 
   if (metadata.operationFragment?.security) {
-    for (const sec of metadata.operationFragment.security) {
-      const mergeIntoIndex: number = security.findIndex((s) => {
-        const sKeys = Object.keys(s);
-        const secKeys = Object.keys(sec);
-        return (
-          sKeys.length === secKeys.length &&
-          sKeys.every((k) => secKeys.includes(k))
-        );
-      });
-      if (mergeIntoIndex >= 0) {
-        security[mergeIntoIndex] = mergeCombineArrays(
-          security[mergeIntoIndex],
-          sec,
-        );
-      } else {
-        security.push(sec);
-      }
-    }
+    security = mergeSecurityReqs(security, metadata.operationFragment.security);
   }
 
   return (spec: OpenAPIObject) => {

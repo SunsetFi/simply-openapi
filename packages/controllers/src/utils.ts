@@ -1,6 +1,7 @@
-import { PathItemObject } from "openapi3-ts/oas31";
+import { PathItemObject, SecurityRequirementObject } from "openapi3-ts/oas31";
 import { JsonValue } from "type-fest";
-import { mergeWith, isPlainObject } from "lodash";
+import { isPlainObject, uniq } from "lodash";
+import { mergeWith as mergeWithFp } from "lodash/fp";
 
 import { ControllerObject } from "./types";
 
@@ -154,12 +155,48 @@ export function isConstructor(object: object): boolean {
 
 export function mergeCombineArrays(object: any, ...sources: any[]) {
   for (const source of sources) {
-    object = mergeWith(object, source, (objValue, srcValue): any => {
-      if (Array.isArray(objValue)) {
-        return objValue.concat(srcValue);
-      }
-    });
+    object = mergeWithFp(
+      (objValue, srcValue): any => {
+        if (Array.isArray(objValue)) {
+          return objValue.concat(srcValue);
+        }
+      },
+      object,
+      source,
+    );
   }
 
   return object;
+}
+
+export function mergeSecurityReqs(
+  target: SecurityRequirementObject[],
+  sources: SecurityRequirementObject[],
+) {
+  target = target.slice();
+  for (const source of sources) {
+    const mergeIntoIndex: number = target.findIndex((s) => {
+      const sKeys = Object.keys(s);
+      const secKeys = Object.keys(source);
+      return (
+        sKeys.length === secKeys.length &&
+        sKeys.every((k) => secKeys.includes(k))
+      );
+    });
+    if (mergeIntoIndex >= 0) {
+      target[mergeIntoIndex] = mergeWithFp(
+        (objValue, srcValue): any => {
+          if (Array.isArray(objValue)) {
+            return uniq(objValue.concat(srcValue));
+          }
+        },
+        target[mergeIntoIndex],
+        source,
+      );
+    } else {
+      target.push(source);
+    }
+  }
+
+  return target;
 }
