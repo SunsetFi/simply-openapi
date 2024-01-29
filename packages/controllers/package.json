@@ -1,6 +1,6 @@
 {
   "name": "@simply-openapi/controllers",
-  "version": "1.7.4",
+  "version": "1.7.5",
   "description": "OpenAPI-first express controllers",
   "repository": {
     "type": "git",
