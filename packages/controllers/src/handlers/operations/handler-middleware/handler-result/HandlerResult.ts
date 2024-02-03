@@ -123,6 +123,8 @@ export class HandlerResult {
     } else if (this._bodyJson !== undefined) {
       res.json(this._bodyJson);
     }
+
+    res.end();
   }
 
   private _ensureBodyNotSet() {
