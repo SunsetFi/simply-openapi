@@ -2,7 +2,7 @@ import { InternalServerError } from "http-errors";
 import { ValidationError } from "ajv";
 
 import { pickContentType, resolveReference } from "../../../schema-utils";
-import { isPlainJson } from "../../../utils";
+import { isJSONSerializable } from "../../../utils";
 import { ValueValidatorFunction } from "../../../validation";
 import { errorObjectsToMessage } from "../../../validation/ajv";
 
@@ -67,7 +67,7 @@ async function responseValidationMiddleware(
     status = result._status;
     contentType = result._headers["Content-Type"];
     body = result._bodyJson || result._bodyRaw;
-  } else if (isPlainJson(result)) {
+  } else if (isJSONSerializable(result)) {
     status = 200;
     contentType = "application/json";
     body = result;

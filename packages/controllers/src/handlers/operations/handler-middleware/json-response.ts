@@ -1,6 +1,6 @@
 import HttpStatusCodes from "http-status-codes";
 
-import { isPlainJson } from "../../../utils";
+import { isJSONSerializable } from "../../../utils";
 
 import { nameOperationFromContext } from "../utils";
 
@@ -34,7 +34,7 @@ export async function operationHandlerJsonResponseMiddleware(
     );
   }
 
-  if (isPlainJson(result)) {
+  if (isJSONSerializable(result)) {
     return HandlerResult.json(result).status(HttpStatusCodes.OK);
   }
 

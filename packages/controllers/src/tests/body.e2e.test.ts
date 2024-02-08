@@ -50,8 +50,6 @@ describe("E2E: Bodies", function () {
         controllers,
       );
 
-      console.log(JSON.stringify(spec, null, 2));
-
       router = createRouterFromSpec(spec);
     });
 

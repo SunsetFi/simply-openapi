@@ -1,5 +1,4 @@
 import { PathItemObject, SecurityRequirementObject } from "openapi3-ts/oas31";
-import { JsonValue } from "type-fest";
 import { isPlainObject, uniq } from "lodash";
 import { mergeWith as mergeWithFp } from "lodash/fp";
 
@@ -16,7 +15,7 @@ export const requestMethods = [
   "trace",
 ] as const satisfies readonly (keyof PathItemObject)[];
 
-export function isPlainJson(x: any): x is JsonValue {
+export function isJSONSerializable(x: any): boolean {
   if (x === undefined) {
     return false;
   }
@@ -26,15 +25,20 @@ export function isPlainJson(x: any): x is JsonValue {
   }
 
   if (Array.isArray(x)) {
-    return x.every(isPlainJson);
+    // Undefined as array elements stringify into  null.
+    return x.every((x) => x === undefined || isJSONSerializable(x));
   }
 
   if (typeof x === "object") {
     if (!isPlainObject(x)) {
-      return false;
+      // We can serialize an object if it has a toJSON method.
+      return typeof x.toJSON === "function";
     }
 
-    return Object.values(x).every(isPlainJson);
+    // Undefined as values are dropped from the object when stringifying.
+    return Object.values(x).every(
+      (x) => x === undefined || isJSONSerializable(x),
+    );
   }
 
   return (
