@@ -156,7 +156,7 @@ class RouterFromSpecFactory {
         } else if (value && typeof value === "object") {
           const ajv = isAjvInstance(value)
             ? value
-            : createOpenAPIAjv(_openApi, value);
+            : createOpenAPIAjv(stripSOCExtensions(_openApi), value);
           return (schema: SchemaObject) => createValueValidator(ajv, schema);
         } else {
           throw new Error(`Invalid validator factory source for ${key}`);
