@@ -114,7 +114,7 @@ const defaultValidatorFactories: ValidatorFactoriesCommon = {
   createBodyValidator: (spec: OpenAPIObject) => {
     spec = stripSOCExtensions(spec);
     const ajv = createOpenAPIAjv(spec, {
-      coerceTypes: true,
+      coerceTypes: false,
       useDefaults: true,
     });
     return (schema: SchemaObject) => {
