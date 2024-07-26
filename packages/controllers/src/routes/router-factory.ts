@@ -125,7 +125,7 @@ const defaultValidatorFactories: ValidatorFactoriesCommon = {
     spec = stripSOCExtensions(spec);
     const ajv = createOpenAPIAjv(spec, {
       coerceTypes: false,
-      useDefaults: true,
+      useDefaults: false,
     });
     return (schema: SchemaObject) => {
       return createValueValidator(ajv, schema);
