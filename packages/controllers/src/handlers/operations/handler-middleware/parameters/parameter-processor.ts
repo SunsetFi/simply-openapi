@@ -1,22 +1,25 @@
-import { ParameterObject } from "openapi3-ts/oas31";
+import { ParameterObject, SchemaObject } from "openapi3-ts/oas31";
 import { NotFound, BadRequest } from "http-errors";
 import { capitalize } from "lodash";
 import { ValidationError } from "ajv";
 
-import { resolveReference } from "../../../schema-utils";
+import { resolveReference, schemaIncludesType } from "../../../../utils";
+
 import {
-  ValueValidatorFactory,
+  ValueValidatorFunction,
   errorObjectsToMessage,
-} from "../../../validation";
+} from "../../../../validation";
 
-import { OperationRequestContext } from "../../OperationRequestContext";
+import { OperationRequestContext } from "../../../OperationRequestContext";
 
-import { nameOperationFromContext } from "../utils";
+import { nameOperationFromContext } from "../../utils";
 import {
   OperationMiddlewareFactory,
   OperationMiddlewareNextFunction,
-} from "./types";
-import { OperationMiddlewareFactoryContext } from "./OperationMiddlewareFactoryContext";
+} from "../types";
+import { OperationMiddlewareFactoryContext } from "../OperationMiddlewareFactoryContext";
+
+import { desieralizeParameterValue } from "./serialization";
 
 export const parametersProcessorMiddlewareFactory: OperationMiddlewareFactory =
   (ctx) => {
@@ -38,17 +41,25 @@ function collectParameterProcessors(ctx: OperationMiddlewareFactoryContext) {
       return (value: any) => value;
     }
 
-    const resolved = resolveReference(ctx.spec, param.schema);
-    if (!resolved) {
+    const schema = resolveReference(ctx.spec, param.schema);
+    if (!schema) {
       throw new Error(
-        `Could not resolve parameter schema reference for parameter ${
-          param.name
-        } in operation ${nameOperationFromContext(ctx)}.`,
+        `Could not resolve parameter schema reference for ${
+          param.in
+        } parameter ${param.name} in operation ${nameOperationFromContext(
+          ctx,
+        )}.`,
       );
     }
 
+    validateParameterDefinition(param, schema);
+
+    // TODO: Validate we have a valid mapping of style and explode bot against
+    // our schema and for our parameter location.
+    /// https://swagger.io/docs/specification/v3_0/serialization/
+
     try {
-      return ctx.validators.createParameterValidator(resolved);
+      return ctx.validators.createParameterValidator(schema);
     } catch (e: any) {
       e.message = `Failed to compile schema for parameter ${param.in} ${
         param.name
@@ -63,32 +74,54 @@ function collectParameterProcessors(ctx: OperationMiddlewareFactoryContext) {
       acc[param.name] = processor;
       return acc;
     },
-    {} as Record<string, ValueValidatorFactory>,
+    {} as Record<string, ValueValidatorFunction>,
   );
 
   return processors;
 }
 
+function validateParameterDefinition(
+  param: ParameterObject,
+  schema: SchemaObject,
+) {
+  if (schemaIncludesType(schema, "object")) {
+    throw new Error(
+      `Object parameters are not supported at this time.  Please file a github feature request.`,
+    );
+  }
+
+  if (param.style === "deepObject") {
+    throw new Error(
+      `Deep object parameters are not supported at this time.  Please file a github feature request.`,
+    );
+  }
+}
+
 function processParameters(
   ctx: OperationRequestContext,
-  processors: Record<string, ValueValidatorFactory>,
+  processors: Record<string, ValueValidatorFunction>,
 ) {
   for (const param of ctx.parameters) {
     const processor = processors[param.name];
 
     const rawValue = getParameterValue(ctx, param);
-    if (rawValue === undefined) {
+    if (rawValue == null) {
       throwIfRequired(param);
       ctx.setRequestData(`openapi-parameter-${param.name}`, undefined);
       continue;
     }
 
-    let value: any;
+    let deserializedValue = desieralizeParameterValue(ctx, param, rawValue);
+
+    let validatedValue: any;
     try {
-      value = processor(rawValue);
+      validatedValue = processor(deserializedValue);
     } catch (e: any) {
       if (e instanceof ValidationError) {
         if (param.in === "path") {
+          // Invalid paths are always "Not Found", as they are not a match.
+          // Note: We might have a case where we have two paths with differing parameter patterns.
+          // We MIGHT consider doing `throw undefined` to make express search for the next matching route.
           throw new NotFound();
         }
 
@@ -100,12 +133,12 @@ function processParameters(
         throw new BadRequest(
           `${capitalize(param.in)} parameter "${
             param.name
-          }" is invalid${addend}`,
+          }" is invalid${addend}.`,
         );
       }
     }
 
-    ctx.setRequestData(`openapi-parameter-${param.name}`, value);
+    ctx.setRequestData(`openapi-parameter-${param.name}`, validatedValue);
   }
 }
 

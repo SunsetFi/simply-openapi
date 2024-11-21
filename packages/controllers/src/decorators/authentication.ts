@@ -1,4 +1,4 @@
-import { SecuritySchemeObject } from "openapi3-ts/dist/oas30";
+import { SecuritySchemeObject } from "openapi3-ts/oas31";
 
 import { setSOCAuthenticatorMetadata } from "../metadata";
 

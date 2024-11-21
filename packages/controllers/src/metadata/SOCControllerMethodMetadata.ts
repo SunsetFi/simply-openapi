@@ -1,5 +1,5 @@
 import { PartialDeep } from "type-fest";
-import { OperationObject } from "openapi3-ts/dist/oas31";
+import { OperationObject } from "openapi3-ts/oas31";
 import { merge } from "lodash";
 
 import { SOCControllerMethodHandlerArg } from "../openapi";

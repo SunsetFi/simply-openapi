@@ -1,21 +1,21 @@
 import { InternalServerError } from "http-errors";
 import { ValidationError } from "ajv";
 
-import { pickContentType, resolveReference } from "../../../schema-utils";
-import { isJSONSerializable } from "../../../utils";
-import { ValueValidatorFunction } from "../../../validation";
-import { errorObjectsToMessage } from "../../../validation/ajv";
+import { pickContentType, resolveReference } from "../../../../schema-utils";
+import { isJSONSerializable } from "../../../../utils";
+import { ValueValidatorFunction } from "../../../../validation";
+import { errorObjectsToMessage } from "../../../../validation/ajv";
 
-import { OperationRequestContext } from "../../OperationRequestContext";
+import { OperationRequestContext } from "../../../OperationRequestContext";
 
-import { nameOperationFromContext } from "../utils";
+import { nameOperationFromContext } from "../../utils";
 
 import { HandlerResult } from "./handler-result";
-import { OperationMiddlewareFactoryContext } from "./OperationMiddlewareFactoryContext";
+import { OperationMiddlewareFactoryContext } from "../OperationMiddlewareFactoryContext";
 import {
   OperationMiddlewareFactory,
   OperationMiddlewareNextFunction,
-} from "./types";
+} from "../types";
 
 // Function to prepare response schemas
 function prepareResponseSchemas(ctx: OperationMiddlewareFactoryContext) {

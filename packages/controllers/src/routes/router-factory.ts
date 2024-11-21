@@ -8,12 +8,11 @@ import {
   stripSOCExtensions,
 } from "../openapi";
 import { ControllerInstance, RequestMethod } from "../types";
-import { requestMethods } from "../utils";
 import { openAPIToExpressPath } from "../urls";
 import { createOpenAPIAjv, isAjvInstance } from "../validation/ajv";
 
 import { OperationContext, OperationRequestContext } from "../handlers";
-import { responseValidationMiddlewareCreator } from "../handlers/operations/handler-middleware/response-validator";
+import { responseValidationMiddlewareCreator } from "../handlers/operations/handler-middleware/responses/response-validator";
 
 import {
   ValidatorFactories,
@@ -21,6 +20,7 @@ import {
   ValidatorFactoryOption,
   createValueValidator,
 } from "../validation";
+import { requestMethods } from "../consts";
 
 import { OperationHandlerFactory, OperationHandlerOptions } from "./types";
 import { socOperationHandlerFactory } from "./handler-factories";

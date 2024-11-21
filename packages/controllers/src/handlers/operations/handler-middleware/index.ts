@@ -1,4 +1,4 @@
-export * from "./handler-result";
+export * from "./responses/handler-result";
 
 export {
   HTTPBasicAuthenticationCredentials,

@@ -36,7 +36,7 @@ export abstract class SecurityRequirementProcessor {
     ctx: OperationRequestContext,
   ): Promise<Record<string, any> | boolean> {
     const value = this._getValue(ctx);
-    if (value === undefined) {
+    if (value == null) {
       return false;
     }
 

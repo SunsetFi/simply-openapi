@@ -72,19 +72,57 @@ export class OperationRequestContext extends OperationHandlerContext {
     this._requestData.set(key, value);
   }
 
-  getPathParam(name: string) {
-    return this.req.params[name];
+  getPathParam(name: string): string | null {
+    const value = this.req.params[name];
+    if (!value) {
+      return null;
+    }
+
+    return value;
   }
 
-  getHeader(name: string) {
-    return this.req.headers[name.toLowerCase()];
+  getHeader(name: string): string | string[] | null {
+    return this.req.headers[name.toLowerCase()] ?? null;
   }
 
-  getQuery(name: string) {
-    return this.req.query[name];
+  getQuery(name: string): string | string[] | null {
+    const value = this.req.query[name];
+    if (value == null) {
+      return null;
+    }
+
+    if (Array.isArray(value)) {
+      if (value.some((v) => typeof v !== "string")) {
+        throw new Error(
+          `Unexpected non-string array value for query parameter "${name}".  Are you using a middleware query parser?  @simply-openapi/controllers will perform its own parsing based on the parameter definition.`,
+        );
+      }
+
+      return value as string[];
+    }
+
+    // Under what circumstances does a query return an additional object?
+    if (typeof value === "object") {
+      throw new Error(
+        `Unexpected object in request query ${name}.  Are you using a middleware query parser?  @simply-openapi/controllers will perform its own parsing based on the parameter definition.`,
+      );
+    }
+
+    return value;
   }
 
-  getCookie(name: string) {
-    return this.req.cookies[name];
+  getCookie(name: string): string | null {
+    const value = this.req.cookies[name];
+    if (!value) {
+      return null;
+    }
+
+    if (typeof value !== "string") {
+      throw new Error(
+        `Unexpected non-string cookie value for cookie "${name}".  Are you using a middleware cookie parser?  @simply-openapi/controllers will perform its own parsing based on the parameter definition.`,
+      );
+    }
+
+    return String(value);
   }
 }

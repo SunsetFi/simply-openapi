@@ -2,7 +2,7 @@ import { getMockReq, getMockRes } from "@jest-mock/express";
 import { Response } from "express";
 import "jest-extended";
 
-import { OperationRequestContext } from "../../OperationRequestContext";
+import { OperationRequestContext } from "../../../OperationRequestContext";
 
 import { operationHandlerJsonResponseMiddleware } from "./json-response";
 import { HandlerResult } from "./handler-result";

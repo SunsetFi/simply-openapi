@@ -52,6 +52,80 @@ describe("E2E: Query Param", function () {
       handler(foo);
       return { bar: true };
     }
+
+    @Get("/formArrayOnly")
+    formArrayOnly(
+      @RequiredQueryParam(
+        "foo",
+        { type: "array", items: { type: "number" } },
+        {
+          style: "form",
+          explode: false,
+        },
+      )
+      foo: number[],
+    ) {
+      handler(foo);
+      return { bar: true };
+    }
+
+    @Get("/formArrayOnlyExplode")
+    formArrayExplode(
+      @RequiredQueryParam(
+        "foo",
+        { type: "array", items: { type: "number" } },
+        {
+          style: "form",
+          explode: true,
+        },
+      )
+      foo: number[],
+    ) {
+      handler(foo);
+      return { bar: true };
+    }
+
+    @Get("/formArrayOrPrimitive")
+    formArrayOrPrimitive(
+      @RequiredQueryParam(
+        "foo",
+        {
+          oneOf: [
+            { type: "array", items: { type: "number" } },
+            { type: "number" },
+          ],
+        },
+        {
+          style: "form",
+          explode: false,
+        },
+      )
+      foo: number[],
+    ) {
+      handler(foo);
+      return { bar: true };
+    }
+
+    @Get("/formArrayOrPrimitiveExplode")
+    formArrayOrPrimitiveExplode(
+      @RequiredQueryParam(
+        "foo",
+        {
+          oneOf: [
+            { type: "array", items: { type: "number" } },
+            { type: "number" },
+          ],
+        },
+        {
+          style: "form",
+          explode: true,
+        },
+      )
+      foo: number[],
+    ) {
+      handler(foo);
+      return { bar: true };
+    }
   }
 
   let spec: OpenAPIObject;
@@ -99,6 +173,120 @@ describe("E2E: Query Param", function () {
                 required: true,
                 schema: { type: "integer" },
                 description: "The foo parameter",
+              },
+            ],
+            responses: {
+              200: {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: { bar: { type: "boolean" } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        "/formArrayOnly": {
+          get: {
+            parameters: [
+              {
+                name: "foo",
+                in: "query",
+                required: true,
+                schema: { type: "array", items: { type: "number" } },
+                style: "form",
+                explode: false,
+              },
+            ],
+            responses: {
+              200: {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: { bar: { type: "boolean" } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        "/formArrayOnlyExplode": {
+          get: {
+            parameters: [
+              {
+                name: "foo",
+                in: "query",
+                required: true,
+                schema: { type: "array", items: { type: "number" } },
+                style: "form",
+                explode: true,
+              },
+            ],
+            responses: {
+              200: {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: { bar: { type: "boolean" } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        "/formArrayOrPrimitive": {
+          get: {
+            parameters: [
+              {
+                name: "foo",
+                in: "query",
+                required: true,
+                schema: {
+                  oneOf: [
+                    { type: "array", items: { type: "number" } },
+                    { type: "number" },
+                  ],
+                },
+                style: "form",
+                explode: false,
+              },
+            ],
+            responses: {
+              200: {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: { bar: { type: "boolean" } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        "/formArrayOrPrimitiveExplode": {
+          get: {
+            parameters: [
+              {
+                name: "foo",
+                in: "query",
+                required: true,
+                schema: {
+                  oneOf: [
+                    { type: "array", items: { type: "number" } },
+                    { type: "number" },
+                  ],
+                },
+                style: "form",
+                explode: true,
               },
             ],
             responses: {
@@ -216,6 +404,176 @@ describe("E2E: Query Param", function () {
           done(e);
         }
       }, 10);
+    });
+  });
+
+  describe("styles", function () {
+    describe("form", function () {
+      describe("formArrayOnly", function () {
+        it("accepts multiple values", function (done) {
+          const req = getMockReq("GET", "/formArrayOnly", {
+            query: { foo: "1,2,3" },
+          });
+          const { res, next } = getMockRes();
+
+          router(req, res, next);
+
+          // Even with sync functions, we await promises, which trampolines us out
+          setTimeout(() => {
+            try {
+              expect(handler).toHaveBeenCalledWith([1, 2, 3]);
+
+              done();
+            } catch (e) {
+              done(e);
+            }
+          }, 10);
+        });
+
+        it("accepts a single value", function (done) {
+          const req = getMockReq("GET", "/formArrayOnly", {
+            query: { foo: "1" },
+          });
+          const { res, next } = getMockRes();
+
+          router(req, res, next);
+
+          // Even with sync functions, we await promises, which trampolines us out
+          setTimeout(() => {
+            try {
+              expect(handler).toHaveBeenCalledWith([1]);
+
+              done();
+            } catch (e) {
+              done(e);
+            }
+          }, 10);
+        });
+      });
+      describe("formArrayOnlyExplode", function () {
+        it("accepts multiple values", function (done) {
+          const req = getMockReq("GET", "/formArrayOnlyExplode", {
+            query: { foo: ["1", "2", "3"] },
+          });
+          const { res, next } = getMockRes();
+
+          router(req, res, next);
+
+          // Even with sync functions, we await promises, which trampolines us out
+          setTimeout(() => {
+            try {
+              expect(handler).toHaveBeenCalledWith([1, 2, 3]);
+
+              done();
+            } catch (e) {
+              done(e);
+            }
+          }, 10);
+        });
+
+        it("accepts a single value", function (done) {
+          const req = getMockReq("GET", "/formArrayOnlyExplode", {
+            query: { foo: "1" },
+          });
+          const { res, next } = getMockRes();
+
+          router(req, res, next);
+
+          // Even with sync functions, we await promises, which trampolines us out
+          setTimeout(() => {
+            try {
+              expect(handler).toHaveBeenCalledWith([1]);
+
+              done();
+            } catch (e) {
+              done(e);
+            }
+          }, 10);
+        });
+      });
+
+      describe("formArrayOrPrimitive", function () {
+        it("accepts multiple values", function (done) {
+          const req = getMockReq("GET", "/formArrayOrPrimitive", {
+            query: { foo: "1,2,3" },
+          });
+          const { res, next } = getMockRes();
+
+          router(req, res, next);
+
+          // Even with sync functions, we await promises, which trampolines us out
+          setTimeout(() => {
+            try {
+              expect(handler).toHaveBeenCalledWith([1, 2, 3]);
+
+              done();
+            } catch (e) {
+              done(e);
+            }
+          }, 10);
+        });
+
+        it("accepts a single value", function (done) {
+          const req = getMockReq("GET", "/formArrayOrPrimitive", {
+            query: { foo: "1" },
+          });
+          const { res, next } = getMockRes();
+
+          router(req, res, next);
+
+          // Even with sync functions, we await promises, which trampolines us out
+          setTimeout(() => {
+            try {
+              expect(handler).toHaveBeenCalledWith(1);
+
+              done();
+            } catch (e) {
+              done(e);
+            }
+          }, 10);
+        });
+      });
+      describe("formArrayOrPrimitiveExplode", function () {
+        it("accepts multiple values", function (done) {
+          const req = getMockReq("GET", "/formArrayOrPrimitiveExplode", {
+            query: { foo: ["1", "2", "3"] },
+          });
+          const { res, next } = getMockRes();
+
+          router(req, res, next);
+
+          // Even with sync functions, we await promises, which trampolines us out
+          setTimeout(() => {
+            try {
+              expect(handler).toHaveBeenCalledWith([1, 2, 3]);
+
+              done();
+            } catch (e) {
+              done(e);
+            }
+          }, 10);
+        });
+
+        it("accepts a single value", function (done) {
+          const req = getMockReq("GET", "/formArrayOrPrimitiveExplode", {
+            query: { foo: "1" },
+          });
+          const { res, next } = getMockRes();
+
+          router(req, res, next);
+
+          // Even with sync functions, we await promises, which trampolines us out
+          setTimeout(() => {
+            try {
+              expect(handler).toHaveBeenCalledWith(1);
+
+              done();
+            } catch (e) {
+              done(e);
+            }
+          }, 10);
+        });
+      });
     });
   });
 });

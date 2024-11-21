@@ -1,6 +1,6 @@
 import { Constructor } from "type-fest";
 
-import { requestMethods } from "./utils";
+import { requestMethods } from "./consts";
 
 export type RequestMethod = (typeof requestMethods)[number];
 

@@ -6,15 +6,16 @@ import {
   getSOCControllerMethodMetadata,
   isSOCBoundControllerMethodMetadata,
 } from "../../metadata";
-import { nameController, requestMethods } from "../../utils";
 import { resolveReference } from "../../schema-utils";
 import { ControllerObject } from "../../types";
+import { requestMethods } from "../../consts";
 
 import { OpenAPIObjectExtractor } from "../types";
 import {
   SOCControllerMethodExtensionData,
   SOCControllerMethodExtensionName,
 } from "../extensions";
+import { nameController } from "../utils";
 
 export const extractSOCBoundMethodSpec: OpenAPIObjectExtractor = (
   controller: ControllerObject,

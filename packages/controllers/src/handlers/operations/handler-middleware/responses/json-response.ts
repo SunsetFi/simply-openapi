@@ -1,11 +1,11 @@
 import HttpStatusCodes from "http-status-codes";
 
-import { isJSONSerializable } from "../../../utils";
+import { isJSONSerializable } from "../../../../utils";
 
-import { nameOperationFromContext } from "../utils";
+import { nameOperationFromContext } from "../../utils";
 
-import { OperationMiddlewareNextFunction } from "./types";
-import { OperationRequestContext } from "../../OperationRequestContext";
+import { OperationMiddlewareNextFunction } from "../types";
+import { OperationRequestContext } from "../../../OperationRequestContext";
 import { HandlerResult } from "./handler-result";
 
 export async function operationHandlerJsonResponseMiddleware(

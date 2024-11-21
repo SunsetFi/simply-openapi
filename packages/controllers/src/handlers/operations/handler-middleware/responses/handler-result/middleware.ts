@@ -1,7 +1,7 @@
-import { nameOperationFromContext } from "../../utils";
+import { nameOperationFromContext } from "../../../utils";
 
-import { OperationMiddlewareNextFunction } from "../types";
-import { OperationRequestContext } from "../../../OperationRequestContext";
+import { OperationMiddlewareNextFunction } from "../../types";
+import { OperationRequestContext } from "../../../../OperationRequestContext";
 
 import { HandlerResult } from "./HandlerResult";
 

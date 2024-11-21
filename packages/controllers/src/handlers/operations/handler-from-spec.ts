@@ -15,7 +15,7 @@ import { OperationContext } from "../OperationContext";
 
 import { MethodHandler } from "./MethodHandler";
 import { OperationMiddleware } from "./handler-middleware";
-import { operationHandlerFallbackResponseMiddleware } from "./handler-middleware/fallback";
+import { operationHandlerFallbackResponseMiddleware } from "./handler-middleware/responses/fallback";
 import defaultHandlerMiddleware from "./handler-middleware/defaultHandlerMiddleware";
 
 export interface CreateMethodHandlerOpts {

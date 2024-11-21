@@ -1,7 +1,7 @@
 import { InfoObject, OpenAPIObject } from "openapi3-ts/oas31";
 import { cloneDeep } from "lodash";
 
-import { getClassMethods, mergeCombineArrays, nameController } from "../utils";
+import { getClassMethods, mergeCombineArrays } from "../utils";
 import { ControllerObject } from "../types";
 
 import {
@@ -17,6 +17,7 @@ import {
   extractSOCAuthenticatorSpec,
   extractSOCControllerSpec,
 } from "./spec-extractors";
+import { nameController } from "./utils";
 
 export interface CreateOpenAPIPathsFromControllerOptions {
   /**

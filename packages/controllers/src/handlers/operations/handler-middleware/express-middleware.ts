@@ -34,7 +34,13 @@ export function convertExpressMiddleware(
     return (context, next) => {
       return new Promise((accept, reject) => {
         (expressHandler as Handler)(context.req, context.res, (err) => {
-          if (err) {
+          // Express supports calling next("route") to check the next route.
+          // We don't really have a system for this, but thankfully
+          // express accepts `throw undefined` to mean the same.
+          if (err === "route") {
+            reject(undefined);
+            return;
+          } else if (err) {
             reject(err);
             return;
           }

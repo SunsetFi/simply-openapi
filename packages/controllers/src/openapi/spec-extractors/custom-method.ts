@@ -3,8 +3,8 @@ import {
   OperationObject,
   SecurityRequirementObject,
 } from "openapi3-ts/oas31";
-import { get } from "lodash";
-import { set } from "lodash/fp";
+import { get, uniq } from "lodash";
+import { set, mergeWith as mergeWithFp } from "lodash/fp";
 
 import {
   SOCCustomControllerMetadata,
@@ -15,17 +15,14 @@ import {
 } from "../../metadata";
 import { joinUrlPaths } from "../../urls";
 import { ControllerObject } from "../../types";
-import {
-  mergeCombineArrays,
-  mergeSecurityReqs,
-  nameController,
-} from "../../utils";
+import { mergeCombineArrays } from "../../utils";
 
 import { OpenAPIObjectExtractor } from "../types";
 import {
   SOCControllerMethodExtensionData,
   SOCControllerMethodExtensionName,
 } from "../extensions";
+import { nameController } from "../utils";
 
 export const extractSOCCustomMethodSpec: OpenAPIObjectExtractor = (
   controller: ControllerObject,
@@ -104,3 +101,35 @@ export const extractSOCCustomMethodSpec: OpenAPIObjectExtractor = (
     return set(["paths", path, metadata.method], op, spec);
   };
 };
+
+function mergeSecurityReqs(
+  target: SecurityRequirementObject[],
+  sources: SecurityRequirementObject[],
+) {
+  target = target.slice();
+  for (const source of sources) {
+    const mergeIntoIndex: number = target.findIndex((s) => {
+      const sKeys = Object.keys(s);
+      const secKeys = Object.keys(source);
+      return (
+        sKeys.length === secKeys.length &&
+        sKeys.every((k) => secKeys.includes(k))
+      );
+    });
+    if (mergeIntoIndex >= 0) {
+      target[mergeIntoIndex] = mergeWithFp(
+        (objValue, srcValue): any => {
+          if (Array.isArray(objValue)) {
+            return uniq(objValue.concat(srcValue));
+          }
+        },
+        target[mergeIntoIndex],
+        source,
+      );
+    } else {
+      target.push(source);
+    }
+  }
+
+  return target;
+}
