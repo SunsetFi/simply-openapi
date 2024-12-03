@@ -42,3 +42,65 @@ app.use("/openapi", swaggerServe, swaggerSetup(strippedDocs));
 app.listen(8080);
 
 ```
+
+## Hosting your spec with Stoplight Elements
+
+For a more feature packed and polished OpenAPI UI, you may wish to use (Stoplight Elements)[https://github.com/stoplightio/elements].
+
+This can be easily integrated into your application with unpkg.com:
+
+```typescript
+
+import express, { Router } from "express";
+import {
+  createOpenAPIFromControllers,
+  stripSOCExtensions
+} from "@simply-openapi/controllers";
+import { escape } from "html-escaper";
+
+import { controllers } from "./controllers";
+
+const app = express();
+
+const docs = createOpenAPIFromControllers(..., controllers);
+
+...
+
+// This step is optional.
+const strippedDocs = stripSOCExtensions(docs);
+
+app.use("/openapi", createDocumentationRouter(strippedDocs));
+
+app.listen(8080);
+
+
+function createDocumentationRouter(spec: OpenAPIObject) {
+  const router = Router();
+
+  router.get("/", (req, res) => {
+    res.setHeader("Content-Type", "application/json");
+    res.send(JSON.stringify(spec, null, 2));
+  });
+
+  router.get("/elements", (req, res) => {
+    res.setHeader("Content-Type", "text/html");
+    res.send(`
+    <!DOCTYPE HTML>
+    <html>
+      <head>
+        <script src="https://unpkg.com/@stoplight/elements/web-components.min.js"></script>
+        <link rel="stylesheet" href="https://unpkg.com/@stoplight/elements/styles.min.css">
+        <title>${escape(spec.info.title)}</title>
+      </head>
+      <body>
+        <elements-api
+          style="display: inline-block; width: 100vw; height: 100vh"
+          apiDescriptionDocument="${escape(JSON.stringify(spec))}"
+          router="hash"
+        />
+      </body>
+    </html>
+    `);
+  });
+}
+```

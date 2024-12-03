@@ -28,7 +28,7 @@ The `responseValidation` option can be used to apply such validation to the api.
 
 - `true` - Validate the response, if a matching media type is found in the specification. Returns an Internal Server Error status code if the response is not valid.
 - `"required"` - Validate the response, and returns an Internal Server Error if it fails to validate. If no matching media type is found in the specification, an Internal Server Error is also returned.
-- `function` - If the response fails to validate, the function will be called with the AJV ValidationError of the failing validation.
+- `function` - If the response fails to validate, the function will be called. The first argument will be the AJV ValidationError of the failing validation, and the second argument will be the [OperationRequestContext](../api-reference/contexts.md#requestcontext).
 - `{required: true, errorHandler: function}` - Applies the behavior of both `"required"` and `function`.
 
 When using a function, you may want to use the exported `errorObjectsToMessage` utility to stringify the errors property of a ValidationError.
@@ -53,7 +53,14 @@ const router = createRouterFromSpec(mySpec, {
   responseValidation: {
     required: true,
     errorHandler: (err, ctx) => {
-      console.log("Method", ctx.method, "at path", ctx.path, "returned an invalid body:", errorObjectsToMessage(err.errors));
+      console.log(
+        "Method",
+        ctx.method,
+        "at path",
+        ctx.path,
+        "returned an invalid body:",
+        errorObjectsToMessage(err.errors)
+      );
       ctx.res.status(500).end();
     }
   }

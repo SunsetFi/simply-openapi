@@ -105,7 +105,7 @@ function processParameters(
     const processor = processors[param.name];
 
     const rawValue = getParameterValue(ctx, param);
-    if (rawValue == null) {
+    if (rawValue === undefined) {
       throwIfRequired(param);
       ctx.setRequestData(`openapi-parameter-${param.name}`, undefined);
       continue;

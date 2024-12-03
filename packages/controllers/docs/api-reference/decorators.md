@@ -135,7 +135,7 @@ class WidgetsController {
 }
 ```
 
-### OpenAPIOperation
+### @OpenAPIOperation
 
 Applies a fragment of an OpenAPI operation to every operation defined by this controller.
 
@@ -428,7 +428,7 @@ class WidgetsController {
 }
 ```
 
-### PathParam
+### @PathParam
 
 Declares a path parameter and binds the handler argument to receive the param.
 
@@ -454,7 +454,7 @@ class WidgetsController {
 
 For brevity, you may specify the schema type as a string. `@PathParam(name, "integer")` is equal to `@PathParam(name, { type: "integer" })`.
 
-### QueryParam
+### @QueryParam
 
 Declares a query parameter and binds the handler argument to receive the param.
 
@@ -478,11 +478,11 @@ class WidgetsController {
 
 For brevity, you may specify the schema type as a string. `@QueryParam(name, "integer")` is equal to `@QueryParam(name, { type: "integer" })`.
 
-### RequiredQueryParam
+### @RequiredQueryParam
 
 This decorator is a shortcut for creating a required query param. `@RequiredQueryParam(name, schema)` is equivalent to `@QueryParam(name, schema, { required: true })`.
 
-### HeaderParam
+### @HeaderParam
 
 Declares a header parameter and binds the handler argument to receive the param.
 
@@ -492,11 +492,11 @@ The second argument takes either an OpenAPI schema object type name, or a schema
 
 The third optional parameter takes additional OpenAPI parameter spec properties.
 
-### RequiredHeaderParam
+### @RequiredHeaderParam
 
 This decorator is a shortcut for creating a required header param. `@RequiredHeaderParam(name, schema)` is equivalent to `@HeaderParam(name, schema, { required: true })`.
 
-### CookieParam
+### @CookieParam
 
 Declares a cookie parameter and binds the handler argument to receive the param.
 
@@ -506,11 +506,11 @@ The second argument takes either an OpenAPI schema object type name, or a schema
 
 The third optional parameter takes additional OpenAPI parameter spec properties.
 
-### RequiredCookieParam
+### @RequiredCookieParam
 
 This decorator is a shortcut for creating a required cookie param. `@RequiredCookieParam(name, schema)` is equivalent to `@CookieParam(name, schema, { required: true })`.
 
-### BindSecurity
+### @BindSecurity
 
 Binds the handler method argument to the result of the given security scheme authentication controller.
 
@@ -543,7 +543,7 @@ class WidgetsController {
 
 ```
 
-### BindParam
+### @BindParam
 
 Binds the handler method argument to an existing OpenAPI parameter on the target operation.
 
@@ -575,7 +575,7 @@ class WidgetsByTypeController {
 
 ```
 
-### Body
+### @Body
 
 This decorator configures a specific media type body for the request response, and binds the handler argument to recieve the body.
 

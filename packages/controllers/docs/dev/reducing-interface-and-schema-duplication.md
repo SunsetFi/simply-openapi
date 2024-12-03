@@ -6,7 +6,7 @@ This is less than ideal, and breaks away from the single source of truth princip
 
 ## @sinclair/typebox
 
-[Typebox](https://www.npmjs.com/package/@sinclair/typebox) provides an elegant way to produce both interfaces and JSON Schema from a single source. As it allows you to pass custom JSON Schema at each level, it allows for a full description of your types using JSON Schema and OpenAPI Schema directives that might not be natively available in other schema generators.
+[Typebox](https://www.npmjs.com/package/@sinclair/typebox) provides an elegant way to produce both interfaces and JSON Schema from a single source. Since it allows you to pass custom JSON Schema at each level, it allows for a full description of your types using JSON Schema and OpenAPI Schema directives that might not be natively available in other schema generators.
 
 ```typescript
 import { Type, Static } from "@sinclair/typebox";

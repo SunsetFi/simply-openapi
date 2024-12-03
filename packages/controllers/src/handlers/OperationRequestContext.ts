@@ -72,23 +72,18 @@ export class OperationRequestContext extends OperationHandlerContext {
     this._requestData.set(key, value);
   }
 
-  getPathParam(name: string): string | null {
-    const value = this.req.params[name];
-    if (!value) {
-      return null;
-    }
-
-    return value;
+  getPathParam(name: string): string | undefined {
+    return this.req.params[name];
   }
 
-  getHeader(name: string): string | string[] | null {
-    return this.req.headers[name.toLowerCase()] ?? null;
+  getHeader(name: string): string | string[] | undefined {
+    return this.req.headers[name.toLowerCase()];
   }
 
-  getQuery(name: string): string | string[] | null {
+  getQuery(name: string): string | string[] | undefined {
     const value = this.req.query[name];
-    if (value == null) {
-      return null;
+    if (value === undefined) {
+      return undefined;
     }
 
     if (Array.isArray(value)) {
@@ -111,10 +106,10 @@ export class OperationRequestContext extends OperationHandlerContext {
     return value;
   }
 
-  getCookie(name: string): string | null {
+  getCookie(name: string): string | undefined {
     const value = this.req.cookies[name];
-    if (!value) {
-      return null;
+    if (value === undefined) {
+      return undefined;
     }
 
     if (typeof value !== "string") {

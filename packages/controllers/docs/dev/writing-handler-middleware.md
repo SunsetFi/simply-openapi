@@ -134,6 +134,7 @@ export function mySchemaMiddlewareFactory(
   // Create a validation function from the schema.
   const validator = factoryContext.validators.createStrictValidator(mySchema);
 
+  // Return a middleware to perform the validation.
   return async (
     context: OperationRequestContext,
     next: OperationMiddlewareNextFunction,

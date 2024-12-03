@@ -19,7 +19,7 @@ This decorator is largely semantic. It is not required, and bound methods can ev
 
 ## Binding a method to an existing operation
 
-[Operations](https://spec.openapis.org/oas/v3.1.0#operation-object) are the unit endpoint specifiers of OpenAPI, and it is these to witch the methods of a bound controller will attach to.
+[Operations](https://spec.openapis.org/oas/v3.1.0#operation-object) are the unit endpoint specifiers of OpenAPI, and it to these that the methods of a bound controller will attach to.
 
 The `@BindOperation` decorator is used on controller methods, and specifies which operation within the OpenAPI spec this method should handle. This is done by matching the `operationId` property of your operation.
 

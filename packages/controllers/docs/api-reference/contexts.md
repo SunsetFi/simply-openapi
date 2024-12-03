@@ -8,15 +8,15 @@ This context provides detailed information about an OpenAPI Operation.
 
 ### Properties
 
-- `spec` - Gets the root OpenAPI specification passed to `createMethodHandlerFromSpec`.
-- `path` - Gets the request / operation path as it exists in the OpenAPI spec.
-- `method` - Gets the request / operation method.
-- `pathItem` - Gets the [Path Item Object](https://spec.openapis.org/oas/v3.1.0#path-item-object) this operation is defined in.
-- `operation` - Gets the [Operation Object](https://spec.openapis.org/oas/v3.1.0#operationObject) this operation is defined in.
-- `securitySchemes` - Gets a record of all resolved [Security Schemes](https://spec.openapis.org/oas/v3.1.0#security-scheme-object) defined in the OpenAPI specification, keyed by scheme name.
-- `securities` - Gets the resolved [Security Requirements](https://spec.openapis.org/oas/v3.1.0#security-requirement-object) for this operation. This will either be those defined by the operation itself, or if the operation does not specify any, then the security schemes of the OpenAPI document will be used.
-- `parameters` - Gets an array of the resolved [Parameter Objects](https://spec.openapis.org/oas/v3.1.0#parameter-object) of this operation. These may come from the operation itself, or the path item.
-- `requestBody` - Gets the resolved [Request Body Object](https://spec.openapis.org/oas/v3.1.0#request-body-object) for this operation.
+- `spec` - The root OpenAPI specification passed to `createMethodHandlerFromSpec`.
+- `path` - The request / operation path as it exists in the OpenAPI spec.
+- `method` - The request / operation method.
+- `pathItem` - The [Path Item Object](https://spec.openapis.org/oas/v3.1.0#path-item-object) this operation is defined in.
+- `operation` - The [Operation Object](https://spec.openapis.org/oas/v3.1.0#operationObject) this operation is defined in.
+- `securitySchemes` - A record of all resolved [Security Schemes](https://spec.openapis.org/oas/v3.1.0#security-scheme-object) defined in the OpenAPI specification, keyed by scheme name.
+- `securities` - An array of the resolved [Security Requirements](https://spec.openapis.org/oas/v3.1.0#security-requirement-object) for this operation. This will either be those defined by the operation itself, or if the operation does not specify any, then the security schemes of the OpenAPI document will be used.
+- `parameters` - An array of the resolved [Parameter Objects](https://spec.openapis.org/oas/v3.1.0#parameter-object) of this operation. These may come from the operation itself, or the path item.
+- `requestBody` - The resolved [Request Body Object](https://spec.openapis.org/oas/v3.1.0#request-body-object) for this operation.
 
 ## OperationHandlerContext
 
@@ -28,7 +28,7 @@ In addition to all properties from the [OperationContext](#operationcontext), th
 
 - `controller` - The resolved controller class instance the handler is attached to.
 - `handler` - The resolved handler function that will handle the operation.
-- `handlerArgs` - An array of argument definitions describing the purpose of each argument of the handler.
+- `handlerArgs` - An array of argument definitions describing the purpose of each argument of the handler. Note that if an argument of the handler has no definition, the value at that index will be undefined.
 
 ## OperationMiddlewareFactoryContext
 
@@ -40,13 +40,13 @@ In addition to all all properties from [OperationHandlerContext](#OperationHandl
 
 - `validators` - An object containing functions which will take an [OpenAPI 3.1 Schema](https://spec.openapis.org/oas/v3.1.0#schema-object) object, and return a function that attempts to validate and coerce its argument. If the data is valid, the cosersed value will be returned. If the data is invalid, an AJV `ValidationError` will be thrown with an array of [AJV Errors](https://ajv.js.org/api.html#validation-errors) in its `errors` property. For an example of this, see [Schema Based Validation](../dev/writing-handler-middleware.md#schema-based-validation).
   The following functions are available by default. They may be modified, or new validators may be added, through the `validatorFactories` option of `createRouterFromSpec`. [See here for more details](../dev/creating-express-routes.md#modifying-or-adding-openapi-schema-validators).
-  - `createParameterValidator` - Creates a validator function that validates parameter objects. The validation will coerce types and apply defaults. Coercion is done in accordance with the [AJV Type Coercion Rules](https://ajv.js.org/coercion.html)
+  - `createParameterValidator` - Creates a validator function that validates parameter objects. The validation will coerce types, but will not apply defaults. Coercion is done in accordance with the [AJV Type Coercion Rules](https://ajv.js.org/coercion.html)
   - `createBodyValidator` - Creates a validator function that validates parameter objects. The validation will coerce types and apply defaults. Coercion is done in accordance with the [AJV Type Coercion Rules](https://ajv.js.org/coercion.html)
-  - `createResponseValidator` - Creates a validator function that validates responses. No type coersion is done; types must match exactly.
+  - `createResponseValidator` - Creates a validator function that validates responses. No type coersion is done, and no defaults are applied; types must match exactly.
 
 ## OperationRequestContext
 
-This context is used when handling a specific network request. It inherits from the OperationHandlerContext.
+This context is used when handling a specific network request. It inherits from the [OperationHandlerContext](#OperationHandlerContext).
 
 ### Properties
 
@@ -60,9 +60,15 @@ In addition to all properties from the [OperationHandlerContext](#OperationHandl
 The following methods are available to simplify working with the request:
 
 - `getPathParam(name)` - Gets the value of the path parameter of the given name.
+  If the parameter is not set, `undefined` is returned.
 - `getHeader(name)` - Gets the value of the header of the given name. This method is case insensitive.
+  If the header is not set, `undefined` is returned.
+  If the header is set more than once, an array of values is returned.
 - `getQuery(name)` - Gets the value of the query parameter with the given name.
+  If the query parameter is not set, `undefined` is returned.
+  If the query parameter is set more than once, an array of values is returned.
 - `getCookie(name)` - Gets the value of the cookie with the given name.
+  If the cookie is not set, `undefined` is returned.
 
 The following methods are available for working with [Request Data](../dev/request-data.md):
 

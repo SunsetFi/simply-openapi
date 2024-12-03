@@ -1,15 +1,9 @@
-import { OpenAPIObject, PathsObject } from "openapi3-ts/oas31";
+import { OpenAPIObject } from "openapi3-ts/oas31";
 import { Router } from "express";
 import { BadRequest } from "http-errors";
 import "jest-extended";
 
-import {
-  Controller,
-  Get,
-  JsonResponse,
-  QueryParam,
-  RequiredQueryParam,
-} from "../decorators";
+import { Controller, Get, QueryParam, RequiredQueryParam } from "../decorators";
 import { createOpenAPIFromControllers } from "../openapi";
 import { createRouterFromSpec } from "../routes";
 
@@ -26,23 +20,15 @@ describe("E2E: Query Param", function () {
   @Controller("/")
   class WidgetController {
     @Get("/opt")
-    @JsonResponse(200, {
-      type: "object",
-      properties: { bar: { type: "boolean" } },
-    })
     getOptionalParam(
       @QueryParam("foo", "integer", { description: "The foo parameter" })
       foo: number,
     ) {
       handler(foo);
-      return { bar: true };
+      return null;
     }
 
     @Get("/req")
-    @JsonResponse(200, {
-      type: "object",
-      properties: { bar: { type: "boolean" } },
-    })
     getRequiredParam(
       @RequiredQueryParam("foo", "integer", {
         description: "The foo parameter",
@@ -50,7 +36,7 @@ describe("E2E: Query Param", function () {
       foo: number,
     ) {
       handler(foo);
-      return { bar: true };
+      return null;
     }
 
     @Get("/formArrayOnly")
@@ -66,7 +52,7 @@ describe("E2E: Query Param", function () {
       foo: number[],
     ) {
       handler(foo);
-      return { bar: true };
+      return null;
     }
 
     @Get("/formArrayOnlyExplode")
@@ -82,7 +68,7 @@ describe("E2E: Query Param", function () {
       foo: number[],
     ) {
       handler(foo);
-      return { bar: true };
+      return null;
     }
 
     @Get("/formArrayOrPrimitive")
@@ -100,10 +86,10 @@ describe("E2E: Query Param", function () {
           explode: false,
         },
       )
-      foo: number[],
+      foo: number[] | number,
     ) {
       handler(foo);
-      return { bar: true };
+      return null;
     }
 
     @Get("/formArrayOrPrimitiveExplode")
@@ -121,10 +107,10 @@ describe("E2E: Query Param", function () {
           explode: true,
         },
       )
-      foo: number[],
+      foo: number[] | number,
     ) {
       handler(foo);
-      return { bar: true };
+      return null;
     }
   }
 
@@ -150,18 +136,6 @@ describe("E2E: Query Param", function () {
                 description: "The foo parameter",
               },
             ],
-            responses: {
-              200: {
-                content: {
-                  "application/json": {
-                    schema: {
-                      type: "object",
-                      properties: { bar: { type: "boolean" } },
-                    },
-                  },
-                },
-              },
-            },
           },
         },
         "/req": {
@@ -175,18 +149,6 @@ describe("E2E: Query Param", function () {
                 description: "The foo parameter",
               },
             ],
-            responses: {
-              200: {
-                content: {
-                  "application/json": {
-                    schema: {
-                      type: "object",
-                      properties: { bar: { type: "boolean" } },
-                    },
-                  },
-                },
-              },
-            },
           },
         },
         "/formArrayOnly": {
@@ -201,18 +163,6 @@ describe("E2E: Query Param", function () {
                 explode: false,
               },
             ],
-            responses: {
-              200: {
-                content: {
-                  "application/json": {
-                    schema: {
-                      type: "object",
-                      properties: { bar: { type: "boolean" } },
-                    },
-                  },
-                },
-              },
-            },
           },
         },
         "/formArrayOnlyExplode": {
@@ -227,18 +177,6 @@ describe("E2E: Query Param", function () {
                 explode: true,
               },
             ],
-            responses: {
-              200: {
-                content: {
-                  "application/json": {
-                    schema: {
-                      type: "object",
-                      properties: { bar: { type: "boolean" } },
-                    },
-                  },
-                },
-              },
-            },
           },
         },
         "/formArrayOrPrimitive": {
@@ -258,18 +196,6 @@ describe("E2E: Query Param", function () {
                 explode: false,
               },
             ],
-            responses: {
-              200: {
-                content: {
-                  "application/json": {
-                    schema: {
-                      type: "object",
-                      properties: { bar: { type: "boolean" } },
-                    },
-                  },
-                },
-              },
-            },
           },
         },
         "/formArrayOrPrimitiveExplode": {
@@ -289,21 +215,9 @@ describe("E2E: Query Param", function () {
                 explode: true,
               },
             ],
-            responses: {
-              200: {
-                content: {
-                  "application/json": {
-                    schema: {
-                      type: "object",
-                      properties: { bar: { type: "boolean" } },
-                    },
-                  },
-                },
-              },
-            },
           },
         },
-      } satisfies PathsObject,
+      },
     });
   });
 
