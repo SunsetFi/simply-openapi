@@ -16,8 +16,7 @@ export interface SOCSharedControllerMetadata {
   handlerMiddleware?: OperationMiddlewareFunction[];
 }
 
-export interface SOCBoundControllerMetadata
-  extends SOCSharedControllerMetadata {
+export interface SOCBoundControllerMetadata extends SOCSharedControllerMetadata {
   type?: "bound";
 }
 
@@ -27,8 +26,7 @@ export function isSOCBoundControllerMetadata(
   return metadata.type === "bound";
 }
 
-export interface SOCCustomControllerMetadata
-  extends SOCSharedControllerMetadata {
+export interface SOCCustomControllerMetadata extends SOCSharedControllerMetadata {
   type?: "custom";
 
   /**

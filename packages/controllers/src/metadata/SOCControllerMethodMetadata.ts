@@ -22,8 +22,7 @@ export interface SOCControllerMethodCommonMetadata {
   handlerArgs?: (SOCControllerMethodHandlerArg | undefined)[];
 }
 
-export interface SOCBoundControllerMethodMetadata
-  extends SOCControllerMethodCommonMetadata {
+export interface SOCBoundControllerMethodMetadata extends SOCControllerMethodCommonMetadata {
   operationId?: string;
 }
 export type ResolvedSOCBoundControllerMethodMetadata =
@@ -36,8 +35,7 @@ export function isSOCBoundControllerMethodMetadata(
   return "operationId" in metadata;
 }
 
-export interface SOCCustomControllerMethodMetadata
-  extends SOCControllerMethodCommonMetadata {
+export interface SOCCustomControllerMethodMetadata extends SOCControllerMethodCommonMetadata {
   path?: string;
   method?: RequestMethod;
   operationFragment?: PartialDeep<OperationObject>;
