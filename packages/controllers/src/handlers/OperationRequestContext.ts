@@ -72,7 +72,7 @@ export class OperationRequestContext extends OperationHandlerContext {
     this._requestData.set(key, value);
   }
 
-  getPathParam(name: string): string | undefined {
+  getPathParam(name: string): string | string[] | undefined {
     return this.req.params[name];
   }
 
