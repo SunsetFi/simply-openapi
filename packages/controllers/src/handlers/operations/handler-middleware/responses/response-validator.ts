@@ -37,15 +37,17 @@ function prepareResponseSchemas(ctx: OperationMiddlewareFactoryContext) {
     return valueProcessors;
   }
 
-  Object.entries(ctx.operation.responses).forEach(([statusCode, response]) => {
-    if (statusCode !== "default" && !/^[1-5]\d\d$/.test(statusCode)) {
-      throw new Error(
-        `Invalid status code "${statusCode}" in operation "${ctx.operation.operationId}".`,
-      );
-    }
+  Object.entries(ctx.operation.responses || {}).forEach(
+    ([statusCode, response]) => {
+      if (statusCode !== "default" && !/^[1-5]\d\d$/.test(statusCode)) {
+        throw new Error(
+          `Invalid status code "${statusCode}" in operation "${ctx.operation.operationId}".`,
+        );
+      }
 
-    responseSchemas[statusCode] = processContent(response.content || {});
-  });
+      responseSchemas[statusCode] = processContent(response.content || {});
+    },
+  );
 
   return responseSchemas;
 }

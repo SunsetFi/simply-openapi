@@ -9,7 +9,7 @@ export function getMockReq(
   method: string,
   url: string,
   opts: MockRequest = {},
-) {
+): ReturnType<typeof getMockReqReal> {
   return getMockReqReal({
     url,
     method,
