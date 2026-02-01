@@ -15,10 +15,10 @@
   ],
   "scripts": {
     "clean": "rimraf dist dts",
-    "prebuild": "npm run clean",
+    "prebuild": "pnpm run clean",
     "build": "tsc -p tsconfig.release.json",
     "format": "prettier --write \"./src/**/*.{ts,js}\"",
-    "prepublish": "npm run build"
+    "prepublish": "pnpm run build"
   },
   "keywords": [
     "openapi",

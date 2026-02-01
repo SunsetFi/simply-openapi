@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "clean": "rimraf dist dts",
-    "prebuild": "npm run clean",
+    "prebuild": "pnpm run clean",
     "build": "run-p build:server build:docs",
     "build:server": "tsc -p src",
     "build:docs": "ts-node src/build-openapi.ts",

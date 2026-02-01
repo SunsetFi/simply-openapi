@@ -11,10 +11,6 @@
   "scripts": {
     "prepare": "is-ci || husky install"
   },
-  "workspaces": [
-    "packages/*",
-    "examples/*"
-  ],
   "devDependencies": {
     "husky": "^8.0.3",
     "is-ci": "^3.0.1",
